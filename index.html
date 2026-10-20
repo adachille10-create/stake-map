@@ -95,7 +95,7 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
 .tools .seg{flex:1 1 100%;min-width:0;flex-wrap:wrap}
 .tools .seg button{flex:1 1 auto;padding:0 8px}
 .photo-scroll{overflow:auto;max-height:78vh;background:var(--sunk);touch-action:pan-x pan-y;overscroll-behavior:contain}
-.photo-inner{position:relative;width:100%;line-height:0;user-select:none;-webkit-user-select:none}
+.photo-inner{position:relative;width:100%;margin:0 auto;line-height:0;user-select:none;-webkit-user-select:none}
 .photo-inner img{width:100%;max-width:none;display:block;pointer-events:none}
 .editing .photo-inner{cursor:crosshair}
 .mk{position:absolute;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;border:1.5px solid #111;box-shadow:0 0 0 1px #fff;display:grid;place-items:center;font:700 8px/1 var(--mono);color:#111;cursor:pointer;padding:0;touch-action:none}
@@ -234,12 +234,12 @@ function numbered(s){var c={s:0,f:0};return (s.marks||[]).map(function(m){if(m.k
 function photoHTML(s){
   if(!s.img){
     if(!ui.edit)return '<div class="drop"><strong>No photo for this site yet</strong><span>Ask whoever runs the map to add a satellite screenshot.</span></div>';
-    return '<div class="drop" id="drop"><strong>Add a satellite screenshot</strong><ol><li>Open the address in Google Maps and switch to <b>Satellite</b>.</li><li>Zoom in until the driveway and lot edges fill the screen.</li><li>Take a screenshot, then add it here. On a computer you can also paste it with Ctrl+V or drop it on this box.</li></ol><label class="btn primary" for="f-img">Choose screenshot</label><input class="file" type="file" id="f-img" accept="image/*"></div>';
+    return '<div class="drop" id="drop"><strong>Add a satellite screenshot</strong><ol><li>Open the address in Google Maps and switch to <b>Satellite</b>.</li><li>Zoom out until the whole parking lot, every driveway and the walkways fit on screen, with a little grass showing around the edges.</li><li>Take a screenshot, then add it here. On a computer you can also paste it with Ctrl+V or drop it on this box.</li></ol><label class="btn primary" for="f-img">Choose screenshot</label><input class="file" type="file" id="f-img" accept="image/*"></div>';
   }
   var all=numbered(s),zl={h:'Hazard',p:'Snow'};
   var zones=all.filter(function(o){return o.m.w!=null}).map(function(o){var m=o.m,on=m.id===ui.mark;return '<div class="zone '+m.k+(on?' on':'')+'" data-mark="'+m.id+'" role="button" tabindex="0" style="left:'+(m.x*100).toFixed(2)+'%;top:'+(m.y*100).toFixed(2)+'%;width:'+(m.w*100).toFixed(2)+'%;height:'+(m.h*100).toFixed(2)+'%" title="'+esc(o.title+(m.note?': '+m.note:''))+'"><span class="zl">'+zl[m.k]+'</span>'+(ui.edit&&on?'<span class="handle" data-handle="'+m.id+'" aria-label="Resize"></span>':'')+'</div>'}).join('');
   var pins=zones+all.filter(function(o){return o.m.w==null}).map(function(o){var m=o.m;return '<button class="mk '+m.k+(m.id===ui.mark?' on':'')+'" data-mark="'+m.id+'" style="left:'+(m.x*100).toFixed(2)+'%;top:'+(m.y*100).toFixed(2)+'%" aria-label="'+esc(o.title)+'" title="'+esc(o.title+(m.note?': '+m.note:''))+'"><span>'+o.lab+'</span></button>'}).join('');
-  return '<div class="photo-scroll"><div style="width:'+(zf()*100)+'%" class="photo-inner'+(zf()>=3?' big':'')+(ui.edit&&(ui.tool==='h'||ui.tool==='p')?' drawing':'')+'" id="photo"><img src="'+s.img+'" alt="Satellite view of '+esc(s.name)+'" draggable="false">'+pins+'</div></div>';
+  return '<div class="photo-scroll"><div style="width:calc('+(zf()*100)+'% * var(--fit,1))" class="photo-inner'+(zf()>=3?' big':'')+(ui.edit&&(ui.tool==='h'||ui.tool==='p')?' drawing':'')+'" id="photo"><img src="'+s.img+'" alt="Satellite view of '+esc(s.name)+'" draggable="false">'+pins+'</div></div>';
 }
 function toolsHTML(s){
   if(!ui.edit||!s.img)return '';
@@ -287,7 +287,7 @@ function render(){
   var y=window.scrollY,ps=document.querySelector('.photo-scroll'),pl=ps?ps.scrollLeft:0,pt=ps?ps.scrollTop:0,pz=ui._pz;ui._pz=ui.zoom;
   app.className='app view-'+ui.view+(ui.edit?' editing':'');
   app.innerHTML=header()+'<div class="layout"><aside class="list" id="list">'+listHTML()+'</aside><section class="detail" id="detail">'+detailHTML(s)+'</section></div><div id="barwrap">'+barHTML()+'</div>';
-  window.scrollTo(0,y);
+  window.scrollTo(0,y);applyFit();
   var ns=document.querySelector('.photo-scroll');if(ns&&ps&&pz===ui.zoom){ns.scrollLeft=pl;ns.scrollTop=pt}
 }
 function renderItems(){var el=document.getElementById('items');if(el)el.innerHTML=itemsHTML()}
@@ -393,15 +393,18 @@ app.addEventListener('change',function(e){
 });
 var drag=null,suppress=false;
 var ZMAX=10,pinch=null;
+function applyFit(){var sc=document.querySelector('.photo-scroll'),im=sc&&sc.querySelector('img');if(!im||!im.naturalWidth||!sc.clientWidth)return;var f=Math.min(1,window.innerHeight*0.78*im.naturalWidth/im.naturalHeight/sc.clientWidth);sc.style.setProperty('--fit',f.toFixed(4))}
+app.addEventListener('load',function(e){if(e.target&&e.target.tagName==='IMG')applyFit()},true);
+window.addEventListener('resize',applyFit);
 function zf(){return ui.zoom||1}
 function setZoom(z,cx,cy){
   var sc=document.querySelector('.photo-scroll'),el=document.getElementById('photo');if(!sc||!el)return;
   z=Math.min(ZMAX,Math.max(1,z));if(z<1.03)z=1;
   var r=sc.getBoundingClientRect(),ox=cx-r.left,oy=cy-r.top;
-  var fx=(sc.scrollLeft+ox)/el.offsetWidth,fy=(sc.scrollTop+oy)/Math.max(1,el.offsetHeight);
+  var fx=(sc.scrollLeft+ox-el.offsetLeft)/el.offsetWidth,fy=(sc.scrollTop+oy)/Math.max(1,el.offsetHeight);
   ui.zoom=z===1?0:z;ui._pz=ui.zoom;
-  el.style.width=(z*100)+'%';el.classList.toggle('big',z>=3);
-  sc.scrollLeft=fx*el.offsetWidth-ox;sc.scrollTop=fy*el.offsetHeight-oy;
+  el.style.width='calc('+(z*100)+'% * var(--fit,1))';el.classList.toggle('big',z>=3);
+  sc.scrollLeft=fx*el.offsetWidth+el.offsetLeft-ox;sc.scrollTop=fy*el.offsetHeight-oy;
   var zv=document.getElementById('zv');if(zv)zv.textContent=z.toFixed(1).replace(/\.0$/,'')+'×';
 }
 function tdist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)}
