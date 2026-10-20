@@ -244,7 +244,7 @@ function photoHTML(s){
 function toolsHTML(s){
   if(!ui.edit||!s.img)return '';
   var t=function(k,l){return '<button data-act="tool" data-v="'+k+'" aria-pressed="'+(ui.tool===k)+'">'+l+'</button>'};
-  return '<div class="tools"><span class="lbl">'+(ui.tool==='h'||ui.tool==='p'?'Drag on the photo to outline the area':'Tap the photo to place a stake')+'</span><div class="seg" role="group" aria-label="Mark type">'+t('s','Wood (lot)')+t('f','Fiberglass (walk)')+t('h','Hazard area')+t('p','Snow area')+'</div><button class="btn sm ghost" data-act="undo"'+((s.marks||[]).length?'':' disabled')+'>Undo last</button></div>';
+  return '<div class="tools"><span class="lbl">'+(ui.tool==='h'||ui.tool==='p'?'Drag on the photo to outline the area':'Tap the photo to place a stake')+'</span><div class="seg" role="group" aria-label="Mark type">'+t('s','Wood (lot)')+t('f','Fiberglass (walk)')+t('h','Hazard area')+t('p','Snow area')+'</div><button class="btn sm ghost" data-act="undo"'+((s.marks||[]).length?'':' disabled')+'>Undo last</button>'+(ui.mark?'<button class="btn sm danger" data-act="del-mark" data-id="'+ui.mark+'">Remove selected</button>':'<span class="note" style="margin:0">Tap a mark to select it, drag to move it.</span>')+'</div>';
 }
 function detailHTML(s){
   if(!s)return '<div class="card placeholder">'+(state.sites.length?'Pick a site from the list to see where its stakes go.':'Sites you add will show up here.')+'</div>';
@@ -260,11 +260,6 @@ function detailHTML(s){
   h+='</div>';
   h+='<div class="card">'+toolsHTML(s)+photoHTML(s);
   if(s.img)h+='<div class="photo-foot"><div class="legend"><span><i class="dot s"></i>Wood stake (parking lot)</span><span><i class="dot f"></i>Fiberglass stake (walkway)</span><span><i class="dot h"></i>Hazard area</span><span><i class="dot p"></i>Snow pile area</span></div><div class="zoombar"><button class="btn sm" data-act="zoom" data-v="out" aria-label="Zoom out">−</button><span class="zv" id="zv">'+zf().toFixed(1).replace(/\.0$/,'')+'×</span><button class="btn sm" data-act="zoom" data-v="in" aria-label="Zoom in">+</button><button class="btn sm" data-act="zoom" data-v="fit">Fit</button></div></div><p class="note" style="padding:0 12px 10px;margin:0">Pinch with two fingers to zoom. On a computer, pinch the trackpad or hold Ctrl and scroll.</p>';
-  h+='</div>';
-  var nm=numbered(s);
-  h+='<div class="sec"><h3>Marks <small>'+stakeText(nw,nf)+'</small></h3>';
-  if(!nm.length)h+='<p class="note">'+(ui.edit?(s.img?'Pick Wood or Fiberglass above and tap where each stake goes. Pick Hazard or Snow and drag to outline an area.':'Add a photo first, then tap it to place stakes.'):'No marks on this site yet.')+'</p>';
-  else h+='<ol class="marks">'+nm.map(function(o){var m=o.m;return '<li data-li="'+m.id+'" class="'+(m.id===ui.mark?'on':'')+'">'+(m.w!=null?'<span class="swatch '+m.k+'"></span>':'<span class="mk pin '+m.k+'"><span>'+o.lab+'</span></span>')+'<div class="tx"><div class="k">'+esc(o.title)+'</div></div>'+(ui.edit?'<button class="btn sm danger" data-act="del-mark" data-id="'+m.id+'">Remove</button>':'')+'</li>'}).join('')+'</ol>';
   h+='</div>';
   if(ui.edit){
     h+='<div class="card pad sec"><h3>Site details</h3><div class="form"><label>Name<input class="inp" id="f-name" data-field="name" value="'+esc(s.name)+'"></label><label>Route #<input class="inp" id="f-route" data-field="route" inputmode="numeric" value="'+esc(s.route||'')+'"></label><label class="full">Address<input class="inp" id="f-addr" data-field="address" value="'+esc(s.address)+'" placeholder="Street, town"></label></div>';
