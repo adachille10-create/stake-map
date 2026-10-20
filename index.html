@@ -94,7 +94,7 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
 .tools .lbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .tools .seg{flex:1 1 100%;min-width:0;flex-wrap:wrap}
 .tools .seg button{flex:1 1 auto;padding:0 8px}
-.photo-scroll{overflow:auto;max-height:78vh;background:var(--sunk);touch-action:pan-x pan-y}
+.photo-scroll{overflow:auto;max-height:78vh;background:var(--sunk);touch-action:pan-x pan-y;overscroll-behavior:contain}
 .photo-inner{position:relative;width:100%;line-height:0;user-select:none;-webkit-user-select:none}
 .photo-inner img{width:100%;max-width:none;display:block;pointer-events:none}
 .editing .photo-inner{cursor:crosshair}
@@ -107,11 +107,12 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
 .mk.h span{transform:rotate(-45deg)}
 .mk.p{background:#fff;border-radius:2px}
 .mk.on{z-index:2;box-shadow:0 0 0 1.5px #fff,0 0 0 4px #D6249F}
-.photo-inner.z4 .mk{width:15px;height:15px}
-.photo-inner.z4 .mk.h{width:13px;height:13px}
-.photo-inner.z4 .mk span{display:block}
-.photo-inner.z2{width:200%}
-.photo-inner.z4{width:400%}
+.photo-inner.big .mk{width:15px;height:15px}
+.photo-inner.big .mk.h{width:13px;height:13px}
+.photo-inner.big .mk span{display:block}
+.zoombar{display:flex;align-items:center;gap:6px}
+.zoombar .zv{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:3.2em;text-align:center;font-variant-numeric:tabular-nums}
+.zoombar .btn{min-width:36px;padding:0 8px}
 .zone{position:absolute;z-index:1;border:2px solid;border-radius:4px;display:grid;place-items:center;touch-action:none;cursor:pointer;min-width:0}
 .editing .zone{cursor:move}
 .zone.h{border-color:#FF1744;background:rgb(255 23 68 / .3)}
@@ -238,7 +239,7 @@ function photoHTML(s){
   var all=numbered(s),zl={h:'Hazard',p:'Snow'};
   var zones=all.filter(function(o){return o.m.w!=null}).map(function(o){var m=o.m,on=m.id===ui.mark;return '<div class="zone '+m.k+(on?' on':'')+'" data-mark="'+m.id+'" role="button" tabindex="0" style="left:'+(m.x*100).toFixed(2)+'%;top:'+(m.y*100).toFixed(2)+'%;width:'+(m.w*100).toFixed(2)+'%;height:'+(m.h*100).toFixed(2)+'%" title="'+esc(o.title+(m.note?': '+m.note:''))+'"><span class="zl">'+zl[m.k]+'</span>'+(ui.edit&&on?'<span class="handle" data-handle="'+m.id+'" aria-label="Resize"></span>':'')+'</div>'}).join('');
   var pins=zones+all.filter(function(o){return o.m.w==null}).map(function(o){var m=o.m;return '<button class="mk '+m.k+(m.id===ui.mark?' on':'')+'" data-mark="'+m.id+'" style="left:'+(m.x*100).toFixed(2)+'%;top:'+(m.y*100).toFixed(2)+'%" aria-label="'+esc(o.title)+'" title="'+esc(o.title+(m.note?': '+m.note:''))+'"><span>'+o.lab+'</span></button>'}).join('');
-  return '<div class="photo-scroll"><div class="photo-inner'+(ui.zoom?' z'+ui.zoom:'')+(ui.edit&&(ui.tool==='h'||ui.tool==='p')?' drawing':'')+'" id="photo"><img src="'+s.img+'" alt="Satellite view of '+esc(s.name)+'" draggable="false">'+pins+'</div></div>';
+  return '<div class="photo-scroll"><div style="width:'+(zf()*100)+'%" class="photo-inner'+(zf()>=3?' big':'')+(ui.edit&&(ui.tool==='h'||ui.tool==='p')?' drawing':'')+'" id="photo"><img src="'+s.img+'" alt="Satellite view of '+esc(s.name)+'" draggable="false">'+pins+'</div></div>';
 }
 function toolsHTML(s){
   if(!ui.edit||!s.img)return '';
@@ -258,7 +259,7 @@ function detailHTML(s){
   else if(s.staked&&s.stakedAt)h+='<p class="note">Marked staked '+esc(s.stakedAt)+'.</p>';
   h+='</div>';
   h+='<div class="card">'+toolsHTML(s)+photoHTML(s);
-  if(s.img)h+='<div class="photo-foot"><div class="legend"><span><i class="dot s"></i>Wood stake (parking lot)</span><span><i class="dot f"></i>Fiberglass stake (walkway)</span><span><i class="dot h"></i>Hazard area</span><span><i class="dot p"></i>Snow pile area</span></div><button class="btn sm" data-act="zoom">'+(ui.zoom===4?'Zoom out':'Zoom in '+(ui.zoom?'4×':'2×'))+'</button></div>';
+  if(s.img)h+='<div class="photo-foot"><div class="legend"><span><i class="dot s"></i>Wood stake (parking lot)</span><span><i class="dot f"></i>Fiberglass stake (walkway)</span><span><i class="dot h"></i>Hazard area</span><span><i class="dot p"></i>Snow pile area</span></div><div class="zoombar"><button class="btn sm" data-act="zoom" data-v="out" aria-label="Zoom out">−</button><span class="zv" id="zv">'+zf().toFixed(1).replace(/\.0$/,'')+'×</span><button class="btn sm" data-act="zoom" data-v="in" aria-label="Zoom in">+</button><button class="btn sm" data-act="zoom" data-v="fit">Fit</button></div></div><p class="note" style="padding:0 12px 10px;margin:0">Pinch with two fingers to zoom. On a computer, pinch the trackpad or hold Ctrl and scroll.</p>';
   h+='</div>';
   var nm=numbered(s);
   h+='<div class="sec"><h3>Marks <small>'+stakeText(nw,nf)+'</small></h3>';
@@ -317,15 +318,15 @@ function compress(file){
   return new Promise(function(res,rej){
     var url=URL.createObjectURL(file),img=new Image();
     img.onload=function(){
-      var max=1400,q=.82,out='';
+      var max=2400,q=.8,out='';
       for(var i=0;i<8;i++){
         var sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');
         c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
         c.getContext('2d').drawImage(img,0,0,c.width,c.height);
         out=c.toDataURL('image/webp',q);
         if(out.indexOf('data:image/webp')!==0)out=c.toDataURL('image/jpeg',q);
-        if(out.length<260000)break;
-        q-=.08;if(q<.48){max=Math.round(max*.82);q=.66}
+        if(out.length<380000)break;
+        q-=.06;if(q<.5){max=Math.round(max*.85);q=.7}
       }
       URL.revokeObjectURL(url);res(out);
     };
@@ -358,7 +359,7 @@ app.addEventListener('click',function(e){
   else if(a==='filter'){ui.filter=b.getAttribute('data-v');saveUi();render()}
   else if(a==='edit'){ui.edit=!ui.edit;ui.confirm=false;saveUi();render()}
   else if(a==='tool'){ui.tool=b.getAttribute('data-v');render()}
-  else if(a==='zoom'){var sc=document.querySelector('.photo-scroll'),fx=.5,fy=.5;if(sc&&sc.scrollWidth>sc.clientWidth){fx=(sc.scrollLeft+sc.clientWidth/2)/sc.scrollWidth;fy=(sc.scrollTop+sc.clientHeight/2)/sc.scrollHeight}ui.zoom=ui.zoom===4?0:(ui.zoom?4:2);render();var n2=document.querySelector('.photo-scroll');if(n2){var im=n2.querySelector('img');var go=function(){n2.scrollLeft=fx*n2.scrollWidth-n2.clientWidth/2;n2.scrollTop=fy*n2.scrollHeight-n2.clientHeight/2};if(im&&!im.complete)im.onload=go;go()}}
+  else if(a==='zoom'){var sc0=document.querySelector('.photo-scroll'),v=b.getAttribute('data-v');if(sc0){var rr=sc0.getBoundingClientRect();setZoom(v==='fit'?1:zf()*(v==='in'?1.6:1/1.6),rr.left+sc0.clientWidth/2,rr.top+sc0.clientHeight/2)}}
   else if(a==='undo'&&s&&s.marks.length){s.marks.pop();ui.mark=null;dirty=true;render()}
   else if(a==='del-mark'&&s){var id2=b.getAttribute('data-id');s.marks=s.marks.filter(function(m){return m.id!==id2});ui.mark=null;dirty=true;render()}
   else if(a==='add-site'){var mx=0;state.sites.forEach(function(x){mx=Math.max(mx,+x.route||0)});var ns={id:uid(),name:'New site',address:'',route:String(mx+1),notes:'',img:null,marks:[],staked:false};state.sites.push(ns);dirty=true;openSite(ns.id);var f=document.getElementById('f-name');if(f){f.focus();f.select()}}
@@ -391,10 +392,36 @@ app.addEventListener('change',function(e){
   if(t.type==='file'&&t.files&&t.files[0])setPhoto(t.files[0]);
 });
 var drag=null,suppress=false;
+var ZMAX=10,pinch=null;
+function zf(){return ui.zoom||1}
+function setZoom(z,cx,cy){
+  var sc=document.querySelector('.photo-scroll'),el=document.getElementById('photo');if(!sc||!el)return;
+  z=Math.min(ZMAX,Math.max(1,z));if(z<1.03)z=1;
+  var r=sc.getBoundingClientRect(),ox=cx-r.left,oy=cy-r.top;
+  var fx=(sc.scrollLeft+ox)/el.offsetWidth,fy=(sc.scrollTop+oy)/Math.max(1,el.offsetHeight);
+  ui.zoom=z===1?0:z;ui._pz=ui.zoom;
+  el.style.width=(z*100)+'%';el.classList.toggle('big',z>=3);
+  sc.scrollLeft=fx*el.offsetWidth-ox;sc.scrollTop=fy*el.offsetHeight-oy;
+  var zv=document.getElementById('zv');if(zv)zv.textContent=z.toFixed(1).replace(/\.0$/,'')+'×';
+}
+function tdist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)}
+app.addEventListener('touchstart',function(e){
+  if(e.touches.length<2)return;var sc=e.target.closest('.photo-scroll');if(!sc)return;
+  if(drag){if(drag.mode==='draw'&&drag.el)drag.el.remove();if(drag.mode==='move'&&drag.m&&drag.m.w==null){drag.m.x=drag.ox;drag.m.y=drag.oy;drag.el.style.left=drag.ox*100+'%';drag.el.style.top=drag.oy*100+'%'}drag=null}
+  var a=e.touches[0],b=e.touches[1];pinch={d:tdist(a,b)||1,z:zf()};suppress=true;e.preventDefault();
+},{passive:false});
+app.addEventListener('touchmove',function(e){
+  if(!pinch||e.touches.length<2)return;e.preventDefault();
+  var a=e.touches[0],b=e.touches[1];setZoom(pinch.z*tdist(a,b)/pinch.d,(a.clientX+b.clientX)/2,(a.clientY+b.clientY)/2);
+},{passive:false});
+function endPinch(e){if(pinch&&e.touches.length<2){pinch=null;setTimeout(function(){suppress=false},400)}}
+app.addEventListener('touchend',endPinch);app.addEventListener('touchcancel',endPinch);
+app.addEventListener('wheel',function(e){if(!e.ctrlKey)return;var sc=e.target.closest('.photo-scroll');if(!sc)return;e.preventDefault();setZoom(zf()*Math.exp(-e.deltaY*0.01),e.clientX,e.clientY)},{passive:false});
+['gesturestart','gesturechange'].forEach(function(n){app.addEventListener(n,function(e){if(e.target.closest&&e.target.closest('.photo-scroll'))e.preventDefault()},{passive:false})});
 function frac(e,r){return {x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}}
 function findMark(id){var s=cur();return s&&(s.marks||[]).filter(function(m){return m.id===id})[0]}
 app.addEventListener('pointerdown',function(e){
-  if(!ui.edit)return;
+  if(!ui.edit||pinch||!e.isPrimary)return;
   var photo=e.target.closest('#photo');if(!photo)return;
   var r=photo.getBoundingClientRect(),p=frac(e,r),hd=e.target.closest('[data-handle]'),mk=e.target.closest('[data-mark]');
   if(hd){var m=findMark(hd.getAttribute('data-handle'));drag={mode:'size',m:m,el:hd.parentNode,r:r,sx:e.clientX,sy:e.clientY,moved:false}}
@@ -405,7 +432,7 @@ app.addEventListener('pointerdown',function(e){
   try{(drag.mode==='draw'?photo:drag.el).setPointerCapture(e.pointerId)}catch(err){}
 });
 app.addEventListener('pointermove',function(e){
-  if(!drag)return;
+  if(!drag||pinch)return;
   if(!drag.moved&&Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)<6)return;
   drag.moved=true;e.preventDefault();
   var p=frac(e,drag.r),m=drag.m,el=drag.el;
