@@ -1023,6 +1023,7 @@ function crewSetHTML(d){
   h+='<div class="row" style="margin-top:12px"><input class="inp" id="s-pin" type="password" inputmode="numeric" maxlength="8" placeholder="New PIN" style="max-width:180px"><button class="btn sm" data-act="save-pin">Change my PIN</button></div></div>';
   if(!isOwner())return h+'<div class="sec"><h3>Crew link</h3><p class="note" style="margin:0">Text your crew the same web address you used to open this page. They pick their name the first time.</p></div></div>';
   // owner only
+  h+='<div class="sec"><h3>Payroll and billing</h3><p class="note" style="margin:0 0 8px">Both are kept up to date in the Google Sheet (Payroll and Billing tabs). Last week’s payroll is emailed to you every Monday morning and last month’s billing on the 1st. Send one now:</p><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn sm" data-act="report" data-k="payroll" data-v="this">Payroll · this week</button><button class="btn sm" data-act="report" data-k="payroll" data-v="last">Payroll · last week</button><button class="btn sm" data-act="report" data-k="billing" data-v="this">Billing · this month</button><button class="btn sm" data-act="report" data-k="billing" data-v="last">Billing · last month</button></div></div>';
   var ze=mgr.zoneEdit||d.zones.map(function(z){return {old:z,name:z}});
   h+='<div class="sec"><h3>Zones</h3><p class="note" style="margin:0 0 8px">Renaming a zone keeps its crew, sites and managers.</p>'+ze.map(function(x,i){return '<div class="crewrow" style="margin-bottom:6px"><input class="inp" data-zn="'+i+'" id="zn-'+i+'" value="'+esc(x.name)+'" aria-label="Zone name"><button class="btn sm danger" data-act="zn-del" data-v="'+i+'">Remove</button></div>'}).join('')+'<div class="row" style="margin-top:8px"><button class="btn sm" data-act="zn-add">+ Add zone</button><span style="flex:1"></span>'+(mgr.zoneEdit?'<button class="btn sm ghost" data-act="zn-cancel">Cancel</button><button class="btn sm primary" data-act="zn-save">Save zones</button>':'')+'</div></div>';
   // managers
@@ -1173,6 +1174,7 @@ app.addEventListener('click',function(e){
   else if(a==='selall'){ui.rsel={};routeOf(v,rtype(mgr.d)).forEach(function(r){ui.rsel[r.site]=1});render()}
   else if(a==='selnone'){ui.rsel={};render()}
   else if(a==='undomove')undoMove();
+  else if(a==='report'){toast('Making the report…');mgrCall('mgrReport',b.getAttribute('data-k'),v).then(function(m){toast(m)},function(e){toast('Could not send: '+e.message)})}
   else if(a==='sheet'){ui.sheet=v;render()}
   else if(a==='sheetclose'){ui.sheet=null;render()}
   else if(a==='moveto'){var ids=selIds();if(!ids.length)return;var nm=ids.length===1?((msiteById(ids[0])||{}).name||'Site'):ids.length+' sites';doMove(ids,v,null,v?nm+(ids.length===1?' is':' are')+' on '+v+'’s '+rtype(mgr.d)+' route.':nm+(ids.length===1?' is':' are')+' off the '+rtype(mgr.d)+' route.')}
