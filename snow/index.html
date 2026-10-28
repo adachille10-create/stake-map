@@ -442,6 +442,14 @@ details.sec summary{cursor:pointer;font-weight:700;padding:6px 0}
 .crewrow:has(.eqsel){flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .crewrow:has(.eqsel)>input.inp{flex:1 1 100%}
 .crewrow .eqsel{flex:1 1 160px;min-width:0}
+/* plowed yet? (salt and walkway crews) */
+.chip.pl-done{background:#E3F3E7;color:#1E6B30;border-color:#9FD6AE}
+.chip.pl-now{background:#FDE7DA;color:#C2410C;border-color:#F5B48E}
+.chip.pl-todo,.chip.pl-skip{background:#F1F3F5;color:#56636E;border-color:#CED4DA}
+.plowline{margin:6px 0 0;padding:8px 10px;border-radius:8px;font-weight:700;font-size:15px}
+.plowline.pl-done{background:#E3F3E7;color:#1E6B30}
+.plowline.pl-now{background:#FDE7DA;color:#C2410C}
+.plowline.pl-todo,.plowline.pl-skip{background:#FFF0DB;color:#8A4B00}
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
@@ -482,7 +490,7 @@ function equipInfo(k){for(var i=0;i<EQUIP.length;i++)if(EQUIP[i].k===k)return EQ
 var ui={rtype:'',pickRoute:false,mode:'pick',sel:null,view:'list',tool:'s',mark:null,zoom:0,confirm:false,tab:'live',q:'',ending:false,again:false};
 var data={crew:[],crewZones:[],zones:[],ver:-1};
 var me=lsGet('snow.me',null);
-var crew={equip:'',helping:'',routes:{},types:[],active:'',pick:'',route:[],ver:-1,shift:null,queue:[],last:0,offline:false};
+var crew={plow:null,equip:'',helping:'',routes:{},types:[],active:'',pick:'',route:[],ver:-1,shift:null,queue:[],last:0,offline:false};
 var mgr={me:lsGet('snow.mgrme',null),zone:lsGet('snow.zone',''),zoneEdit:null,mgrs:null,mgrEdit:null,tempMode:null,typeEdit:null,hrsOpen:false,log:null,lg:{scope:'storm',auto:lsGet('snow.lgauto',true),kind:'note',to:''},token:lsGet('snow.mgr',null),d:null,dirty:false,editing:null,importing:null,crewEdit:null};
 var imgs={},imgWait={};
 var toastT=null,suppress=false,drag=null,pinch=null,ZMAX=10;
@@ -530,8 +538,8 @@ function photoCard(s){
 
 /* ---------- crew: local shift + queue ---------- */
 function ck(k){return 'snow.'+k+'.'+me}
-function loadCrew(){crew.equip=lsGet(ck('equip'),'');crew.routes=lsGet(ck('routes'),{});crew.types=lsGet(ck('types'),[]);crew.active=lsGet(ck('active'),'');crew.pick=lsGet(ck('pick'),'');crew.ver=lsGet(ck('ver'),-1);crew.shift=lsGet(ck('shift'),null);crew.queue=lsGet(ck('queue'),[]);applyRoute()}
-function saveCrew(){lsSet(ck('equip'),crew.equip);lsSet(ck('routes'),crew.routes);lsSet(ck('types'),crew.types);lsSet(ck('active'),crew.active);lsSet(ck('pick'),crew.pick);lsSet(ck('ver'),crew.ver);lsSet(ck('shift'),crew.shift);lsSet(ck('queue'),crew.queue)}
+function loadCrew(){crew.plow=lsGet(ck('plow'),null);crew.equip=lsGet(ck('equip'),'');crew.routes=lsGet(ck('routes'),{});crew.types=lsGet(ck('types'),[]);crew.active=lsGet(ck('active'),'');crew.pick=lsGet(ck('pick'),'');crew.ver=lsGet(ck('ver'),-1);crew.shift=lsGet(ck('shift'),null);crew.queue=lsGet(ck('queue'),[]);applyRoute()}
+function saveCrew(){lsSet(ck('plow'),crew.plow);lsSet(ck('equip'),crew.equip);lsSet(ck('routes'),crew.routes);lsSet(ck('types'),crew.types);lsSet(ck('active'),crew.active);lsSet(ck('pick'),crew.pick);lsSet(ck('ver'),crew.ver);lsSet(ck('shift'),crew.shift);lsSet(ck('queue'),crew.queue)}
 function myTypes(){var r=crew.routes||{};var t=(crew.types||[]).filter(function(x){return r[x]&&r[x].length});Object.keys(r).forEach(function(x){if(t.indexOf(x)<0&&r[x].length)t.push(x)});return t}
 function eff(){var r=crew.routes||{};if(crew.pick&&r[crew.pick]&&r[crew.pick].length)return crew.pick;if(crew.active&&r[crew.active]&&r[crew.active].length)return crew.active;return myTypes()[0]||''}
 function applyRoute(){crew.route=(crew.routes||{})[eff()]||[]}
@@ -547,6 +555,9 @@ function sync(){
     var doneIds=r.done||[];crew.queue=crew.queue.filter(function(o){return doneIds.indexOf(o.opId)<0});
     var first=crew.ver<0,beforeType=eff(),before=crew.route.slice(),msg='';
     if(typeof r.equip==='string')crew.equip=r.equip;
+    if('plow' in r){var was=crew.plow||{},nowP=r.plow||null,ready=[];
+      if(nowP&&!first)Object.keys(nowP).forEach(function(id){if(nowP[id].s==='done'&&was[id]&&was[id].s!=='done'){var ss=siteById(id,allMine());if(ss&&!visitsFor(id).some(function(v){return v.stop&&!isSkip(v)}))ready.push(ss.name)}});
+      crew.plow=nowP;if(ready.length&&!msg)msg=(ready.length===1?ready[0]+' is':ready.length+' of your lots are')+' plowed now.'+(ready.length>1?' ('+ready.join(', ')+')':'')}
     if(typeof r.helping==='string'&&r.helping!==crew.helping){if(!first&&r.helping)msg='You are helping '+r.helping+' this event.';crew.helping=r.helping}
     if(typeof r.active==='string'&&r.active!==crew.active){crew.active=r.active;if(!first&&r.active){crew.pick='';msg='The office set your route: '+r.active+'.'}}
     if(r.routes){crew.routes=r.routes;crew.types=r.types||crew.types;crew.ver=r.ver;var all=[];Object.keys(r.routes).forEach(function(k){all=all.concat(r.routes[k])});prefetch(crew.route.concat(all))}
@@ -591,6 +602,14 @@ function openVisit(){return crew.shift&&crew.shift.visits.filter(function(v){ret
 function visitsFor(id){var t=eff();return crew.shift?crew.shift.visits.filter(function(v){return v.site===id&&(!v.route||v.route===t)}):[]}
 function siteById(id,list){list=list||crew.route;for(var i=0;i<list.length;i++)if(list[i].id===id)return list[i];return null}
 var SKIPR=['Closed / not open yet','Cars or gate blocking','No snow to clear','Customer said skip','Equipment problem','Not safe','Other'];
+function allMine(){var r=crew.routes||{},a=[];Object.keys(r).forEach(function(k){a=a.concat(r[k])});return a}
+function showPlow(){return !!crew.plow&&!/plow/i.test(eff())}
+function plowInfo(id){if(!showPlow())return null;var p=crew.plow[id];if(!p)return null;
+  if(p.s==='done')return {c:'pl-done',t:'Plowed '+clock(p.t),l:'Plowed at '+clock(p.t)+' by '+p.by};
+  if(p.s==='now')return {c:'pl-now',t:'Plowing now',l:p.by+' is plowing it now (since '+clock(p.t)+')'};
+  if(p.s==='skip')return {c:'pl-skip',t:'Plow skipped',l:p.by+' skipped plowing it: '+p.why};
+  if(p.s==='todo')return {c:'pl-todo',t:'Not plowed yet',l:'Not plowed yet. It’s stop #'+p.n+' on '+p.by+'’s plow route.'};
+  return null}
 function isSkip(v){return /^Skipped/.test(v.svc||'')}
 function skipWhy(v){return String(v.svc||'').replace(/^Skipped – ?/,'')}
 function resolved(id){return visitsFor(id).some(function(v){return v.stop})}
@@ -612,7 +631,7 @@ function skipSite(id){
   render();
 }
 function skipForm(s){
-  return '<div class="work skipbox"><h3>Skip '+esc(s.name)+'?</h3><p class="note" style="margin:0">Pick why. The office sees it right away.</p><div class="skr">'+SKIPR.map(function(r){return '<button class="cbtn'+(ui.skipWhy===r?' on':'')+'" data-act="skipwhy" data-v="'+esc(r)+'">'+esc(r)+'</button>'}).join('')+'</div><input class="inp" id="sk-note" placeholder="'+(ui.skipWhy==='Other'?'Why are you skipping it? (needed)':'Anything else? (optional)')+'"><div class="row"><button class="btn ghost" data-act="skipcancel">Cancel</button><button class="btn danger" data-act="skipgo" data-id="'+s.id+'"'+(ui.skipWhy?'':' disabled')+'>Skip this site</button></div></div>';
+  return '<div class="work skipbox"><h3>Skip '+esc(s.name)+'?</h3><p class="note" style="margin:0">Pick why. The office sees it right away.</p><div class="skr">'+(showPlow()&&SKIPR.indexOf('Not plowed yet')<0?['Not plowed yet']:[]).concat(SKIPR).map(function(r){return '<button class="cbtn'+(ui.skipWhy===r?' on':'')+'" data-act="skipwhy" data-v="'+esc(r)+'">'+esc(r)+'</button>'}).join('')+'</div><input class="inp" id="sk-note" placeholder="'+(ui.skipWhy==='Other'?'Why are you skipping it? (needed)':'Anything else? (optional)')+'"><div class="row"><button class="btn ghost" data-act="skipcancel">Cancel</button><button class="btn danger" data-act="skipgo" data-id="'+s.id+'"'+(ui.skipWhy?'':' disabled')+'>Skip this site</button></div></div>';
 }
 function clockIn(){var id=uid();crew.shift={id:id,clockIn:Date.now(),visits:[]};ui.ended=null;push({type:'in',id:id});render();toast('Clocked in at '+clock(crew.shift.clockIn)+'. Drive safe.')}
 function startSite(id){
@@ -674,9 +693,10 @@ function crewHeader(){
 }
 function stopRow(s,i){
   var vs=visitsFor(s.id),done=vs.filter(function(v){return v.stop&&!isSkip(v)}),sk=vs.filter(isSkip).pop(),now=vs.filter(function(v){return !v.stop})[0],nx=crew.shift&&!now&&!done.length&&!sk?upNext():null,isNext=nx&&nx.id===s.id,locked=crew.shift&&!now&&!done.length&&!sk&&!isNext;
+  var pi=!now&&!done.length?plowInfo(s.id):null;
   var chip=now?'<span class="pill now"><i class="blink"></i>Working</span>':(done.length?'<span class="chip done">Done '+mins(done.reduce(function(a,v){return a+(v.stop-v.start)},0))+'</span>':sk?'<span class="chip skip">Skipped</span>':isNext&&!openVisit()?'<span class="chip next">Up next</span>':'');
   var hc=(now||done.length||sk)?'':hoursChip(s);
-  return '<button class="stop'+(now?' now':done.length?' done':sk?' skipped':isNext?' upnext':locked?' locked':'')+'" data-act="open" data-id="'+s.id+'"><span class="rt">'+(i+1)+'</span><span style="min-width:0"><span class="nm">'+esc(s.name)+'</span><span class="ad">'+esc(s.address)+'</span></span><span class="rgt">'+chip+hc+'</span></button>';
+  return '<button class="stop'+(now?' now':done.length?' done':sk?' skipped':isNext?' upnext':locked?' locked':'')+'" data-act="open" data-id="'+s.id+'"><span class="rt">'+(i+1)+'</span><span style="min-width:0"><span class="nm">'+esc(s.name)+'</span><span class="ad">'+esc(s.address)+'</span></span><span class="rgt">'+chip+(pi?'<span class="chip '+pi.c+'">'+esc(pi.t)+'</span>':'')+hc+'</span></button>';
 }
 function crewListHTML(){
   var h=crewHeader(),sh=crew.shift;
@@ -699,7 +719,7 @@ function crewListHTML(){
 function crewSiteHTML(s){
   var i=crew.route.indexOf(s),vs=visitsFor(s.id),ov=openVisit(),done=vs.filter(function(v){return v.stop});
   var h=crewHeader()+'<div class="detail" style="margin-top:12px"><div><button class="back" style="display:block" data-act="back">‹ All stops</button>';
-  h+='<div class="d-title"><span class="rt" style="padding:4px 8px">#'+(i+1)+'</span><h2>'+esc(s.name)+'</h2></div><p class="addr">'+esc(s.address)+'</p>'+(hoursNow(s)?'<div style="margin-top:6px">'+hoursChip(s)+'</div>':'');
+  h+='<div class="d-title"><span class="rt" style="padding:4px 8px">#'+(i+1)+'</span><h2>'+esc(s.name)+'</h2></div><p class="addr">'+esc(s.address)+'</p>'+(plowInfo(s.id)?'<p class="plowline '+plowInfo(s.id).c+'">'+esc(plowInfo(s.id).l)+'</p>':'')+(hoursNow(s)?'<div style="margin-top:6px">'+hoursChip(s)+'</div>':'');
   h+='<div class="actions"><a class="btn" href="'+mapsUrl(s.address)+'" target="_blank" rel="noopener">Directions</a><span class="cnt" style="align-self:center">'+stakeText(nK(s,'s'),nK(s,'f'))+'</span></div></div>';
   // action card
   h+='<div class="card">';
@@ -716,7 +736,7 @@ function crewSiteHTML(s){
   else if(done.length&&!ui.again){var dn=done.filter(function(v){return !isSkip(v)}),sk1=done.filter(isSkip);h+='<div class="work"><div class="row">'+(dn.length?'<span class="chip done">Done</span>':'<span class="chip skip">Skipped</span>')+'<span class="note" style="margin:0">'+dn.map(function(v){return clock(v.start)+'–'+clock(v.stop)+' ('+mins(v.stop-v.start)+')'+(v.svc?' · '+esc(v.svc):'')}).concat(sk1.map(function(v){return 'Skipped '+clock(v.stop)+' · '+esc(skipWhy(v))+(v.note?' · “'+esc(v.note)+'”':'')})).join('<br>')+'</span></div><button class="btn sm ghost" data-act="again" style="align-self:flex-start">Came back to this site? Start it again</button></div>'}
   else{var un=upNext();
     if(un&&un.id!==s.id&&!done.length)h+='<div class="work"><p style="margin:0"><b>Do the stops in order.</b> Finish or skip <b>'+esc(un.name)+'</b> first.</p><button class="btn primary" data-act="open" data-id="'+un.id+'">Go to '+esc(un.name)+'</button><p class="note" style="margin:0">If the office wants you to go here first, they can move it up on your route.</p></div>';
-    else h+='<div class="work"><button class="btn big go" data-act="startsite" data-id="'+s.id+'">Start this site</button><p class="note" style="margin:0">Tap when you start plowing or shoveling here. It records the time.</p>'+(done.length?'':'<button class="linkbtn" style="align-self:center" data-act="skipask" data-id="'+s.id+'">Can’t do this one? Skip with a reason</button>')+'</div>';
+    else h+='<div class="work"><button class="btn big go" data-act="startsite" data-id="'+s.id+'">Start this site</button><p class="note" style="margin:0">Tap when you start working here. It records the time.</p>'+(done.length?'':'<button class="linkbtn" style="align-self:center" data-act="skipask" data-id="'+s.id+'">Can’t do this one? Skip with a reason</button>')+'</div>';
   }
   h+='</div>';
   h+=photoCard(s);
