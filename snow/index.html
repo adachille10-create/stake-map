@@ -438,6 +438,10 @@ details.sec summary{cursor:pointer;font-weight:700;padding:6px 0}
 .skipbox h3{font-size:18px}
 .skr{display:flex;flex-wrap:wrap;gap:6px}
 .skiptx{color:#8A4B00}
+.eqtag{font-size:12px;font-weight:600;color:var(--muted);background:var(--sunk);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.crewrow:has(.eqsel){flex-wrap:wrap;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.crewrow:has(.eqsel)>input.inp{flex:1 1 100%}
+.crewrow .eqsel{flex:1 1 160px;min-width:0}
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
@@ -467,10 +471,18 @@ function tick(ms){var s=Math.max(0,Math.floor(ms/1000));var h=Math.floor(s/3600)
 var app=document.getElementById('app');
 var KIND={s:'Wood stake',f:'Fiberglass stake',h:'Hazard area',p:'Snow pile area'};
 var SVC=['Plowed lot','Shoveled walks','Salted lot','Salted walks'];
+/* what each kind of equipment does: the services it can tick, and which are ticked to start */
+var EQUIP=[
+  {k:'Loader',does:['Plowed lot'],on:['Plowed lot']},
+  {k:'Pickup – plow only',does:['Plowed lot'],on:['Plowed lot']},
+  {k:'Pickup – plow + salter',does:['Plowed lot','Salted lot'],on:['Plowed lot']},
+  {k:'Salt truck',does:['Salted lot'],on:['Salted lot']},
+  {k:'Walkway van',does:['Shoveled walks','Salted walks'],on:['Shoveled walks','Salted walks']}];
+function equipInfo(k){for(var i=0;i<EQUIP.length;i++)if(EQUIP[i].k===k)return EQUIP[i];return null}
 var ui={rtype:'',pickRoute:false,mode:'pick',sel:null,view:'list',tool:'s',mark:null,zoom:0,confirm:false,tab:'live',q:'',ending:false,again:false};
 var data={crew:[],crewZones:[],zones:[],ver:-1};
 var me=lsGet('snow.me',null);
-var crew={helping:'',routes:{},types:[],active:'',pick:'',route:[],ver:-1,shift:null,queue:[],last:0,offline:false};
+var crew={equip:'',helping:'',routes:{},types:[],active:'',pick:'',route:[],ver:-1,shift:null,queue:[],last:0,offline:false};
 var mgr={me:lsGet('snow.mgrme',null),zone:lsGet('snow.zone',''),zoneEdit:null,mgrs:null,mgrEdit:null,tempMode:null,typeEdit:null,hrsOpen:false,log:null,lg:{scope:'storm',auto:lsGet('snow.lgauto',true),kind:'note',to:''},token:lsGet('snow.mgr',null),d:null,dirty:false,editing:null,importing:null,crewEdit:null};
 var imgs={},imgWait={};
 var toastT=null,suppress=false,drag=null,pinch=null,ZMAX=10;
@@ -518,8 +530,8 @@ function photoCard(s){
 
 /* ---------- crew: local shift + queue ---------- */
 function ck(k){return 'snow.'+k+'.'+me}
-function loadCrew(){crew.routes=lsGet(ck('routes'),{});crew.types=lsGet(ck('types'),[]);crew.active=lsGet(ck('active'),'');crew.pick=lsGet(ck('pick'),'');crew.ver=lsGet(ck('ver'),-1);crew.shift=lsGet(ck('shift'),null);crew.queue=lsGet(ck('queue'),[]);applyRoute()}
-function saveCrew(){lsSet(ck('routes'),crew.routes);lsSet(ck('types'),crew.types);lsSet(ck('active'),crew.active);lsSet(ck('pick'),crew.pick);lsSet(ck('ver'),crew.ver);lsSet(ck('shift'),crew.shift);lsSet(ck('queue'),crew.queue)}
+function loadCrew(){crew.equip=lsGet(ck('equip'),'');crew.routes=lsGet(ck('routes'),{});crew.types=lsGet(ck('types'),[]);crew.active=lsGet(ck('active'),'');crew.pick=lsGet(ck('pick'),'');crew.ver=lsGet(ck('ver'),-1);crew.shift=lsGet(ck('shift'),null);crew.queue=lsGet(ck('queue'),[]);applyRoute()}
+function saveCrew(){lsSet(ck('equip'),crew.equip);lsSet(ck('routes'),crew.routes);lsSet(ck('types'),crew.types);lsSet(ck('active'),crew.active);lsSet(ck('pick'),crew.pick);lsSet(ck('ver'),crew.ver);lsSet(ck('shift'),crew.shift);lsSet(ck('queue'),crew.queue)}
 function myTypes(){var r=crew.routes||{};var t=(crew.types||[]).filter(function(x){return r[x]&&r[x].length});Object.keys(r).forEach(function(x){if(t.indexOf(x)<0&&r[x].length)t.push(x)});return t}
 function eff(){var r=crew.routes||{};if(crew.pick&&r[crew.pick]&&r[crew.pick].length)return crew.pick;if(crew.active&&r[crew.active]&&r[crew.active].length)return crew.active;return myTypes()[0]||''}
 function applyRoute(){crew.route=(crew.routes||{})[eff()]||[]}
@@ -534,6 +546,7 @@ function sync(){
     if(r.error==='unknown_crew'){toast('Your name was removed from the crew list. Pick your name again.');lsDel('snow.me');me=null;ui.mode='pick';refreshBoot();return}
     var doneIds=r.done||[];crew.queue=crew.queue.filter(function(o){return doneIds.indexOf(o.opId)<0});
     var first=crew.ver<0,beforeType=eff(),before=crew.route.slice(),msg='';
+    if(typeof r.equip==='string')crew.equip=r.equip;
     if(typeof r.helping==='string'&&r.helping!==crew.helping){if(!first&&r.helping)msg='You are helping '+r.helping+' this event.';crew.helping=r.helping}
     if(typeof r.active==='string'&&r.active!==crew.active){crew.active=r.active;if(!first&&r.active){crew.pick='';msg='The office set your route: '+r.active+'.'}}
     if(r.routes){crew.routes=r.routes;crew.types=r.types||crew.types;crew.ver=r.ver;var all=[];Object.keys(r.routes).forEach(function(k){all=all.concat(r.routes[k])});prefetch(crew.route.concat(all))}
@@ -646,7 +659,7 @@ function pickHTML(){
 function icon(){return '<svg width="22" height="34" viewBox="0 0 22 34" aria-hidden="true"><rect x="8" y="2" width="6" height="30" rx="3" fill="var(--accent)"/><rect x="8" y="5" width="6" height="4" fill="var(--surface)"/><rect x="8" y="12" width="6" height="4" fill="var(--surface)"/></svg>'}
 function crewHeader(){
   var sh=crew.shift,done=sh?sh.visits.filter(function(v){return v.stop&&!isSkip(v)}).length:0,skp=sh?sh.visits.filter(isSkip).length:0;
-  var h='<header class="top"><div class="brand">'+icon()+'<div><h1>'+esc(me)+'</h1><div class="sum">'+crew.route.length+' stop'+(crew.route.length===1?'':'s')+(eff()?' · '+esc(eff()):'')+'</div></div></div><button class="btn sm ghost" data-act="switch">Not you?</button></header>';
+  var h='<header class="top"><div class="brand">'+icon()+'<div><h1>'+esc(me)+'</h1><div class="sum">'+crew.route.length+' stop'+(crew.route.length===1?'':'s')+(eff()?' · '+esc(eff()):'')+(crew.equip?' · '+esc(crew.equip):'')+'</div></div></div><button class="btn sm ghost" data-act="switch">Not you?</button></header>';
   var mt=myTypes();
   if(mt.length){
     var how=crew.pick?'You picked this':crew.active===eff()?'Set by the office':'';
@@ -662,8 +675,8 @@ function crewHeader(){
 function stopRow(s,i){
   var vs=visitsFor(s.id),done=vs.filter(function(v){return v.stop&&!isSkip(v)}),sk=vs.filter(isSkip).pop(),now=vs.filter(function(v){return !v.stop})[0],nx=crew.shift&&!now&&!done.length&&!sk?upNext():null,isNext=nx&&nx.id===s.id,locked=crew.shift&&!now&&!done.length&&!sk&&!isNext;
   var chip=now?'<span class="pill now"><i class="blink"></i>Working</span>':(done.length?'<span class="chip done">Done '+mins(done.reduce(function(a,v){return a+(v.stop-v.start)},0))+'</span>':sk?'<span class="chip skip">Skipped</span>':isNext&&!openVisit()?'<span class="chip next">Up next</span>':'');
-  var fw=nK(s,'f'),hc=(now||done.length)?'':hoursChip(s);
-  return '<button class="stop'+(now?' now':done.length?' done':sk?' skipped':isNext?' upnext':locked?' locked':'')+'" data-act="open" data-id="'+s.id+'"><span class="rt">'+(i+1)+'</span><span style="min-width:0"><span class="nm">'+esc(s.name)+'</span><span class="ad">'+esc(s.address)+'</span></span><span class="rgt">'+chip+hc+(fw?'<span class="chip walk">Walkways</span>':'')+'</span></button>';
+  var hc=(now||done.length||sk)?'':hoursChip(s);
+  return '<button class="stop'+(now?' now':done.length?' done':sk?' skipped':isNext?' upnext':locked?' locked':'')+'" data-act="open" data-id="'+s.id+'"><span class="rt">'+(i+1)+'</span><span style="min-width:0"><span class="nm">'+esc(s.name)+'</span><span class="ad">'+esc(s.address)+'</span></span><span class="rgt">'+chip+hc+'</span></button>';
 }
 function crewListHTML(){
   var h=crewHeader(),sh=crew.shift;
@@ -694,8 +707,10 @@ function crewSiteHTML(s){
   else if(ui.skip===s.id&&(!ov||ov.site===s.id))h+=skipForm(s);
   else if(ov&&ov.site===s.id){
     h+='<div class="work"><div class="row"><span class="pill now"><i class="blink"></i>Working here</span><span class="note" style="margin:0">since '+clock(ov.start)+'</span></div><div class="timer" id="visitclock">'+tick(Date.now()-ov.start)+'</div>';
-    h+='<div class="checks">'+SVC.map(function(x,k){var walk=/walk/i.test(x);var dflt=!walk||nK(s,'f')>0;return '<label><input type="checkbox" data-svc value="'+x+'" id="svc'+k+'"'+(dflt&&k<1?' checked':'')+'>'+x+'</label>'}).join('')+'</div>';
-    h+='<label class="fieldlbl">Salt used (optional)<input class="inp" id="v-salt" placeholder="e.g. 4 bags, half a yard"></label><label class="fieldlbl">Note (optional)<input class="inp" id="v-note" placeholder="e.g. car parked in the lot, broken curb"></label>';
+    var eq=equipInfo(crew.equip),does=eq?eq.does:SVC,on=eq?eq.on.slice():['Plowed lot'];
+    if(eq&&eq.k==='Pickup – plow + salter'&&/salt/i.test(eff()))on=['Salted lot'];
+    h+='<div class="checks">'+does.map(function(x){var k=SVC.indexOf(x);return '<label><input type="checkbox" data-svc value="'+x+'" id="svc'+k+'"'+(on.indexOf(x)>=0?' checked':'')+'>'+x+'</label>'}).join('')+'</div>';
+    h+=(does.some(function(x){return /salt/i.test(x)})?'<label class="fieldlbl">Salt used (optional)<input class="inp" id="v-salt" placeholder="e.g. 4 bags, half a yard"></label>':'')+'<label class="fieldlbl">Note (optional)<input class="inp" id="v-note" placeholder="e.g. car parked in the lot, broken curb"></label>';
     h+='<button class="btn big stop" data-act="stopsite">Done at this site</button><button class="linkbtn" style="align-self:center" data-act="skipask" data-id="'+s.id+'">Couldn’t finish? Skip with a reason</button></div>';
   }else if(ov){var os=siteById(ov.site);h+='<div class="work"><p class="note" style="margin:0">You are still working at <b>'+esc(os?os.name:'another site')+'</b>. Finish it before starting this one.</p><button class="btn primary" data-act="open" data-id="'+ov.site+'">Go to '+esc(os?os.name:'that site')+'</button></div>'}
   else if(done.length&&!ui.again){var dn=done.filter(function(v){return !isSkip(v)}),sk1=done.filter(isSkip);h+='<div class="work"><div class="row">'+(dn.length?'<span class="chip done">Done</span>':'<span class="chip skip">Skipped</span>')+'<span class="note" style="margin:0">'+dn.map(function(v){return clock(v.start)+'–'+clock(v.stop)+' ('+mins(v.stop-v.start)+')'+(v.svc?' · '+esc(v.svc):'')}).concat(sk1.map(function(v){return 'Skipped '+clock(v.stop)+' · '+esc(skipWhy(v))+(v.note?' · “'+esc(v.note)+'”':'')})).join('<br>')+'</span></div><button class="btn sm ghost" data-act="again" style="align-self:flex-start">Came back to this site? Start it again</button></div>'}
@@ -714,7 +729,7 @@ function crewSiteHTML(s){
 
 /* ---------- manager ---------- */
 function zv(){return mgr.me&&mgr.me.role!=='owner'?mgr.me.zone:mgr.zone}
-function zoneCrew(){return mgr.d.crew.filter(function(c){return c.zone===mgr.d.zone}).map(function(c){return {name:c.name,active:c.active}})}
+function zoneCrew(){return mgr.d.crew.filter(function(c){return c.zone===mgr.d.zone}).map(function(c){return {name:c.name,active:c.active,equip:c.equip||''}})}
 function isOwner(){return !!(mgr.me&&mgr.me.role==='owner')}
 function mgrCall(fn){var a=[].slice.call(arguments,1);return api.apply(null,[fn,mgr.token].concat(a)).catch(function(e){if(/signed_out/.test(e.message)){mgr.token=null;lsDel('snow.mgr');ui.mode='mgr-login';render();toast('Signed out. Enter your PIN again.')}throw e})}
 function loadMgr(){return mgrCall('mgrData',zv()).then(function(d){mgr.d=d;mgr.loaded=Date.now();render();return d})}
@@ -783,6 +798,7 @@ function dutyHTML(d){
   return '<div class="duty'+(zi.duty?'':' none')+'"><span>On duty tonight</span><b>'+(zi.duty?esc(zi.duty):'Nobody yet')+'</b><span class="note" style="margin:0">'+(zi.duty?'Gets '+esc(d.zone)+'’s route emails and printouts':'Emails go to the owner until someone is on duty')+'</span><span class="sp"></span>'+(mine?'<span class="chip done">You</span>':'<button class="btn sm primary" data-act="duty">I’m on duty</button>')+'</div>';
 }
 function stormOnly(d){d=d||mgr.d;return !!(d&&d.storm)&&(mgr.tempMode==null?true:mgr.tempMode)}
+function eqOf(n){var c=(mgr.d&&mgr.d.crew||[]).filter(function(x){return x.name===n})[0];return c?c.equip||'':''}
 function liveOf(n){return (mgr.d&&mgr.d.live||[]).filter(function(l){return l.crew===n})[0]}
 function stat(l){return !l||!l.shift?'off':l.current?'now':'on'}
 function routeOf(n,T){return mgr.d.routes.filter(function(r){return r.crew===n&&r.type===T}).sort(function(a,b){return a.order-b.order})}
@@ -816,7 +832,7 @@ function liveHTML(d){
     else if(l.shift)sub=l.lastDone?(l.lastDone.skip?'<span class="skiptx">Skipped '+esc(l.lastDone.site)+' · '+esc(l.lastDone.skip)+'</span>':'Finished '+esc(l.lastDone.site)+' '+clock(l.lastDone.stop)):'Clocked in '+clock(l.shift.clockIn);
     else sub=l.lastShift?'Off · last out '+new Date(l.lastShift.clockOut).toLocaleDateString([], {weekday:'short'})+' '+clock(l.lastShift.clockOut):'Off';
     var pct=l.total?Math.min(100,Math.round(100*(l.done||0)/l.total)):0;
-    var r='<button class="lrow'+(open?' open':'')+'" data-act="lopen" data-v="'+esc(l.crew)+'" aria-expanded="'+open+'"><span class="dot '+s+'"></span><span class="lmain"><span class="lname">'+esc(l.crew)+(l.zone!==d.zone?' <span class="chip">from '+esc(l.zone)+'</span>':'')+(l.helping&&l.helping!==d.zone?' <span class="chip tmp">in '+esc(l.helping)+'</span>':'')+'</span><span class="lsub">'+sub+'</span></span><span class="lprog"><span>'+(l.route?esc(l.route):'No route')+'</span>'+(l.shift?'<b>'+(l.done||0)+'/'+l.total+'</b><i><u style="width:'+pct+'%"></u></i>':'<b>'+l.total+' sites</b>')+'</span></button>';
+    var r='<button class="lrow'+(open?' open':'')+'" data-act="lopen" data-v="'+esc(l.crew)+'" aria-expanded="'+open+'"><span class="dot '+s+'"></span><span class="lmain"><span class="lname">'+esc(l.crew)+(eqOf(l.crew)?' <small class="eqtag">'+esc(eqOf(l.crew))+'</small>':'')+(l.zone!==d.zone?' <span class="chip">from '+esc(l.zone)+'</span>':'')+(l.helping&&l.helping!==d.zone?' <span class="chip tmp">in '+esc(l.helping)+'</span>':'')+'</span><span class="lsub">'+sub+'</span></span><span class="lprog"><span>'+(l.route?esc(l.route):'No route')+'</span>'+(l.shift?'<b>'+(l.done||0)+'/'+l.total+'</b><i><u style="width:'+pct+'%"></u></i>':'<b>'+l.total+' sites</b>')+'</span></button>';
     if(open){
       r+='<div class="ldet">';
       r+='<div class="flabel">Route today'+(l.picked?' · <b>they switched to '+esc(l.picked)+'</b>':'')+'</div><div class="cgrp">'+d.types.filter(function(t){return routeOf(l.crew,t).length||(d.active[l.crew]||'')===t}).map(function(t){var n=routeOf(l.crew,t).length,on=(d.active[l.crew]||'')===t;return '<button class="cbtn'+(on?' on':'')+'" data-act="setactive" data-c="'+esc(l.crew)+'" data-v="'+esc(t)+'"'+(n?'':' data-empty="1"')+'>'+esc(t)+' <small>'+n+'</small></button>'}).join('')+'</div>'+(d.types.some(function(t){return routeOf(l.crew,t).length})?'':'<div class="note" style="margin:0">No sites on any of '+esc(l.crew)+'’s routes yet. Tap Edit route to add some.</div>');
@@ -845,7 +861,7 @@ function routesHTML(d){
     var list=routeOf(g,T).filter(function(r){return byId[r.site]}),open=ui.rcrew===g,l=liveOf(g),cz=(d.crew.filter(function(c){return c.name===g})[0]||{});
     list.forEach(function(r){on[r.site]=1});
     var done=(l&&l.doneIds)||[];
-    h+='<div class="rc'+(open?' open':'')+'"><button class="rchead" data-act="rcrew" data-v="'+esc(g)+'" aria-expanded="'+open+'"><span class="dot '+stat(l)+'"></span><b>'+esc(g)+'</b>'+(cz.zone&&cz.zone!==d.zone?'<span class="chip">from '+esc(cz.zone)+'</span>':'')+(d.active[g]===T?'<span class="chip done">today</span>':'')+'<span style="flex:1"></span><span class="cnt">'+list.length+'</span><span class="chev">›</span></button>';
+    h+='<div class="rc'+(open?' open':'')+'"><button class="rchead" data-act="rcrew" data-v="'+esc(g)+'" aria-expanded="'+open+'"><span class="dot '+stat(l)+'"></span><b>'+esc(g)+'</b>'+(eqOf(g)?'<small class="eqtag">'+esc(eqOf(g))+'</small>':'')+(cz.zone&&cz.zone!==d.zone?'<span class="chip">from '+esc(cz.zone)+'</span>':'')+(d.active[g]===T?'<span class="chip done">today</span>':'')+'<span style="flex:1"></span><span class="cnt">'+list.length+'</span><span class="chev">›</span></button>';
     if(open){
       h+='<div class="rlist" data-crew="'+esc(g)+'">'+list.map(function(r,i){var x=byId[r.site],sel=ui.rsel&&ui.rsel[x.id];return '<div class="rr'+(sel?' sel':'')+(done.indexOf(x.id)>=0?' dn':'')+'" data-site="'+x.id+'"><span class="hnd" data-drag="'+x.id+'" aria-label="Drag to reorder">≡</span><button class="rtx" data-act="rsel" data-id="'+x.id+'"><span class="num">'+(i+1)+'</span><span class="rnm"><span class="rl"><b>'+esc(x.name)+'</b>'+(r.temp?'<span class="chip tmp">event</span>':'')+(done.indexOf(x.id)>=0?'<span class="chip done">done</span>':'')+'</span><small>'+esc(shortAddr(x.address))+'</small></span><span class="ck" aria-hidden="true"></span></button></div>'}).join('')+'</div>';
       if(!list.length)h+='<p class="note" style="padding:0 12px">Nothing on '+esc(g)+'’s '+esc(T)+' route yet.</p>';
@@ -872,7 +888,7 @@ function sheetHTML(d){
   if(ui.sheet==='move'){
     var ids=selIds(),from={};ids.forEach(function(id){var r=d.routes.filter(function(x){return x.type===T&&x.site===id})[0];from[r?r.crew:'']=1});
     var names=d.crew.map(function(c){return c.name});
-    h+='<div class="shead"><b>Move '+(ids.length===1?esc((msiteById(ids[0])||{}).name||'1 site'):ids.length+' sites')+' to…</b><button class="x" data-act="sheetclose" aria-label="Close">✕</button></div><div class="note" style="margin:0">'+esc(T)+' route</div>'+temp+'<div class="slist">'+names.map(function(n){var l=liveOf(n),c=routeOf(n,T).length,same=Object.keys(from).length===1&&from[n];return '<button class="srow" data-act="moveto" data-v="'+esc(n)+'"'+(same?' disabled':'')+'><span class="dot '+stat(l)+'"></span><b>'+esc(n)+'</b><span style="flex:1"></span><small>'+(same?'already here':c+' sites'+(l&&l.shift?' · on the clock':''))+'</small></button>'}).join('')+'<button class="srow off" data-act="moveto" data-v=""><b>Take off the '+esc(T)+' route</b></button></div>';
+    h+='<div class="shead"><b>Move '+(ids.length===1?esc((msiteById(ids[0])||{}).name||'1 site'):ids.length+' sites')+' to…</b><button class="x" data-act="sheetclose" aria-label="Close">✕</button></div><div class="note" style="margin:0">'+esc(T)+' route</div>'+temp+'<div class="slist">'+names.map(function(n){var l=liveOf(n),c=routeOf(n,T).length,same=Object.keys(from).length===1&&from[n];return '<button class="srow" data-act="moveto" data-v="'+esc(n)+'"'+(same?' disabled':'')+'><span class="dot '+stat(l)+'"></span><b>'+esc(n)+'</b>'+(eqOf(n)?'<small class="eqtag">'+esc(eqOf(n))+'</small>':'')+'<span style="flex:1"></span><small>'+(same?'already here':c+' sites'+(l&&l.shift?' · on the clock':''))+'</small></button>'}).join('')+'<button class="srow off" data-act="moveto" data-v=""><b>Take off the '+esc(T)+' route</b></button></div>';
   }else if(ui.sheet==='add'){
     var g=ui.addTo,mine={};routeOf(g,T).forEach(function(r){mine[r.site]=1});
     var owner={};d.routes.forEach(function(r){if(r.type===T)owner[r.site]=r.crew});
@@ -941,9 +957,9 @@ function crewSetHTML(d){
   var h='<div class="panel">';
   // the zone's crew
   if(d.zone){
-    var list=mgr.crewEdit||d.crew.filter(function(c){return c.zone===d.zone}).map(function(c){return {name:c.name,active:c.active}});
+    var list=mgr.crewEdit||zoneCrew();
     h+='<div class="sec"><h3>'+esc(d.zone)+' crew</h3><p class="note" style="margin:0 0 8px">These names show on the crew screen. Unticking “Working” hides a name without losing their history.</p>';
-    h+=list.map(function(c,i){return '<div class="crewrow" style="margin-bottom:6px"><input class="inp" data-crew="'+i+'" id="cr-'+i+'" value="'+esc(c.name)+'" aria-label="Crew name"><label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-crewon="'+i+'" id="cro-'+i+'"'+(c.active!==false?' checked':'')+'>Working</label><button class="btn sm danger" data-act="crew-del" data-v="'+i+'">Remove</button></div>'}).join('');
+    h+=list.map(function(c,i){return '<div class="crewrow" style="margin-bottom:6px"><input class="inp" data-crew="'+i+'" id="cr-'+i+'" value="'+esc(c.name)+'" aria-label="Crew name"><select class="inp eqsel" data-crewequip="'+i+'" id="cre-'+i+'" aria-label="Equipment"><option value="">Equipment…</option>'+EQUIP.map(function(q){return '<option'+(q.k===c.equip?' selected':'')+'>'+esc(q.k)+'</option>'}).join('')+'</select><label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-crewon="'+i+'" id="cro-'+i+'"'+(c.active!==false?' checked':'')+'>Working</label><button class="btn sm danger" data-act="crew-del" data-v="'+i+'">Remove</button></div>'}).join('');
     h+='<div class="row" style="margin-top:8px"><button class="btn sm" data-act="crew-add">+ Add person</button><span style="flex:1"></span>'+(mgr.crewEdit?'<button class="btn sm ghost" data-act="crew-cancel">Cancel</button><button class="btn sm primary" data-act="crew-save">Save crew</button>':'')+'</div></div>';
   }else h+='<div class="sec"><h3>Crew</h3><p class="note" style="margin:0">Pick a zone at the top to edit its crew.</p></div>';
   // you
@@ -1131,7 +1147,7 @@ app.addEventListener('click',function(e){
   else if(a==='discard'){var dsrc=mgr.editing&&msiteById(mgr.editing.id);mgr.dirty=false;mgr.editing=dsrc?JSON.parse(JSON.stringify(dsrc)):null;render()}
   else if(a==='save-site')saveSite();
   else if(a==='del-site'){var ds=mgr.editing;if(!ds)return;if(ui.confirm!=='del'){ui.confirm='del';render();return}ui.confirm=false;if(ds._isNew){mgr.editing=null;mgr.dirty=false;render();return}mgrCall('mgrDeleteSite',ds.id).then(function(){mgr.editing=null;mgr.dirty=false;toast('Site deleted.');return loadMgr()},function(e){toast('Could not delete: '+e.message)})}
-  else if(a==='crew-add'){mgr.crewEdit=(mgr.crewEdit||zoneCrew());mgr.crewEdit.push({name:'',active:true});render();var last=document.getElementById('cr-'+(mgr.crewEdit.length-1));if(last)last.focus()}
+  else if(a==='crew-add'){mgr.crewEdit=(mgr.crewEdit||zoneCrew());mgr.crewEdit.push({name:'',active:true,equip:''});render();var last=document.getElementById('cr-'+(mgr.crewEdit.length-1));if(last)last.focus()}
   else if(a==='crew-del'){mgr.crewEdit=(mgr.crewEdit||zoneCrew());mgr.crewEdit.splice(+v,1);render()}
   else if(a==='crew-cancel'){mgr.crewEdit=null;render()}
   else if(a==='crew-save'){var cl=(mgr.crewEdit||[]).filter(function(c){return c.name.trim()});var seen={},dup=cl.some(function(c){var k=c.name.trim().toLowerCase();if(seen[k])return true;seen[k]=1});if(dup){toast('Two people have the same name. Add a last initial to tell them apart.');return}
@@ -1172,6 +1188,7 @@ app.addEventListener('change',function(e){
   if(t.hasAttribute('data-active')){var who=t.getAttribute('data-active'),rt=t.value;mgrCall('mgrSetActive',who,rt,zv()).then(function(d){mgr.d=d;render();toast(rt?who+' is on the '+rt+' route. Their phone switches within a minute.':who+' has no route set.')},function(err){toast('Could not set the route: '+err.message);loadMgr()});return}
   if(t.hasAttribute('data-hx')||t.hasAttribute('data-ho')||t.hasAttribute('data-hc')){hrsFromForm();return}
   if(t.id==='lg-auto'){mgr.lg.auto=t.checked;lsSet('snow.lgauto',t.checked);render();return}
+  if(t.hasAttribute('data-crewequip')){mgr.crewEdit=(mgr.crewEdit||zoneCrew());mgr.crewEdit[+t.getAttribute('data-crewequip')].equip=t.value;render();return}
   if(t.hasAttribute('data-crewon')){mgr.crewEdit=(mgr.crewEdit||zoneCrew());mgr.crewEdit[+t.getAttribute('data-crewon')].active=t.checked;render();return}
   if(t.getAttribute('data-field')){var hd=app.querySelector('.d-title h2');if(hd&&t.id==='f-name')hd.textContent=t.value||'New site';return}
   if(t.id==='f-import'&&t.files&&t.files[0]){runImport(t.files[0]);return}
