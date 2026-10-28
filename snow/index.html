@@ -458,7 +458,7 @@ details.sec summary{cursor:pointer;font-weight:700;padding:6px 0}
 function api(fn){var args=[].slice.call(arguments,1);return new Promise(function(res,rej){
   if(window.SNOW_API){
     fetch(window.SNOW_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args}),redirect:'follow'})
-      .then(function(r){if(!r.ok)throw new Error('busy '+r.status);return r.json()},function(e){throw new Error('NetworkError: '+(e&&e.message||'failed'))})
+      .then(function(r){if(!r.ok)throw new Error('The server answered '+r.status+'.');return r.text().then(function(t){try{return JSON.parse(t)}catch(x){throw new Error(/doPost/.test(t)?'The script deployment is missing doPost. Deploy a New version of the latest Code.gs.':/sign ?in|accounts\.google/i.test(t)?'The script asks for a Google sign-in. Set Who has access to Anyone in Deploy → Manage deployments.':'The script did not answer properly: '+t.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0,160))}})},function(e){throw new Error('NetworkError: '+(e&&e.message||'failed'))})
       .then(function(j){if(j&&j.ok)res(j.result);else rej(new Error(j&&j.error||'Server error'))},function(e){rej(e)});
     return}
   if(!(window.google&&google.script&&google.script.run)){rej(new Error('offline'));return}
@@ -665,6 +665,7 @@ function clockOut(){
 function pickHTML(){
   var h='<div class="who"><div class="brand">'+icon()+'<h1 style="font-size:22px;text-transform:uppercase;font-weight:800">Snow Route</h1></div>';
   if(!data.loaded)return h+'<p class="note">Loading…</p></div>';
+  if(data.err&&!data.crew.length)h+='<div class="queue"><b>Could not reach the server.</b> '+esc(data.err)+'</div><button class="btn primary" data-act="reboot">Try again</button>';
   if(!data.crew.length)h+='<div class="empty">No crew names yet. The manager adds them under <b>Manager → Settings</b>.</div>';
   else{
     h+='<h2>Who’s working?</h2>';
@@ -752,7 +753,7 @@ function zv(){return mgr.me&&mgr.me.role!=='owner'?mgr.me.zone:mgr.zone}
 function zoneCrew(){return mgr.d.crew.filter(function(c){return c.zone===mgr.d.zone}).map(function(c){return {name:c.name,active:c.active,equip:c.equip||''}})}
 function isOwner(){return !!(mgr.me&&mgr.me.role==='owner')}
 function mgrCall(fn){var a=[].slice.call(arguments,1);return api.apply(null,[fn,mgr.token].concat(a)).catch(function(e){if(/signed_out/.test(e.message)){mgr.token=null;lsDel('snow.mgr');ui.mode='mgr-login';render();toast('Signed out. Enter your PIN again.')}throw e})}
-function loadMgr(){return mgrCall('mgrData',zv()).then(function(d){mgr.d=d;mgr.loaded=Date.now();render();return d})}
+function loadMgr(){return mgrCall('mgrData',zv()).then(function(d){mgr.d=d;mgr.err='';mgr.loaded=Date.now();render();return d},function(e){mgr.err=String(e&&e.message||e);if(!mgr.d)render();throw e})}
 function msiteById(id){return mgr.d?siteById(id,mgr.d.sites):null}
 function loginHTML(){
   return '<div class="pinbox"><div class="brand">'+icon()+'<h1 style="font-size:22px;text-transform:uppercase;font-weight:800">Manager</h1></div>'+(ui.firstPin?'<p>Pick a PIN of 4 to 8 digits. You will use it to get into the manager screens.</p>':'<p>Enter your manager PIN.</p>')+'<input class="inp" id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="PIN"><button class="btn primary big" data-act="login">'+(ui.firstPin?'Set PIN':'Open manager')+'</button><button class="linkbtn" data-act="to-crew">Back to crew screen</button></div>';
@@ -765,7 +766,7 @@ function mgrHTML(){
   var h='<header class="top"><div class="brand">'+icon()+'<div><h1>Snow Route</h1><div class="sum">'+who+(d?' · '+d.sites.length+' sites · '+d.crew.filter(function(c){return c.active}).length+' crew':'')+'</div></div></div>'+zsel+'<button class="btn sm ghost" data-act="mgr-out">Sign out</button></header>';
   var t=function(k,l){return '<button role="tab" data-act="tab" data-v="'+k+'" aria-selected="'+(ui.tab===k)+'">'+l+'</button>'};
   h+='<nav class="tabs mtabs" role="tablist">'+t('live','Live')+t('routes','Routes')+t('log','Log')+t('sites','Stakes')+t('crew','Settings')+'</nav>';
-  if(!d)return h+'<div class="panel"><p class="note">Loading…</p></div>';
+  if(!d)return h+'<div class="panel">'+(mgr.err?'<div class="queue" style="margin:0"><b>Could not load.</b> '+esc(mgr.err)+'</div><button class="btn primary" style="align-self:flex-start" data-act="refresh">Try again</button>':'<p class="note">Loading…</p>')+'</div>';
   var needZone=isOwner()&&!d.zone&&(ui.tab==='routes'||ui.tab==='log');
   if(needZone)h+='<div class="panel"><div class="empty">Pick a zone at the top to see its '+(ui.tab==='log'?'event log':'routes')+'.</div>'+zonePickHTML(d)+'</div>';
   else if(ui.tab==='live')h+=liveHTML(d);
@@ -1118,6 +1119,7 @@ app.addEventListener('click',function(e){
   else if(a==='login'){var pin=(document.getElementById('pin')||{}).value;api('mgrLogin',pin).then(function(r){if(r.error){toast(r.error);return}mgr.token=r.token;mgr.me=r.me;lsSet('snow.mgr',r.token);lsSet('snow.mgrme',r.me);if(r.me.role!=='owner')mgr.zone=r.me.zone;ui.mode='mgr';ui.tab='live';render();loadMgr()},function(e){toast('Could not sign in: '+e.message)})}
   else if(a==='mgr-out'){if(mgr.dirty){toast('Save or discard your site changes first.');return}mgr.token=null;mgr.d=null;mgr.me=null;mgr.mgrs=null;lsDel('snow.mgr');lsDel('snow.mgrme');ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
   else if(a==='tab'){if(mgr.dirty){toast('Save or discard your site changes first.');return}ui.tab=v;ui.sheet=null;ui.rsel={};ui.confirm=false;mgr.editing=null;ui.zoom=0;render();if(v==='live'||v==='routes')loadMgr().catch(function(){});if(v==='log')loadLog()}
+  else if(a==='reboot'){data.err='';data.loaded=false;render();refreshBoot()}
   else if(a==='refresh'){loadMgr().then(function(){toast('Updated.')},function(){})}
   else if(a==='ask-out'){ui.confirm='out:'+v;render()}
   else if(a==='cancel-x'){ui.confirm=false;render()}
@@ -1274,7 +1276,7 @@ document.addEventListener('paste',function(e){if(!editing()||!mgr.editing||!e.cl
 window.addEventListener('beforeunload',function(e){if(mgr.dirty||(crew.queue&&crew.queue.length)){e.preventDefault();e.returnValue=''}});
 
 /* ---------- start ---------- */
-function refreshBoot(){api('boot').then(function(b){data.crew=b.crew;data.crewZones=b.crewZones||[];data.zones=b.zones||[];data.loaded=true;if(me&&b.crew.indexOf(me)<0){lsDel('snow.me');me=null;ui.mode='pick'}render()},function(){data.loaded=true;render()})}
+function refreshBoot(){api('boot').then(function(b){data.crew=b.crew;data.crewZones=b.crewZones||[];data.zones=b.zones||[];data.loaded=true;if(me&&b.crew.indexOf(me)<0){lsDel('snow.me');me=null;ui.mode='pick'}render()},function(e){data.loaded=true;data.err=String(e&&e.message||e);render()})}
 if(me){loadCrew();ui.mode='crew';render();sync();prefetch(crew.route)}else render();
 refreshBoot();
 })();
