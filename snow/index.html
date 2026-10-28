@@ -1,0 +1,1029 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Snow Route</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#141C24">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Snow Route">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script>window.SNOW_API="https://script.google.com/macros/s/AKfycby5VV5ginbWwLdaM4om5lWtzv9GN2K9s_DcwLZvnBc_YELxUVlGDNZAVfuocTX4dyWO5A/exec";</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&amp;family=Overpass+Mono:wght@500;600&amp;display=swap">
+<style>
+/* Layout: site list beside (desktop) or before (phone) one site sheet: photo with pins, mark list, address actions. */
+:root{
+  --bg:#EDF1F4; --surface:#FFFFFF; --sunk:#E2E8ED; --ink:#141C24; --muted:#56636E; --line:#D0D8DF;
+  --accent:#E8590C; --accent-ink:#FFFFFF; --hazard:#C92A2A; --pile:#1971C2; --ok:#2B8A3E; --ok-bg:#E3F3E7; --sel:#FAB005;
+  --display:"Overpass","Arial Narrow",system-ui,sans-serif; --body:"Overpass",system-ui,-apple-system,sans-serif; --mono:"Overpass Mono",ui-monospace,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E141A; --surface:#17202A; --sunk:#111920; --ink:#E6EDF3; --muted:#94A2AE; --line:#2B3744;
+  --accent:#FF7A2E; --accent-ink:#1A0D04; --hazard:#FF6B6B; --pile:#4DABF7; --ok:#69DB7C; --ok-bg:#17301F; --sel:#FFD43B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E141A; --surface:#17202A; --sunk:#111920; --ink:#E6EDF3; --muted:#94A2AE; --line:#2B3744;
+  --accent:#FF7A2E; --accent-ink:#1A0D04; --hazard:#FF6B6B; --pile:#4DABF7; --ok:#69DB7C; --ok-bg:#17301F; --sel:#FFD43B; color-scheme:dark}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);font-size:15px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+*{box-sizing:border-box}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:14px 12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.brand svg{flex:none}
+.brand h1{font-size:22px;font-weight:800;letter-spacing:.01em;text-transform:uppercase;line-height:1}
+.sum{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:3px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--hazard);border-color:color-mix(in srgb,var(--hazard) 45%,var(--line))}
+.btn.danger.armed{background:var(--hazard);color:var(--surface);border-color:var(--hazard)}
+.btn.status.on{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.btn.wide{width:100%}
+.btn.sm{min-height:32px;padding:0 10px;font-size:13px}
+
+.layout{display:grid;grid-template-columns:1fr;gap:20px;padding-top:16px}
+.view-list .detail{display:none}
+.view-detail .list{display:none}
+@media (min-width:900px){
+  .layout{grid-template-columns:340px minmax(0,1fr);align-items:start}
+  .view-list .detail,.view-detail .list{display:block}
+  .list{position:sticky;top:calc(env(safe-area-inset-top,0px) + 84px);max-height:calc(100vh - 110px);overflow:auto;padding-right:4px}
+  .back{display:none!important}
+}
+
+.list-tools{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.search{width:100%;min-height:42px;border-radius:8px;border:1px solid var(--line);background:var(--surface);padding:0 12px}
+.seg{display:flex;background:var(--sunk);border-radius:9px;padding:3px;gap:3px}
+.seg button{flex:1;min-height:34px;border:0;border-radius:7px;background:transparent;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+.items{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.site{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;padding:10px 12px 10px 10px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.site:hover{border-color:var(--muted)}
+.site[aria-current="true"]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
+.rt{font-family:var(--mono);font-weight:600;font-size:13px;color:var(--muted);text-align:center;border:1.5px solid var(--line);border-radius:6px;padding:4px 0;font-variant-numeric:tabular-nums}
+.site .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.site .ad{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.site .rgt{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.cnt{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.chip{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
+.chip.done{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.chip.todo{border-color:var(--accent);color:var(--accent)}
+.chip.ex{border-style:dashed}
+.chip.walk{border-color:#111;color:#111;background:#00E5FF}
+.chips{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.site-row{display:flex;gap:6px;align-items:stretch}
+.site-row .site{flex:1;min-width:0}
+.ordb{display:flex;flex-direction:column;gap:4px}
+.ordb button{flex:1;width:36px;border:1px solid var(--line);background:var(--surface);border-radius:7px;cursor:pointer;font-size:11px;color:var(--muted)}
+.ordb button:hover{border-color:var(--accent);color:var(--accent)}
+.stops{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.stops .btn.primary{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:var(--r)}
+
+.detail{min-width:0;display:flex;flex-direction:column;gap:16px}
+.view-detail .detail,.detail{display:flex}
+.view-list .detail{display:none}
+@media (min-width:900px){.view-list .detail{display:flex}}
+.back{align-self:flex-start;border:0;background:none;color:var(--accent);font-weight:700;padding:4px 0;cursor:pointer}
+.d-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.d-title h2{font-size:28px;font-weight:800;line-height:1.1}
+.addr{margin:4px 0 0;color:var(--muted);user-select:all;-webkit-user-select:all}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.note{font-size:13px;color:var(--muted);margin:6px 0 0}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.tools .lbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tools .seg{flex:1 1 100%;min-width:0;flex-wrap:wrap}
+.tools .seg button{flex:1 1 auto;padding:0 8px}
+.photo-scroll{overflow:auto;max-height:78vh;background:var(--sunk);touch-action:pan-x pan-y;overscroll-behavior:contain}
+.photo-inner{position:relative;width:100%;margin:0 auto;line-height:0;user-select:none;-webkit-user-select:none}
+.photo-inner img{width:100%;max-width:none;display:block;pointer-events:none}
+.editing .photo-inner{cursor:crosshair}
+.mk{position:absolute;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;border:1.5px solid #111;box-shadow:0 0 0 1px #fff;display:grid;place-items:center;font:700 8px/1 var(--mono);color:#111;cursor:pointer;padding:0;touch-action:none}
+.mk span{display:none}
+.mk::before{content:"";position:absolute;inset:-5px;border-radius:50%}
+.mk.s{background:#FFD400}
+.mk.f{background:#00E5FF}
+.mk.h{background:#FF1744;color:#fff;border-radius:2px;transform:translate(-50%,-50%) rotate(45deg);width:9px;height:9px}
+.mk.h span{transform:rotate(-45deg)}
+.mk.p{background:#fff;border-radius:2px}
+.mk.on{z-index:2;box-shadow:0 0 0 1.5px #fff,0 0 0 4px #D6249F}
+.photo-inner.big .mk{width:15px;height:15px}
+.photo-inner.big .mk.h{width:13px;height:13px}
+.photo-inner.big .mk span{display:block}
+.zoombar{display:flex;align-items:center;gap:6px}
+.zoombar .zv{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:3.2em;text-align:center;font-variant-numeric:tabular-nums}
+.zoombar .btn{min-width:36px;padding:0 8px}
+.zone{position:absolute;z-index:1;border:2px solid;border-radius:4px;display:grid;place-items:center;touch-action:none;cursor:pointer;min-width:0}
+.editing .zone{cursor:move}
+.zone.h{border-color:#FF1744;background:rgb(255 23 68 / .3)}
+.zone.p{border-color:#fff;border-style:dashed;background:rgb(255 255 255 / .32)}
+.zone.draft{pointer-events:none;opacity:.8}
+.zone.on{box-shadow:0 0 0 3px #D6249F}
+.zl{font:800 11px/1 var(--display);letter-spacing:.1em;text-transform:uppercase;padding:3px 5px;border-radius:3px;white-space:nowrap;pointer-events:none}
+.zone.h .zl{background:#FF1744;color:#fff}
+.zone.p .zl{background:#fff;color:#111}
+.zone.draft .zl{display:none}
+.handle{position:absolute;right:-7px;bottom:-7px;width:14px;height:14px;background:#D6249F;border:2px solid #fff;border-radius:3px;cursor:nwse-resize;touch-action:none}
+.photo-inner.drawing{touch-action:none}
+.mk{z-index:2}
+.swatch{width:22px;height:16px;border-radius:3px;border:2px solid}
+.swatch.h{border-color:#FF1744;background:rgb(255 23 68 / .35)}
+.swatch.p{border-color:#111;border-style:dashed;background:#fff}
+.photo-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-top:1px solid var(--line)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.dot{border:1.5px solid #111}.dot.s{background:#FFD400}.dot.f{background:#00E5FF}.dot.h{background:#FF1744;border-radius:2px;transform:rotate(45deg)}.dot.p{background:#fff;border-radius:3px}
+.drop{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:36px 20px;background:var(--sunk);color:var(--muted)}
+.drop.over{outline:3px dashed var(--accent);outline-offset:-10px}
+.drop strong{color:var(--ink);font-size:16px}
+.drop ol{text-align:left;margin:0;padding-left:20px;max-width:46ch;font-size:14px}
+.file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+.sec h3{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:baseline;gap:10px;margin-bottom:8px}
+.sec h3 small{font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:0;text-transform:none;color:var(--muted)}
+.marks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.marks li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:10px;padding:6px 8px;border-radius:8px;border:1px solid transparent;cursor:pointer}
+.marks li.on{border-color:#D6249F;background:color-mix(in srgb,#D6249F 10%,transparent)}
+.marks .pin{position:static;transform:none;width:22px;height:22px;font-size:11px;border-width:2px;box-shadow:none}
+.marks .pin span{display:block}
+.marks .pin.h{width:18px;height:18px}
+.marks .pin::before{display:none}
+.marks .pin.h{transform:rotate(45deg)}
+.marks .k{font-weight:600}
+.marks .tx{min-width:0}
+.marks .tx p{margin:0;font-size:13px;color:var(--muted)}
+.inp{width:100%;min-height:36px;border:1px solid var(--line);border-radius:7px;background:var(--bg);padding:4px 10px;font-size:14px}
+textarea.inp{min-height:84px;padding:8px 10px;resize:vertical}
+.notes{margin:0;white-space:pre-wrap}
+.form{display:grid;grid-template-columns:1fr 110px;gap:12px}
+.form .full{grid-column:1/-1}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.form label .inp{text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pad{padding:14px}
+.placeholder{padding:60px 20px;text-align:center;color:var(--muted)}
+
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgb(0 0 0 / .12);display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bar .msg{flex:1;min-width:180px;font-size:14px}
+.bar .msg small{display:block;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.bar .warn{color:var(--hazard)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:9;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 4px 16px rgb(0 0 0 / .25)}
+@media (prefers-reduced-motion:no-preference){.site,.btn{transition:border-color .15s,background-color .15s}}
+
+/* Crew + manager additions on top of the stake map styles */
+html,body{margin:0}
+body{padding-block:0 120px}
+img{max-width:100%}
+[hidden]{display:none!important}
+.who{max-width:520px;margin:0 auto;padding-top:28px;display:flex;flex-direction:column;gap:14px}
+.who h2{font-size:26px;font-weight:800}
+.who .names{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.who .names button{min-height:64px;font-size:18px;font-weight:700;border-radius:12px;border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--ink)}
+.who .names button:hover{border-color:var(--accent)}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;padding:6px 0;font-size:14px;align-self:flex-start}
+.big{min-height:64px;font-size:19px;font-weight:800;letter-spacing:.02em;border-radius:12px;width:100%}
+.btn.go{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.stop{background:var(--hazard);border-color:var(--hazard);color:#fff}
+.shiftbar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 0px);z-index:6;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:12px 0 0;border-radius:10px;background:var(--ok-bg);border:1px solid var(--ok);color:var(--ink)}
+.shiftbar.off{background:var(--sunk);border-color:var(--line)}
+.shiftbar b{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.shiftbar .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.pill.on{border-color:var(--ok);color:var(--ok);background:var(--ok-bg)}
+.pill.now{border-color:var(--accent);color:var(--accent-ink);background:var(--accent)}
+.pill.off{opacity:.8}
+.pill .blink{width:8px;height:8px;border-radius:50%;background:currentColor}
+@media (prefers-reduced-motion:no-preference){.pill .blink{animation:bl 1.4s infinite}@keyframes bl{50%{opacity:.25}}}
+.stoplist{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.stop{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;padding:12px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);cursor:pointer;color:var(--ink)}
+.stop.done{opacity:.72}
+.stop.now{border-color:var(--accent);box-shadow:inset 4px 0 0 var(--accent)}
+.stop .nm{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.stop .ad{font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.stop .rgt{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.work{display:flex;flex-direction:column;gap:12px;padding:14px}
+.work .timer{font:800 34px/1 var(--mono);font-variant-numeric:tabular-nums}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.checks label{display:flex;align-items:center;gap:10px;min-height:48px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-weight:600;cursor:pointer}
+.checks input{width:22px;height:22px;accent-color:var(--ok)}
+.checks label:has(input:checked){border-color:var(--ok);background:var(--ok-bg)}
+.fieldlbl{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.fieldlbl .inp{text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink);min-height:44px}
+.footbar{position:fixed;left:0;right:0;bottom:0;z-index:8;background:var(--surface);border-top:1px solid var(--line);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;align-items:center}
+.footbar .btn{flex:1}
+.confirm{display:flex;flex-direction:column;gap:12px;padding:16px}
+.confirm h3{font-size:20px}
+.sumrow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.sumrow:last-child{border-bottom:0}
+.queue{font-size:13px;color:var(--hazard);font-weight:600}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding-top:10px}
+.tabs button{flex:none;min-height:40px;padding:0 14px;border-radius:8px 8px 0 0;border:1px solid transparent;border-bottom:0;background:transparent;font-weight:700;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:0 10px 10px 10px;padding:14px;display:flex;flex-direction:column;gap:14px}
+.livegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.lc{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.lc h3{font-size:18px}
+.lc .meta{font-size:13px;color:var(--muted)}
+.lc .bar2{height:8px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.lc .bar2 i{display:block;height:100%;background:var(--ok)}
+.group h3{font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;display:flex;gap:8px;align-items:baseline;margin:6px 0 8px}
+.group h3 small{font-family:var(--mono);font-weight:500;letter-spacing:0;text-transform:none;color:var(--muted)}
+.rrow{display:grid;grid-template-columns:30px minmax(0,1fr);gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);margin-bottom:6px}
+.rrow .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .ad{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .ctl{display:flex;gap:4px;align-items:center}
+.rrow .ctl button{width:34px;height:34px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer;color:var(--muted)}
+.rrow select{min-height:34px;border:1px solid var(--line);border-radius:7px;background:var(--surface);max-width:130px;font:inherit;font-size:13px}
+.crewrow{display:flex;gap:8px;align-items:center}
+.crewrow .inp{flex:1}
+.prog{height:10px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent)}
+.pinbox{max-width:360px;margin:40px auto 0;display:flex;flex-direction:column;gap:12px}
+.pinbox input{font:800 28px/1 var(--mono);letter-spacing:.3em;text-align:center;min-height:60px}
+.loadimg{padding:60px 16px;text-align:center;color:var(--muted);background:var(--sunk)}
+.offline{margin:8px 0 0;background:var(--hazard);color:#fff;font-size:13px;font-weight:700;padding:8px 12px;border-radius:8px}
+.mbar .msg{flex:1 1 100%;min-width:0}
+.mbar .btn{flex:1}
+.toast{pointer-events:none;bottom:auto;top:calc(env(safe-area-inset-top,0px) + 74px);width:max-content}
+
+.rrow .ctl{grid-column:2}
+.rrow select{flex:1;max-width:none}
+@media (min-width:700px){.rrow{grid-template-columns:30px minmax(0,1fr) auto}.rrow .ctl{grid-column:auto}.rrow select{flex:none;max-width:160px}}
+
+.loglist{display:flex;flex-direction:column}
+.logday{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 0 6px;border-bottom:1px solid var(--line)}
+.logrow{display:grid;grid-template-columns:68px 70px minmax(0,1fr);gap:8px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line)}
+.logrow .lt{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.logrow .ltx{min-width:0;overflow-wrap:anywhere}
+.logrow.mine .ltx{font-weight:700}
+.ltype{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;text-align:center;padding:2px 4px;border-radius:5px;border:1px solid var(--line);color:var(--muted)}
+.ltype.t-note{border-color:var(--ink);color:var(--ink)}
+.ltype.t-call{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ltype.t-conditions{background:#1971C2;border-color:#1971C2;color:#fff}
+.ltype.t-storm{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.ltype.t-clock{border-color:var(--ok);color:var(--ok)}
+
+.tabs button{flex:1 0 auto;padding:0 10px}
+
+.routebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.routebar .lbl{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.routebar b{font-size:16px}
+.routebar .sp{flex:1}
+.routepick{display:flex;flex-direction:column;gap:6px;margin-top:8px;padding:10px;border:1px solid var(--accent);border-radius:10px;background:var(--surface)}
+.routepick .btn{justify-content:space-between;min-height:52px;font-size:16px}
+.routepick .btn.primary .cnt{color:inherit}
+.chip.hrs-open{border-color:var(--ok);color:var(--ok)}
+.chip.hrs-soon{border-color:#B7791F;color:#B7791F}
+.chip.hrs-closed{background:var(--sunk);border-color:var(--line);color:var(--ink)}
+.htable{display:flex;flex-direction:column}
+.htable .hrow{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.htable .hrow:last-child{border-bottom:0}
+.htable .hrow.today{font-weight:800;color:var(--accent)}
+.hedit{display:flex;flex-direction:column;gap:6px}
+.hedit .hrow{display:grid;grid-template-columns:34px minmax(0,1fr) 14px minmax(0,1fr) 72px;gap:5px;align-items:center}
+.hedit .hrow span{font-weight:700}
+.hedit .hrow .to{font-weight:400;color:var(--muted);text-align:center}
+.hedit .hx{display:flex;gap:5px;align-items:center;font-size:13px}
+.hedit .inp{min-height:38px;padding:4px 6px;font-size:14px;min-width:0}
+.hedit input[type=time]::-webkit-calendar-picker-indicator{display:none}
+.hedit .inp:disabled{opacity:.4}
+.typeseg{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.typeseg button{flex:none;min-height:38px;padding:0 12px;border-radius:99px;border:1px solid var(--line);background:var(--bg);font-weight:700;cursor:pointer;color:var(--ink);white-space:nowrap}
+.typeseg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.typeseg button[aria-pressed="true"] .cnt{color:inherit;opacity:.8}
+.routesel{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.routesel select{flex:1;min-height:36px;border:1px solid var(--line);border-radius:7px;background:var(--surface);font:inherit;font-size:14px;color:var(--ink)}
+
+.zlabel{margin:6px 0 0;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.helpbar{margin:8px 0 0;padding:8px 12px;border-radius:8px;background:#1971C2;color:#fff;font-size:14px}
+.zonesel{min-height:36px;max-width:130px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font:inherit;font-size:14px;font-weight:700;color:var(--ink);padding:0 6px}
+.zonetag{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 8px;border-radius:6px;background:var(--ink);color:var(--bg)}
+.duty{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;border:2px solid var(--ok);background:var(--ok-bg)}
+.duty.none{border-color:var(--hazard);background:var(--surface)}
+.duty>span:first-child{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.duty b{font-size:16px}
+.duty .sp{flex:1}
+.helpfrom{color:#1971C2;font-weight:700}
+.tempbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tempbar>span{font-size:13px;font-weight:700;color:var(--muted)}
+.tempbar .seg{flex:1;min-width:220px}
+.chip.tmp{border-color:#1971C2;color:#1971C2}
+.mgrrow{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:var(--bg)}
+.mgrrow .inp{min-height:38px}
+.mgrrow .btn{justify-self:start}
+@media (min-width:760px){.mgrrow{grid-template-columns:1.2fr 1fr 1fr 1.6fr 1fr auto}}
+.sitezones{display:flex;flex-direction:column;gap:4px;max-height:520px;overflow:auto}
+.szrow{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:6px 8px;border:1px solid var(--line);border-radius:8px}
+.szrow span{min-width:0;font-weight:600;display:flex;flex-direction:column}
+.szrow small{font-weight:400;color:var(--muted);font-size:12px}
+.szrow select{min-height:34px;border:1px solid var(--line);border-radius:7px;background:var(--surface);font:inherit;font-size:13px;color:var(--ink)}
+.lby{font-size:12px;font-weight:400;color:var(--muted);margin-left:4px}
+.top .zonesel,.top .zonetag{order:2}
+/* the stake map hid back buttons on wide screens; this app always needs them */
+@media (min-width:900px){.back{display:block!important}}
+.app{max-width:1100px;margin:0 auto}
+</style></head><body>
+<div id="app" class="app"><div class="placeholder">Loading…</div></div>
+<script>(function(){
+'use strict';
+/* ---------- server bridge ---------- */
+function api(fn){var args=[].slice.call(arguments,1);return new Promise(function(res,rej){
+  if(window.SNOW_API){
+    fetch(window.SNOW_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args}),redirect:'follow'})
+      .then(function(r){if(!r.ok)throw new Error('busy '+r.status);return r.json()},function(e){throw new Error('NetworkError: '+(e&&e.message||'failed'))})
+      .then(function(j){if(j&&j.ok)res(j.result);else rej(new Error(j&&j.error||'Server error'))},function(e){rej(e)});
+    return}
+  if(!(window.google&&google.script&&google.script.run)){rej(new Error('offline'));return}
+  var r=google.script.run.withSuccessHandler(res).withFailureHandler(function(e){rej(e instanceof Error?e:new Error(String(e&&e.message||e)))});
+  r[fn].apply(r,args);
+})}
+function lsGet(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function mapsUrl(a){return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(a)}
+function clock(t){return t?new Date(t).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):''}
+function dur(ms){var m=Math.max(0,Math.floor(ms/60000));return Math.floor(m/60)+'h '+('0'+m%60).slice(-2)+'m'}
+function mins(ms){return Math.max(0,Math.round(ms/60000))+' min'}
+function tick(ms){var s=Math.max(0,Math.floor(ms/1000));var h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return (h?h+':'+('0'+m).slice(-2):m)+':'+('0'+x).slice(-2)}
+
+var app=document.getElementById('app');
+var KIND={s:'Wood stake',f:'Fiberglass stake',h:'Hazard area',p:'Snow pile area'};
+var SVC=['Plowed lot','Shoveled walks','Salted lot','Salted walks'];
+var ui={rtype:'',pickRoute:false,mode:'pick',sel:null,view:'list',tool:'s',mark:null,zoom:0,confirm:false,tab:'live',q:'',ending:false,again:false};
+var data={crew:[],crewZones:[],zones:[],ver:-1};
+var me=lsGet('snow.me',null);
+var crew={helping:'',routes:{},types:[],active:'',pick:'',route:[],ver:-1,shift:null,queue:[],last:0,offline:false};
+var mgr={me:lsGet('snow.mgrme',null),zone:lsGet('snow.zone',''),zoneEdit:null,mgrs:null,mgrEdit:null,tempMode:false,typeEdit:null,hrsOpen:false,log:null,lg:{scope:'storm',auto:lsGet('snow.lgauto',true),kind:'note',to:''},token:lsGet('snow.mgr',null),d:null,dirty:false,editing:null,importing:null,crewEdit:null};
+var imgs={},imgWait={};
+var toastT=null,suppress=false,drag=null,pinch=null,ZMAX=10;
+
+function toast(t){var old=document.getElementById('toast');if(old)old.remove();var d=document.createElement('div');d.className='toast';d.id='toast';d.setAttribute('role','status');d.textContent=t;document.body.appendChild(d);clearTimeout(toastT);toastT=setTimeout(function(){d.remove()},4200)}
+
+/* ---------- photo + marks (shared by crew view and manager editor) ---------- */
+function nK(s,k){return (s.marks||[]).filter(function(m){return m.k===k}).length}
+function stakeText(w,f){if(!w&&!f)return 'No stakes';var a=[];if(w)a.push(w+' wood');if(f)a.push(f+' fiberglass');return a.join(' · ')}
+function numbered(s){var c={s:0,f:0};return (s.marks||[]).map(function(m){if(m.k==='s'||m.k==='f'){c[m.k]++;return {m:m,lab:String(c[m.k]),title:KIND[m.k]+' '+c[m.k]}}return {m:m,lab:m.k==='h'?'!':'P',title:KIND[m.k]}})}
+function editing(){return ui.mode==='mgr'&&ui.tab==='sites'}
+function showing(s){return (ui.mode==='crew'&&ui.sel===s.id)||(ui.mode==='mgr'&&mgr.editing&&mgr.editing.id===s.id)}
+function loadImg(s){
+  if(!s||!s.photo||imgs[s.photo]!==undefined||imgWait[s.photo])return;
+  var k=s.photo;imgWait[k]=1;
+  api('getPhoto',s.id).then(function(u){imgs[k]=u||'';delete imgWait[k];if(showing(s)&&!drag)render()},function(){setTimeout(function(){delete imgWait[k];if(showing(s))loadImg(s)},8000+Math.random()*8000)});
+}
+function prefetch(list){if(direct){list.forEach(function(s){if(s&&s.photo&&!driveBad[s.photo]){var im=new Image();im.onerror=function(){driveBad[s.photo]=1};im.src=driveUrl(s.photo)}});return}var i=0;(function next(){var s=list[i++];if(!s)return;if(!s.photo||imgs[s.photo]!==undefined||imgWait[s.photo]){next();return}var k=s.photo;imgWait[k]=1;api('getPhoto',s.id).then(function(u){imgs[k]=u||'';delete imgWait[k];if(showing(s)&&!drag)render();next()},function(){delete imgWait[k]})})()}
+var driveBad={},direct=lsGet('snow.direct',true);
+function driveUrl(id){return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w2400'}
+function srcOf(s){if(s._img)return s._img;if(!s.photo)return '';if(imgs[s.photo])return imgs[s.photo];if(direct&&!driveBad[s.photo]&&!/^data:/.test(s.photo))return driveUrl(s.photo);return imgs[s.photo]}
+function zf(){return ui.zoom||1}
+function photoHTML(s){
+  var ed=editing(),src=srcOf(s);
+  if(src===undefined){loadImg(s);return '<div class="loadimg">Loading the satellite photo…</div>'}
+  if(!src){
+    if(!ed)return '<div class="drop"><strong>No photo for this site yet</strong></div>';
+    return '<div class="drop" id="drop"><strong>Add a satellite screenshot</strong><ol><li>Open the address in Google Maps and switch to <b>Satellite</b>.</li><li>Zoom out until the whole lot, every driveway and the walkways fit on screen.</li><li>Take a screenshot and add it here. On a computer you can also paste it with Ctrl+V.</li></ol><label class="btn primary" for="f-img">Choose screenshot</label><input class="file" type="file" id="f-img" accept="image/*"></div>';
+  }
+  var all=numbered(s),zl={h:'Hazard',p:'Snow'};
+  var zones=all.filter(function(o){return o.m.w!=null}).map(function(o){var m=o.m,on=m.id===ui.mark;return '<div class="zone '+m.k+(on?' on':'')+'" data-mark="'+m.id+'" role="button" tabindex="0" style="left:'+(m.x*100).toFixed(2)+'%;top:'+(m.y*100).toFixed(2)+'%;width:'+(m.w*100).toFixed(2)+'%;height:'+(m.h*100).toFixed(2)+'%" title="'+esc(o.title+(m.note?': '+m.note:''))+'"><span class="zl">'+zl[m.k]+'</span>'+(ed&&on?'<span class="handle" data-handle="'+m.id+'" aria-label="Resize"></span>':'')+'</div>'}).join('');
+  var pins=zones+all.filter(function(o){return o.m.w==null}).map(function(o){var m=o.m;return '<button class="mk '+m.k+(m.id===ui.mark?' on':'')+'" data-mark="'+m.id+'" style="left:'+(m.x*100).toFixed(2)+'%;top:'+(m.y*100).toFixed(2)+'%" aria-label="'+esc(o.title)+'" title="'+esc(o.title+(m.note?': '+m.note:''))+'"><span>'+o.lab+'</span></button>'}).join('');
+  return '<div class="photo-scroll"><div style="width:calc('+(zf()*100)+'% * var(--fit,1))" class="photo-inner'+(zf()>=3?' big':'')+(ed&&(ui.tool==='h'||ui.tool==='p')?' drawing':'')+'" id="photo"><img src="'+src+'" data-pid="'+esc(s.photo||'')+'" alt="Satellite view of '+esc(s.name)+'" draggable="false">'+pins+'</div></div>';
+}
+function toolsHTML(s){
+  if(!editing()||!srcOf(s))return '';
+  var t=function(k,l){return '<button data-act="tool" data-v="'+k+'" aria-pressed="'+(ui.tool===k)+'">'+l+'</button>'};
+  return '<div class="tools"><span class="lbl">'+(ui.tool==='h'||ui.tool==='p'?'Drag on the photo to outline the area':'Tap the photo to place a stake')+'</span><div class="seg" role="group" aria-label="Mark type">'+t('s','Wood (lot)')+t('f','Fiberglass (walk)')+t('h','Hazard area')+t('p','Snow area')+'</div><button class="btn sm ghost" data-act="undo"'+((s.marks||[]).length?'':' disabled')+'>Undo last</button>'+(ui.mark?'<button class="btn sm danger" data-act="del-mark" data-id="'+ui.mark+'">Remove selected</button>':'<span class="note" style="margin:0">Tap a mark to select it, drag to move it.</span>')+'</div>';
+}
+function photoCard(s){
+  var h='<div class="card">'+toolsHTML(s)+photoHTML(s);
+  if(srcOf(s))h+='<div class="photo-foot"><div class="legend"><span><i class="dot s"></i>Wood stake (lot)</span><span><i class="dot f"></i>Fiberglass stake (walk)</span><span><i class="dot h"></i>Hazard</span><span><i class="dot p"></i>Snow pile</span></div><div class="zoombar"><button class="btn sm" data-act="zoom" data-v="out" aria-label="Zoom out">−</button><span class="zv" id="zv">'+zf().toFixed(1).replace(/\.0$/,'')+'×</span><button class="btn sm" data-act="zoom" data-v="in" aria-label="Zoom in">+</button><button class="btn sm" data-act="zoom" data-v="fit">Fit</button></div></div>';
+  return h+'</div>';
+}
+
+/* ---------- crew: local shift + queue ---------- */
+function ck(k){return 'snow.'+k+'.'+me}
+function loadCrew(){crew.routes=lsGet(ck('routes'),{});crew.types=lsGet(ck('types'),[]);crew.active=lsGet(ck('active'),'');crew.pick=lsGet(ck('pick'),'');crew.ver=lsGet(ck('ver'),-1);crew.shift=lsGet(ck('shift'),null);crew.queue=lsGet(ck('queue'),[]);applyRoute()}
+function saveCrew(){lsSet(ck('routes'),crew.routes);lsSet(ck('types'),crew.types);lsSet(ck('active'),crew.active);lsSet(ck('pick'),crew.pick);lsSet(ck('ver'),crew.ver);lsSet(ck('shift'),crew.shift);lsSet(ck('queue'),crew.queue)}
+function myTypes(){var r=crew.routes||{};var t=(crew.types||[]).filter(function(x){return r[x]&&r[x].length});Object.keys(r).forEach(function(x){if(t.indexOf(x)<0&&r[x].length)t.push(x)});return t}
+function eff(){var r=crew.routes||{};if(crew.pick&&r[crew.pick]&&r[crew.pick].length)return crew.pick;if(crew.active&&r[crew.active]&&r[crew.active].length)return crew.active;return myTypes()[0]||''}
+function applyRoute(){crew.route=(crew.routes||{})[eff()]||[]}
+function push(op){op.opId=uid();op.t=op.t||Date.now();crew.queue.push(op);saveCrew();sync()}
+var syncing=false,syncAgain=false;
+function sync(){
+  if(!me)return;
+  if(syncing){syncAgain=true;return}
+  syncing=true;var sent=crew.queue.slice();
+  api('crewSync',me,sent,crew.ver).then(function(r){
+    syncing=false;crew.offline=false;crew.last=Date.now();if(typeof r.direct==='boolean'&&r.direct!==direct){direct=r.direct;lsSet('snow.direct',direct)}
+    if(r.error==='unknown_crew'){toast('Your name was removed from the crew list. Pick your name again.');lsDel('snow.me');me=null;ui.mode='pick';refreshBoot();return}
+    var doneIds=r.done||[];crew.queue=crew.queue.filter(function(o){return doneIds.indexOf(o.opId)<0});
+    var first=crew.ver<0,beforeType=eff(),before=crew.route.slice(),msg='';
+    if(typeof r.helping==='string'&&r.helping!==crew.helping){if(!first&&r.helping)msg='You are helping '+r.helping+' this storm.';crew.helping=r.helping}
+    if(typeof r.active==='string'&&r.active!==crew.active){crew.active=r.active;if(!first&&r.active){crew.pick='';msg='The office set your route: '+r.active+'.'}}
+    if(r.routes){crew.routes=r.routes;crew.types=r.types||crew.types;crew.ver=r.ver;var all=[];Object.keys(r.routes).forEach(function(k){all=all.concat(r.routes[k])});prefetch(crew.route.concat(all))}
+    applyRoute();
+    if(!first&&!msg&&eff()===beforeType){
+      var old=before.map(function(s){return s.id}),nw=crew.route.map(function(s){return s.id});
+      var added=crew.route.filter(function(s){return old.indexOf(s.id)<0}),gone=before.filter(function(s){return nw.indexOf(s.id)<0});
+      if(added.length||gone.length){var lb=function(x){return x.name+' ('+String(x.address).split(',')[0]+')'};msg='Your route changed.'+(added.length?' Added: '+added.map(lb).join(', ')+'.':'')+(gone.length?' Moved off your route: '+gone.map(lb).join(', ')+'.':'')}
+    }
+    if(msg)toast(msg);
+    if(!crew.queue.length){
+      var had=crew.shift;
+      crew.shift=r.shift?{id:r.shift.id,clockIn:r.shift.clockIn,visits:r.shift.visits}:null;
+      if(had&&!crew.shift&&!ui.ended)toast('Your shift was closed by the office.');
+    }
+    saveCrew();if(ui.mode==='crew')render();
+    if(syncAgain){syncAgain=false;sync()}
+  },function(e){syncing=false;var net=!navigator.onLine||/network|connection|failed to fetch|offline/i.test(String(e&&e.message||''));crew.offline=net;if(ui.mode==='crew')render();setTimeout(function(){if(crew.queue.length)sync()},(net?20000:8000)+Math.random()*12000)});
+}
+function pickRoute(t){
+  if(openVisit()){toast('Finish the site you are working on before changing routes.');return}
+  crew.pick=t===crew.active?'':t;applyRoute();ui.pickRoute=false;ui.view='list';ui.sel=null;
+  push({type:'switch',route:t});render();toast('Switched to the '+t+' route. The office can see it.');
+}
+var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],WEEK=[1,2,3,4,5,6,0];
+function mm(x){var p=String(x).split(':');return (+p[0])*60+(+p[1]||0)}
+function t12(x){var p=String(x).split(':'),h=+p[0],m=p[1]||'00';return (h%12||12)+(m!=='00'?':'+m:'')+(h<12?' AM':' PM')}
+function hoursNow(s,now){
+  var H=s&&s.hours;if(!H)return null;now=now||new Date();var d=now.getDay(),x=H[d];
+  if(x===undefined)return null;if(x===null)return {c:'closed',t:'Closed today ('+DAYS[d]+')'};if(!x[0]||!x[1])return null;
+  var m=now.getHours()*60+now.getMinutes();
+  if(m<mm(x[0]))return {c:'soon',t:'Opens '+t12(x[0])+' today'};
+  if(m<mm(x[1]))return {c:'open',t:'Open until '+t12(x[1])};
+  return {c:'closed',t:'Closed now · open '+t12(x[0])+'–'+t12(x[1])};
+}
+function hoursChip(s){var h=hoursNow(s);return h?'<span class="chip hrs-'+h.c+'">'+esc(h.t)+'</span>':''}
+function hoursTable(s){
+  var H=s.hours;if(!H)return '';var today=new Date().getDay();
+  return '<div class="card pad sec"><h3>Business hours</h3><div class="htable">'+WEEK.map(function(d){var x=H[d];return '<div class="hrow'+(d===today?' today':'')+'"><span>'+DAYS[d]+(d===today?' · today':'')+'</span><b>'+(x===null?'Closed':(!x||!x[0]||!x[1])?'<span class="note">Not set</span>':t12(x[0])+' – '+t12(x[1]))+'</b></div>'}).join('')+'</div></div>';
+}
+function openVisit(){return crew.shift&&crew.shift.visits.filter(function(v){return !v.stop})[0]}
+function visitsFor(id){var t=eff();return crew.shift?crew.shift.visits.filter(function(v){return v.site===id&&(!v.route||v.route===t)}):[]}
+function siteById(id,list){list=list||crew.route;for(var i=0;i<list.length;i++)if(list[i].id===id)return list[i];return null}
+function nextStop(afterId){
+  var r=crew.route,i=afterId?r.findIndex(function(s){return s.id===afterId}):-1;
+  for(var k=1;k<=r.length;k++){var s=r[(i+k+r.length)%r.length];if(s&&!visitsFor(s.id).some(function(v){return v.stop}))return s}
+  return null;
+}
+function clockIn(){var id=uid();crew.shift={id:id,clockIn:Date.now(),visits:[]};ui.ended=null;push({type:'in',id:id});render();toast('Clocked in at '+clock(crew.shift.clockIn)+'. Drive safe.')}
+function startSite(id){
+  var s=siteById(id);if(!s||!crew.shift)return;
+  var v={id:uid(),site:id,start:Date.now(),stop:0,svc:'',salt:'',note:'',route:eff()};crew.shift.visits.push(v);
+  push({type:'start',id:v.id,shift:crew.shift.id,site:id,siteName:s.name,route:v.route,t:v.start});ui.again=false;render();
+}
+function stopSite(){
+  var v=openVisit();if(!v)return;
+  var svc=[].slice.call(app.querySelectorAll('[data-svc]:checked')).map(function(x){return x.value}).join(', ');
+  var salt=(document.getElementById('v-salt')||{}).value||'',note=(document.getElementById('v-note')||{}).value||'';
+  v.stop=Date.now();v.svc=svc;v.salt=salt;v.note=note;
+  push({type:'stop',id:v.id,t:v.stop,svc:svc,salt:salt,note:note});
+  var nx=nextStop(v.site),s=siteById(v.site);
+  toast('Done at '+(s?s.name:'site')+' · '+mins(v.stop-v.start)+(nx?'. Next: '+nx.name:'. That was the last stop.'));
+  if(nx){ui.sel=nx.id;ui.view='detail';ui.zoom=0;window.scrollTo(0,0)}else{ui.view='list';ui.sel=null}
+  render();
+}
+function clockOut(){
+  if(!crew.shift)return;
+  var note=(document.getElementById('o-note')||{}).value||'',t=Date.now();
+  var ov=openVisit();if(ov){ov.stop=t;push({type:'stop',id:ov.id,t:t,svc:'',salt:'',note:'closed at clock-out'})}
+  var sh=crew.shift;ui.ended={clockIn:sh.clockIn,clockOut:t,done:sh.visits.filter(function(v){return v.stop}).length,total:crew.route.length};
+  push({type:'out',shift:sh.id,t:t,note:note});
+  crew.shift=null;saveCrew();ui.ending=false;ui.view='list';ui.sel=null;render();window.scrollTo(0,0);
+}
+
+/* ---------- crew screens ---------- */
+function pickHTML(){
+  var h='<div class="who"><div class="brand">'+icon()+'<h1 style="font-size:22px;text-transform:uppercase;font-weight:800">Snow Route</h1></div>';
+  if(!data.loaded)return h+'<p class="note">Loading…</p></div>';
+  if(!data.crew.length)h+='<div class="empty">No crew names yet. The manager adds them under <b>Manager → Settings</b>.</div>';
+  else{
+    h+='<h2>Who’s working?</h2>';
+    var groups=(data.zones||[]).concat(['']);
+    groups.forEach(function(z){var ns=data.crew.filter(function(n,i){return (data.crewZones[i]||'')===z});if(!ns.length)return;
+      h+=(groups.length>1&&data.zones.length>1?'<p class="zlabel">'+(z?esc(z):'No zone')+'</p>':'')+'<div class="names">'+ns.map(function(n){return '<button data-act="iam" data-v="'+esc(n)+'">'+esc(n)+'</button>'}).join('')+'</div>'});
+    h+='<p class="note">Pick your name once. This phone will remember you.</p>';
+  }
+  return h+'<button class="linkbtn" data-act="to-mgr">Manager</button></div>';
+}
+function icon(){return '<svg width="22" height="34" viewBox="0 0 22 34" aria-hidden="true"><rect x="8" y="2" width="6" height="30" rx="3" fill="var(--accent)"/><rect x="8" y="5" width="6" height="4" fill="var(--surface)"/><rect x="8" y="12" width="6" height="4" fill="var(--surface)"/></svg>'}
+function crewHeader(){
+  var sh=crew.shift,done=sh?sh.visits.filter(function(v){return v.stop}).length:0;
+  var h='<header class="top"><div class="brand">'+icon()+'<div><h1>'+esc(me)+'</h1><div class="sum">'+crew.route.length+' stop'+(crew.route.length===1?'':'s')+(eff()?' · '+esc(eff()):'')+'</div></div></div><button class="btn sm ghost" data-act="switch">Not you?</button></header>';
+  var mt=myTypes();
+  if(mt.length){
+    var how=crew.pick?'You picked this':crew.active===eff()?'Set by the office':'';
+    h+='<div class="routebar"><span class="lbl">Route</span><b>'+esc(eff())+'</b>'+(how?'<span class="note" style="margin:0">'+how+'</span>':'')+'<span class="sp"></span>'+(mt.length>1?'<button class="btn sm" data-act="route-menu" aria-expanded="'+ui.pickRoute+'">'+(ui.pickRoute?'Close':'Change route')+'</button>':'')+'</div>';
+    if(ui.pickRoute)h+='<div class="routepick">'+mt.map(function(t){var n=crew.routes[t].length;return '<button class="btn'+(t===eff()?' primary':'')+'" data-act="pick-route" data-v="'+esc(t)+'"><span>'+esc(t)+'</span><span class="cnt">'+n+' stop'+(n===1?'':'s')+(t===crew.active?' · office pick':'')+'</span></button>'}).join('')+'<p class="note" style="margin:0">Only change it if the office told you to or conditions call for it. The office sees the switch.</p></div>';
+  }
+  if(sh)h+='<div class="shiftbar"><span class="pill on"><i class="blink"></i>On the clock</span><span>since '+clock(sh.clockIn)+' · <b id="shiftclock">'+dur(Date.now()-sh.clockIn)+'</b></span><span class="sp"></span><span class="cnt">'+done+' of '+crew.route.length+' done</span></div>';
+  if(crew.helping)h+='<p class="helpbar">Helping <b>'+esc(crew.helping)+'</b> this storm</p>';
+  if(crew.offline)h+='<p class="offline">No signal right now. Everything you tap is saved on this phone.</p>';
+  if(crew.queue.length)h+='<p class="queue" style="margin:8px 0 0">'+crew.queue.length+' update'+(crew.queue.length===1?'':'s')+' waiting for signal. They send on their own; keep the app open.</p>';
+  return h;
+}
+function stopRow(s,i){
+  var vs=visitsFor(s.id),done=vs.filter(function(v){return v.stop}),now=vs.filter(function(v){return !v.stop})[0];
+  var chip=now?'<span class="pill now"><i class="blink"></i>Working</span>':(done.length?'<span class="chip done">Done '+mins(done.reduce(function(a,v){return a+(v.stop-v.start)},0))+'</span>':'');
+  var fw=nK(s,'f'),hc=(now||done.length)?'':hoursChip(s);
+  return '<button class="stop'+(now?' now':done.length?' done':'')+'" data-act="open" data-id="'+s.id+'"><span class="rt">'+(i+1)+'</span><span style="min-width:0"><span class="nm">'+esc(s.name)+'</span><span class="ad">'+esc(s.address)+'</span></span><span class="rgt">'+chip+hc+(fw?'<span class="chip walk">Walkways</span>':'')+'</span></button>';
+}
+function crewListHTML(){
+  var h=crewHeader(),sh=crew.shift;
+  if(ui.ended){var e=ui.ended;h+='<div class="card confirm" style="margin-top:14px"><h3>Route sent to the office</h3><div class="sumrow"><span>On site</span><b>'+clock(e.clockIn)+'</b></div><div class="sumrow"><span>Clocked out</span><b>'+clock(e.clockOut)+'</b></div><div class="sumrow"><span>Total time</span><b>'+dur(e.clockOut-e.clockIn)+'</b></div><div class="sumrow"><span>Sites done</span><b>'+e.done+' of '+e.total+'</b></div>'+(crew.queue.length?'<p class="queue">Still sending. Keep the app open until this message goes away.</p>':'<p class="note">The office has your times. Nice work.</p>')+'</div>'}
+  if(!sh){
+    h+='<div class="card confirm" style="margin-top:14px"><h3>'+(ui.ended?'Next storm':'Ready to go?')+'</h3><p class="note" style="margin:0">Tap this when you get to your machine. It starts your clock.</p><button class="btn big go" data-act="clockin">On site · Clock in</button></div>';
+  }else if(ui.ending){
+    var done=sh.visits.filter(function(v){return v.stop}).length,ov=openVisit();
+    h+='<div class="card confirm" style="margin-top:14px"><h3>Finish route and clock out?</h3><div class="sumrow"><span>On the clock</span><b>'+dur(Date.now()-sh.clockIn)+'</b></div><div class="sumrow"><span>Sites done</span><b>'+done+' of '+crew.route.length+'</b></div>'+(ov?'<p class="queue">You are still working at '+esc((siteById(ov.site)||{}).name||'a site')+'. Clocking out will stop it too.</p>':'')+'<label class="fieldlbl">Note for the office (optional)<textarea class="inp" id="o-note" placeholder="Anything they should know: damage, a site you skipped and why"></textarea></label><div class="row"><button class="btn ghost" data-act="cancel-end">Keep working</button><span style="flex:1"></span><button class="btn stop" data-act="clockout">Clock out and send</button></div></div>';
+  }
+  if(!crew.route.length)h+='<div class="empty" style="margin-top:14px">No stops on '+(eff()?'your '+esc(eff())+' route':'your route')+' yet. The office assigns them, and they show up here on their own.</div>';
+  else{
+    var ov2=openVisit();
+    if(ov2&&!ui.ending){var cs=siteById(ov2.site);h+='<button class="btn big primary" style="margin-top:14px" data-act="open" data-id="'+ov2.site+'">Back to '+esc(cs?cs.name:'current site')+' · '+tick(Date.now()-ov2.start)+'</button>'}
+    h+='<div class="stoplist">'+crew.route.map(stopRow).join('')+'</div>';
+  }
+  if(sh&&!ui.ending)h+='<div class="footbar"><button class="btn big stop" data-act="end">Finish route · Clock out</button></div>';
+  return h;
+}
+function crewSiteHTML(s){
+  var i=crew.route.indexOf(s),vs=visitsFor(s.id),ov=openVisit(),done=vs.filter(function(v){return v.stop});
+  var h=crewHeader()+'<div class="detail" style="margin-top:12px"><div><button class="back" style="display:block" data-act="back">‹ All stops</button>';
+  h+='<div class="d-title"><span class="rt" style="padding:4px 8px">#'+(i+1)+'</span><h2>'+esc(s.name)+'</h2></div><p class="addr">'+esc(s.address)+'</p>'+(hoursNow(s)?'<div style="margin-top:6px">'+hoursChip(s)+'</div>':'');
+  h+='<div class="actions"><a class="btn" href="'+mapsUrl(s.address)+'" target="_blank" rel="noopener">Directions</a><span class="cnt" style="align-self:center">'+stakeText(nK(s,'s'),nK(s,'f'))+'</span></div></div>';
+  // action card
+  h+='<div class="card">';
+  if(!crew.shift)h+='<div class="work"><p class="note" style="margin:0">Clock in first, then start this site.</p><button class="btn big go" data-act="clockin">On site · Clock in</button></div>';
+  else if(ov&&ov.site===s.id){
+    h+='<div class="work"><div class="row"><span class="pill now"><i class="blink"></i>Working here</span><span class="note" style="margin:0">since '+clock(ov.start)+'</span></div><div class="timer" id="visitclock">'+tick(Date.now()-ov.start)+'</div>';
+    h+='<div class="checks">'+SVC.map(function(x,k){var walk=/walk/i.test(x);var dflt=!walk||nK(s,'f')>0;return '<label><input type="checkbox" data-svc value="'+x+'" id="svc'+k+'"'+(dflt&&k<1?' checked':'')+'>'+x+'</label>'}).join('')+'</div>';
+    h+='<label class="fieldlbl">Salt used (optional)<input class="inp" id="v-salt" placeholder="e.g. 4 bags, half a yard"></label><label class="fieldlbl">Note (optional)<input class="inp" id="v-note" placeholder="e.g. car parked in the lot, broken curb"></label>';
+    h+='<button class="btn big stop" data-act="stopsite">Done at this site</button></div>';
+  }else if(ov){var os=siteById(ov.site);h+='<div class="work"><p class="note" style="margin:0">You are still working at <b>'+esc(os?os.name:'another site')+'</b>. Finish it before starting this one.</p><button class="btn primary" data-act="open" data-id="'+ov.site+'">Go to '+esc(os?os.name:'that site')+'</button></div>'}
+  else if(done.length&&!ui.again){h+='<div class="work"><div class="row"><span class="chip done">Done</span><span class="note" style="margin:0">'+done.map(function(v){return clock(v.start)+'–'+clock(v.stop)+' ('+mins(v.stop-v.start)+')'+(v.svc?' · '+esc(v.svc):'')}).join('<br>')+'</span></div><button class="btn sm ghost" data-act="again" style="align-self:flex-start">Came back to this site? Start it again</button></div>'}
+  else h+='<div class="work"><button class="btn big go" data-act="startsite" data-id="'+s.id+'">Start this site</button><p class="note" style="margin:0">Tap when you start plowing or shoveling here. It records the time.</p></div>';
+  h+='</div>';
+  h+=photoCard(s);
+  if(s.notes)h+='<div class="card pad sec"><h3>Notes</h3><p class="notes">'+esc(s.notes)+'</p></div>';
+  h+=hoursTable(s);
+  var pv=crew.route[i-1],nx=crew.route[i+1];
+  h+='<div class="stops"><button class="btn sm" data-act="open" data-id="'+(pv?pv.id:'')+'"'+(pv?'':' disabled')+'>‹ Previous</button><span class="cnt">Stop '+(i+1)+' of '+crew.route.length+'</span><button class="btn sm" data-act="open" data-id="'+(nx?nx.id:'')+'"'+(nx?'':' disabled')+'>'+(nx?'Next: '+esc(nx.name)+' ›':'Last stop')+'</button></div>';
+  return h+'</div>';
+}
+
+/* ---------- manager ---------- */
+function zv(){return mgr.me&&mgr.me.role!=='owner'?mgr.me.zone:mgr.zone}
+function zoneCrew(){return mgr.d.crew.filter(function(c){return c.zone===mgr.d.zone}).map(function(c){return {name:c.name,active:c.active}})}
+function isOwner(){return !!(mgr.me&&mgr.me.role==='owner')}
+function mgrCall(fn){var a=[].slice.call(arguments,1);return api.apply(null,[fn,mgr.token].concat(a)).catch(function(e){if(/signed_out/.test(e.message)){mgr.token=null;lsDel('snow.mgr');ui.mode='mgr-login';render();toast('Signed out. Enter your PIN again.')}throw e})}
+function loadMgr(){return mgrCall('mgrData',zv()).then(function(d){mgr.d=d;mgr.loaded=Date.now();render();return d})}
+function msiteById(id){return mgr.d?siteById(id,mgr.d.sites):null}
+function loginHTML(){
+  return '<div class="pinbox"><div class="brand">'+icon()+'<h1 style="font-size:22px;text-transform:uppercase;font-weight:800">Manager</h1></div>'+(ui.firstPin?'<p>Pick a PIN of 4 to 8 digits. You will use it to get into the manager screens.</p>':'<p>Enter your manager PIN.</p>')+'<input class="inp" id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="PIN"><button class="btn primary big" data-act="login">'+(ui.firstPin?'Set PIN':'Open manager')+'</button><button class="linkbtn" data-act="to-crew">Back to crew screen</button></div>';
+}
+function setZone(z){if(mgr.dirty){toast('Save or discard your site changes first.');return}mgr.zone=z;lsSet('snow.zone',z);mgr.editing=null;mgr.crewEdit=null;mgr.log=null;mgr.d=null;render();loadMgr().catch(function(){});if(ui.tab==='log')loadLog()}
+function mgrHTML(){
+  var d=mgr.d;
+  var who=mgr.me?esc(mgr.me.name)+(isOwner()&&mgr.me.name!=='Owner'?' · owner':''):'Manager';
+  var zsel=isOwner()&&d?'<select class="zonesel" id="zonesel" data-zonesel aria-label="Zone">'+['<option value="">All zones</option>'].concat(d.zones.map(function(z){return '<option value="'+esc(z)+'"'+(z===mgr.zone?' selected':'')+'>'+esc(z)+'</option>'})).join('')+'</select>':(mgr.me&&mgr.me.zone?'<span class="zonetag">'+esc(mgr.me.zone)+'</span>':'');
+  var h='<header class="top"><div class="brand">'+icon()+'<div><h1>Snow Route</h1><div class="sum">'+who+(d?' · '+d.sites.length+' sites · '+d.crew.filter(function(c){return c.active}).length+' crew':'')+'</div></div></div>'+zsel+'<button class="btn sm ghost" data-act="mgr-out">Sign out</button></header>';
+  var t=function(k,l){return '<button role="tab" data-act="tab" data-v="'+k+'" aria-selected="'+(ui.tab===k)+'">'+l+'</button>'};
+  h+='<div class="tabs" role="tablist">'+t('live','Live')+t('log','Log')+t('routes','Routes')+t('sites','Stakes')+t('crew','Settings')+'</div>';
+  if(!d)return h+'<div class="panel"><p class="note">Loading…</p></div>';
+  var needZone=isOwner()&&!d.zone&&(ui.tab==='routes'||ui.tab==='log');
+  if(needZone)h+='<div class="panel"><div class="empty">Pick a zone at the top to see its '+(ui.tab==='log'?'storm log':'routes')+'.</div>'+zonePickHTML(d)+'</div>';
+  else if(ui.tab==='live')h+=liveHTML(d);
+  else if(ui.tab==='log')h+=logHTML(d);
+  else if(ui.tab==='routes')h+=routesHTML(d);
+  else if(ui.tab==='sites')h+=sitesHTML(d);
+  else h+=crewSetHTML(d);
+  return h;
+}
+function stormHTML(d){
+  var st=d.storm,h='<div class="lc" style="background:var(--surface);border-width:2px;border-color:'+(st?'var(--accent)':'var(--line)')+'"><div class="meta" style="text-transform:uppercase;letter-spacing:.06em;font-weight:700">'+esc(d.zone)+'</div>';
+  if(st){
+    var on=d.live.filter(function(l){return l.shift}).length;
+    h+='<div class="row"><h3>'+esc(st.name)+'</h3><span style="flex:1"></span><span class="pill now"><i class="blink"></i>Storm running</span></div><div class="meta">Started '+new Date(st.start).toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'})+' at '+clock(st.start)+' · '+dur(Date.now()-st.start)+' · '+on+' on the clock now</div>';
+    h+=ui.confirm==='endstorm'?'<p style="margin:0">End the storm?'+(on?' <b>'+on+' still clocked in</b> will be clocked out now.':'')+' Each person’s printout is made and emailed to you.</p><div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm danger armed" data-act="end-storm">End storm and make printouts</button></div>':'<button class="btn primary" style="align-self:flex-start" data-act="ask-endstorm">End storm</button><p class="note" style="margin:0">Crew can clock in and out as many times as they need. Their printout covers the whole storm.</p>';
+  }else{
+    h+='<div class="row"><h3>No storm running</h3></div><div class="crewrow"><input class="inp" id="st-name" placeholder="Name, e.g. Dec 8 storm (optional)"><button class="btn primary" data-act="start-storm">Start storm</button></div><p class="note" style="margin:0">Starting the storm puts you on duty for '+esc(d.zone)+'. If you forget, the first person in this zone to clock in starts one.</p>';
+  }
+  h+='</div>';
+  if(d.storms&&d.storms.filter(function(s){return s.end}).length)h+='<div class="sec"><h3>Recent storms</h3>'+d.storms.filter(function(s){return s.end}).map(function(s){return '<div class="sumrow"><span><b>'+esc(s.name)+'</b><br><span class="note">'+new Date(s.start).toLocaleDateString([], {month:'short',day:'numeric'})+' '+clock(s.start)+' – '+clock(s.end)+' · '+s.people+' people · '+s.hours+' h · '+s.sites+' visits</span></span>'+(s.printouts?'<a class="btn sm" href="'+esc(s.printouts)+'" target="_blank" rel="noopener">Printouts</a>':'')+'</div>'}).join('')+'</div>';
+  return h;
+}
+function loadLog(){return mgrCall('mgrLog',mgr.lg.scope,zv()).then(function(r){mgr.log=r;if(ui.tab==='log')render()},function(e){toast('Could not load the log: '+e.message)})}
+var LGT={note:'Note',call:'Call',conditions:'Weather',clock:'Clock',work:'Work',route:'Route',storm:'Storm'};
+function logHTML(d){
+  var L=mgr.log,g=mgr.lg,names=d.crew.filter(function(c){return c.active}).map(function(c){return c.name});
+  var seg=function(act,cur,k,l){return '<button data-act="'+act+'" data-v="'+k+'" aria-pressed="'+(cur===k)+'">'+l+'</button>'};
+  var h='<div class="panel"><div class="row"><h3 style="font-size:18px">'+(L?(L.storm?esc(L.storm)+(L.running?' <span class="pill now"><i class="blink"></i>Running</span>':''):'No storms yet'):'Storm log')+'</h3><span style="flex:1"></span><div class="seg" style="min-width:220px">'+seg('lg-scope',g.scope,'storm','This storm')+seg('lg-scope',g.scope,'all','Everything')+'</div></div>';
+  h+='<div class="lc" style="background:var(--surface)"><div class="seg">'+seg('lg-kind',g.kind,'note','Note')+seg('lg-kind',g.kind,'call','Call')+seg('lg-kind',g.kind,'conditions','Weather')+'</div>';
+  if(g.kind==='call')h+='<div class="row">'+names.map(function(n){return '<button class="btn sm'+(g.to===n?' primary':'')+'" data-act="lg-to" data-v="'+esc(n)+'">'+esc(n)+'</button>'}).join('')+'<button class="btn sm'+(g.to==='a customer'?' primary':'')+'" data-act="lg-to" data-v="a customer">Customer</button><button class="btn sm'+(g.to==='the salt supplier'?' primary':'')+'" data-act="lg-to" data-v="the salt supplier">Salt supplier</button></div>';
+  if(g.kind==='conditions')h+='<p class="note" style="margin:0">Adds the current temperature, sky, wind and visibility from the National Weather Service, with your own note if you add one.</p>';
+  h+='<textarea class="inp" id="lg-text" style="min-height:64px" placeholder="'+(g.kind==='call'?'What about? (optional)':g.kind==='conditions'?'What you see (optional), e.g. 4 inches down, heavy and wet':'What’s happening: salt delivery, truck 3 down, sent Joe to help Mike…')+'"></textarea>';
+  h+='<button class="btn primary" style="align-self:flex-start" data-act="lg-add">'+(g.kind==='call'?'Log call':g.kind==='conditions'?'Add current weather':'Add to log')+'</button></div>';
+  h+='<label style="display:flex;gap:8px;align-items:center;font-size:14px"><input type="checkbox" style="width:20px;height:20px;flex:none" id="lg-auto"'+(g.auto?' checked':'')+'>Show crew activity (clock in/out, sites started and finished)</label>';
+  if(!L)return h+'<p class="note">Loading the log…</p></div>';
+  var list=L.entries.filter(function(e){return g.auto||!(e.type==='clock'||e.type==='work')});
+  if(!list.length)return h+'<div class="empty">Nothing logged yet'+(g.scope==='storm'?' for this storm':'')+'. Notes you add, calls, weather, and crew clock-ins all show up here.</div></div>';
+  var day='';
+  h+='<div class="loglist">'+list.map(function(e){
+    var dd=new Date(e.t).toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'}),hd='';
+    if(dd!==day){day=dd;hd='<div class="logday">'+dd+'</div>'}
+    var mine=(e.by&&e.by!=='Weather')||e.type==='note'||e.type==='call';
+    return hd+'<div class="logrow'+(mine?' mine':'')+'"><span class="lt">'+clock(e.t)+'</span><span class="ltype t-'+esc(e.type)+'">'+(LGT[e.type]||esc(e.type))+'</span><span class="ltx">'+esc(e.text)+(e.by&&e.by!=='Weather'?' <span class="lby">'+esc(e.by)+'</span>':'')+'</span></div>';
+  }).join('')+'</div>';
+  return h+'<p class="note">Everything here is also saved in the <b>Log</b> tab of your Google Sheet, and the whole storm’s log comes with the end-of-storm email.</p></div>';
+}
+function zonePickHTML(d){return '<div class="livegrid">'+d.zoneInfo.map(function(z){return '<div class="lc"><div class="row"><h3>'+esc(z.name)+'</h3><span style="flex:1"></span>'+(z.storm?'<span class="pill now"><i class="blink"></i>Storm</span>':'<span class="pill off">No storm</span>')+'</div><div class="meta">'+(z.storm?esc(z.storm.name)+' since '+clock(z.storm.start)+' · ':'')+z.onClock+' on the clock</div><div class="meta">On duty: <b>'+(z.duty?esc(z.duty):'nobody')+'</b>'+(z.managers.length?' · Managers: '+z.managers.map(esc).join(', '):'')+'</div><div class="meta">'+z.crew+' crew · '+z.sites+' sites</div><button class="btn sm" style="align-self:flex-start" data-act="pick-zone" data-v="'+esc(z.name)+'">Open '+esc(z.name)+'</button></div>'}).join('')+'</div>'}
+function dutyHTML(d){
+  var zi=d.zoneInfo.filter(function(z){return z.name===d.zone})[0]||{},mine=mgr.me&&zi.duty===mgr.me.name;
+  return '<div class="duty'+(zi.duty?'':' none')+'"><span>On duty tonight</span><b>'+(zi.duty?esc(zi.duty):'Nobody yet')+'</b><span class="note" style="margin:0">'+(zi.duty?'Gets '+esc(d.zone)+'’s route emails and printouts':'Emails go to the owner until someone is on duty')+'</span><span class="sp"></span>'+(mine?'<span class="chip done">You</span>':'<button class="btn sm primary" data-act="duty">I’m on duty</button>')+'</div>';
+}
+function liveHTML(d){
+  if(!d.zone){
+    var w=d.unzoned?'<p class="queue" style="margin:0">'+d.unzoned+' site'+(d.unzoned===1?' has':'s have')+' no zone yet. Assign them under Settings → Sites by zone.</p>':'';
+    return '<div class="panel"><h3 style="font-size:18px">All zones</h3>'+w+zonePickHTML(d)+'<p class="note">Open a zone to run its storm, routes and log. Each zone’s on-duty manager gets that zone’s emails.</p></div>';
+  }
+  var h='<div class="panel">'+unzonedNote(d)+dutyHTML(d)+stormHTML(d)+'<div class="row"><span class="note" style="margin:0">Updated '+clock(mgr.loaded)+'. Refreshes every minute.</span><span style="flex:1"></span><button class="btn sm" data-act="refresh">Refresh</button><a class="btn sm" href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">Open full log</a></div>';
+  if(!d.live.length)return h+'<div class="empty">Add your crew under <b>Settings</b> first.</div></div>';
+  h+='<div class="livegrid">'+d.live.map(function(l){
+    var st,body='';
+    if(l.shift){
+      st=l.current?'<span class="pill now"><i class="blink"></i>At a site</span>':'<span class="pill on"><i class="blink"></i>On the clock</span>';
+      body+='<div class="meta">Clocked in '+clock(l.shift.clockIn)+' · '+dur(Date.now()-l.shift.clockIn)+'</div>';
+      if(l.current)body+='<div><b>'+esc(l.current.site)+'</b> since '+clock(l.current.start)+' ('+mins(Date.now()-l.current.start)+')</div>';
+      else if(l.lastDone)body+='<div class="meta">Last finished '+esc(l.lastDone.site)+' at '+clock(l.lastDone.stop)+'</div>';
+      var pct=l.total?Math.min(100,Math.round(100*(l.done||0)/l.total)):0;
+      body+='<div class="bar2"><i style="width:'+pct+'%"></i></div><div class="meta">'+(l.done||0)+' visits · '+l.total+' sites on '+(l.route?esc(l.route):'their route')+'</div>';
+      body+=ui.confirm==='out:'+l.crew?'<div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm danger armed" data-act="force-out" data-v="'+esc(l.crew)+'">Clock '+esc(l.crew)+' out now</button></div>':'<button class="btn sm ghost" style="align-self:flex-start" data-act="ask-out" data-v="'+esc(l.crew)+'">Clock out for them</button>';
+    }else{
+      st='<span class="pill off">Off</span>';
+      body+=l.lastShift?'<div class="meta">Last shift '+new Date(l.lastShift.clockIn).toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'})+', '+clock(l.lastShift.clockIn)+'–'+clock(l.lastShift.clockOut)+' ('+l.lastShift.hours+' h)</div>':'<div class="meta">No shifts yet</div>';
+      body+='<div class="meta">'+(l.route?l.total+' sites on '+esc(l.route):'No route set')+'</div>';
+    }
+    var opts=['<option value="">Not set</option>'].concat(d.types.map(function(t){var n=d.routes.filter(function(r){return r.crew===l.crew&&r.type===t}).length;return '<option value="'+esc(t)+'"'+((d.active[l.crew]||'')===t?' selected':'')+'>'+esc(t)+' ('+n+')</option>'})).join('');
+    var rsel='<label class="routesel"><span>Route today</span><select data-active="'+esc(l.crew)+'" id="ac-'+esc(l.crew).replace(/\W/g,'_')+'">'+opts+'</select></label>'+(l.picked?'<div class="meta"><b>'+esc(l.crew)+' switched to '+esc(l.picked)+'</b></div>':'');
+    var away=l.zone!==d.zone;
+    var hopts=d.zones.map(function(z){return '<option value="'+(z===l.zone?'':esc(z))+'"'+((l.helping||l.zone)===z?' selected':'')+'>'+(z===l.zone?esc(z)+' (home)':'Helping '+esc(z))+'</option>'}).join('');
+    rsel+=(away?'<div class="meta helpfrom">Helping from '+esc(l.zone)+' this storm</div>':'')+'<label class="routesel"><span>Working in</span><select data-help="'+esc(l.crew)+'" id="hp-'+esc(l.crew).replace(/\W/g,'_')+'">'+hopts+'</select></label>';
+    return '<div class="lc"><div class="row"><h3>'+esc(l.crew)+'</h3><span style="flex:1"></span>'+st+'</div>'+rsel+body+'</div>';
+  }).join('')+'</div>';
+  return h+'<p class="note">Times and route emails come from each phone. The full history of every shift and site visit is in the log.</p></div>';
+}
+function rtype(d){if(!ui.rtype||d.types.indexOf(ui.rtype)<0)ui.rtype=d.types[0]||'';return ui.rtype}
+function routesHTML(d){
+  var names=d.crew.map(function(c){return c.name}),T=rtype(d);
+  var h='<div class="panel"><div class="typeseg" role="tablist" aria-label="Route type">'+d.types.map(function(t){var n=d.routes.filter(function(r){return r.type===t}).length;return '<button data-act="rtype" data-v="'+esc(t)+'" aria-pressed="'+(t===T)+'">'+esc(t)+' <span class="cnt">'+n+'</span></button>'}).join('')+'</div>';
+  if(d.storm)h+='<div class="tempbar"><span>Changes are</span><div class="seg"><button data-act="tempmode" data-v="0" aria-pressed="'+!mgr.tempMode+'">Permanent</button><button data-act="tempmode" data-v="1" aria-pressed="'+mgr.tempMode+'">This storm only</button></div></div>'+(mgr.tempMode?'<p class="note" style="margin:0"><b>This storm only:</b> moves you make now go back to the normal routes when you end '+esc(d.storm.name)+'.</p>':'');
+  h+='<p class="note" style="margin:0">'+esc(T)+' route: pick a name to put a site on someone’s '+esc(T)+' route, and use ▲ ▼ to set the order. A site can be on several route types at once. Phones update within a minute.</p>';
+  var byId={};d.sites.forEach(function(x){byId[x.id]=x});
+  var rows=d.routes.filter(function(r){return r.type===T&&byId[r.site]});
+  names.forEach(function(g){
+    var list=rows.filter(function(r){return r.crew===g}).sort(function(a,b){return a.order-b.order});
+    var live=d.live.filter(function(l){return l.crew===g})[0];
+    var cz=(d.crew.filter(function(c){return c.name===g})[0]||{});
+    h+='<div class="group"><h3>'+esc(g)+(cz.zone&&cz.zone!==d.zone?' <span class="chip">from '+esc(cz.zone)+'</span>':'')+' <small>'+list.length+' site'+(list.length===1?'':'s')+(d.active[g]===T?' · route today':'')+(live&&live.shift?' · on the clock':'')+'</small></h3>';
+    if(!list.length)h+='<p class="note">No sites on '+esc(g)+'’s '+esc(T)+' route.</p>';
+    h+=list.map(function(r,i){var x=byId[r.site];return rrow(x,i,list.length,g,names,r.temp)}).join('');
+    h+='</div>';
+  });
+  var on={};rows.forEach(function(r){if(names.indexOf(r.crew)>=0)on[r.site]=1});
+  var off=d.sites.filter(function(x){return !on[x.id]});
+  h+='<div class="group"><h3>Not on this route <small>'+off.length+' site'+(off.length===1?'':'s')+'</small></h3>'+off.map(function(x,i){return rrow(x,i,off.length,'',names)}).join('')+'</div>';
+  if(!names.length)h+='<div class="empty">Add crew names under <b>Settings</b>, then build routes here.</div>';
+  return h+'</div>';
+}
+function rrow(x,i,n,g,names,temp){
+  return '<div class="rrow"><span class="rt">'+(g?i+1:'–')+'</span><div style="min-width:0"><div class="nm">'+esc(x.name)+(temp?' <span class="chip tmp">This storm</span>':'')+'</div><div class="ad">'+esc(x.address)+'</div></div><div class="ctl">'+(g?'<button data-act="r-up" data-id="'+x.id+'" aria-label="Move up"'+(i?'':' disabled')+'>▲</button><button data-act="r-down" data-id="'+x.id+'" aria-label="Move down"'+(i<n-1?'':' disabled')+'>▼</button>':'')+'<select data-assign="'+x.id+'" id="as-'+x.id+'" aria-label="Who has '+esc(x.name)+'">'+['<option value="">Not on this route</option>'].concat(names.map(function(nm){return '<option value="'+esc(nm)+'"'+(nm===g?' selected':'')+'>'+esc(nm)+'</option>'})).join('')+'</select></div></div>';
+}
+function unzonedNote(d){return isOwner()&&d.zone&&d.unzoned?'<p class="queue" style="margin:0">'+d.unzoned+' site'+(d.unzoned===1?' has':'s have')+' no zone yet, so '+(d.unzoned===1?'it is':'they are')+' hidden in '+esc(d.zone)+'. Pick <b>All zones</b> at the top, then set zones under Settings → Sites by zone.</p>':''}
+function sitesHTML(d){
+  var s=mgr.editing;
+  if(!s){
+    var q=ui.q.trim().toLowerCase(),list=d.sites.filter(function(x){return !q||(x.name+' '+x.address).toLowerCase().indexOf(q)>=0});
+    var h='<div class="panel">'+unzonedNote(d)+'<div class="list-tools" style="margin:0"><input class="search" id="q" type="search" placeholder="Search sites" aria-label="Search sites" value="'+esc(ui.q)+'"><button class="btn primary" data-act="add-site">+ Add site</button></div><div class="items" style="margin:0">';
+    h+=list.map(function(x,i){var n=d.routes.filter(function(r){return r.site===x.id}).length;return '<button class="site" data-act="edit-site" data-id="'+x.id+'"><span class="rt">'+(i+1)+'</span><span style="min-width:0"><span class="nm" style="display:block">'+esc(x.name)+'</span><span class="ad" style="display:block">'+esc(x.address)+'</span></span><span class="rgt"><span class="chip">'+(!d.zone?esc(x.zone||'No zone')+' · ':'')+(n?'On '+n+' route'+(n===1?'':'s'):'No routes')+'</span><span class="cnt">'+stakeText(nK(x,'s'),nK(x,'f'))+'</span></span></button>'}).join('')||'<div class="empty">No sites yet. Import your stake map under Settings, or add a site.</div>';
+    return h+'</div></div>';
+  }
+  var h='<div class="panel detail" style="gap:16px"><div><button class="back" style="display:block" data-act="close-site">‹ All sites</button><div class="d-title"><h2>'+esc(s.name||'New site')+'</h2></div><p class="addr">'+esc(s.address||'')+'</p></div>';
+  h+=photoCard(s);
+  h+='<div class="sec"><h3>Site details</h3><div class="form"><label class="full">Name<input class="inp" id="f-name" data-field="name" value="'+esc(s.name)+'"></label><label class="full">Address<input class="inp" id="f-addr" data-field="address" value="'+esc(s.address)+'"></label>'+(isOwner()?'<label class="full">Zone<select class="inp" id="f-zone" data-field="zone">'+['<option value="">No zone</option>'].concat(d.zones.map(function(z){return '<option value="'+esc(z)+'"'+(z===(s.zone||'')?' selected':'')+'>'+esc(z)+'</option>'})).join('')+'</select></label>':'')+'<label class="full">Notes for the crew<textarea class="inp" id="f-notes" data-field="notes">'+esc(s.notes||'')+'</textarea></label></div>';
+  h+=hoursEditor(s);
+  var onr=d.routes.filter(function(r){return r.site===s.id});
+  h+='<p class="note">'+(onr.length?'On these routes: '+onr.map(function(r){return '<b>'+esc(r.type)+'</b> ('+esc(r.crew)+', stop '+r.order+')'}).join(' · '):'Not on any route yet.')+' Change routes under <b>Routes</b>.</p>';
+  h+='<div class="row" style="margin-top:12px">'+(srcOf(s)?'<label class="btn" for="f-img2">Replace photo</label><input class="file" type="file" id="f-img2" accept="image/*">':'')+'<span style="flex:1"></span>'+(ui.confirm==='del'?'<button class="btn ghost" data-act="cancel-x">Cancel</button><button class="btn danger armed" data-act="del-site">Delete this site</button>':'<button class="btn danger" data-act="del-site">Delete site</button>')+'</div></div></div>';
+  if(mgr.dirty)h+='<div class="bar mbar"><div class="msg">'+(mgr.saving?'Saving…':'Unsaved changes to '+esc(s.name))+'</div>'+(mgr.saving?'':'<button class="btn ghost" data-act="discard">Discard</button><button class="btn primary" data-act="save-site">Save site</button>')+'</div>';
+  return h;
+}
+function hoursEditor(s){
+  var H=s.hours||{};
+  var h='<h3 style="margin-top:16px">Business hours</h3><p class="note" style="margin:0 0 8px">The crew sees “Closed today”, “Opens 7 AM” or “Open until 6 PM” on this stop. Leave a day blank if you do not know it.</p><div class="hedit">';
+  h+=WEEK.map(function(d){var x=H[d],cl=x===null;return '<div class="hrow"><span>'+DAYS[d]+'</span><input class="inp" type="time" data-ho="'+d+'" id="ho'+d+'" value="'+(x&&x[0]||'')+'"'+(cl?' disabled':'')+' aria-label="'+DAYS[d]+' opens"><span class="to">–</span><input class="inp" type="time" data-hc="'+d+'" id="hc'+d+'" value="'+(x&&x[1]||'')+'"'+(cl?' disabled':'')+' aria-label="'+DAYS[d]+' closes"><label class="hx"><input type="checkbox" data-hx="'+d+'" id="hx'+d+'"'+(cl?' checked':'')+'>Closed</label></div>'}).join('');
+  return h+'</div><div class="row" style="margin-top:8px"><button class="btn sm" data-act="hrs-copy">Copy Monday to Tue–Fri</button><button class="btn sm ghost" data-act="hrs-clear">Clear hours</button></div>';
+}
+function hrsFromForm(){
+  var s=mgr.editing;if(!s)return;var H={};
+  WEEK.forEach(function(d){var x=document.getElementById('hx'+d),o=document.getElementById('ho'+d),c=document.getElementById('hc'+d);if(!x)return;
+    if(x.checked){H[d]=null;o.disabled=c.disabled=true}else{o.disabled=c.disabled=false;if(o.value||c.value)H[d]=[o.value,c.value]}});
+  s.hours=Object.keys(H).length?H:null;if(!mgr.dirty){mgr.dirty=true;render()}
+}
+function crewSetHTML(d){
+  var h='<div class="panel">';
+  // the zone's crew
+  if(d.zone){
+    var list=mgr.crewEdit||d.crew.filter(function(c){return c.zone===d.zone}).map(function(c){return {name:c.name,active:c.active}});
+    h+='<div class="sec"><h3>'+esc(d.zone)+' crew</h3><p class="note" style="margin:0 0 8px">These names show on the crew screen. Unticking “Working” hides a name without losing their history.</p>';
+    h+=list.map(function(c,i){return '<div class="crewrow" style="margin-bottom:6px"><input class="inp" data-crew="'+i+'" id="cr-'+i+'" value="'+esc(c.name)+'" aria-label="Crew name"><label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-crewon="'+i+'" id="cro-'+i+'"'+(c.active!==false?' checked':'')+'>Working</label><button class="btn sm danger" data-act="crew-del" data-v="'+i+'">Remove</button></div>'}).join('');
+    h+='<div class="row" style="margin-top:8px"><button class="btn sm" data-act="crew-add">+ Add person</button><span style="flex:1"></span>'+(mgr.crewEdit?'<button class="btn sm ghost" data-act="crew-cancel">Cancel</button><button class="btn sm primary" data-act="crew-save">Save crew</button>':'')+'</div></div>';
+  }else h+='<div class="sec"><h3>Crew</h3><p class="note" style="margin:0">Pick a zone at the top to edit its crew.</p></div>';
+  // you
+  h+='<div class="sec"><h3>You</h3><div class="form"><label class="full">Your email (route emails come here when you are on duty)<input class="inp" id="s-email" type="email" value="'+esc(d.myEmail||'')+'"></label></div><div class="row" style="margin-top:8px"><button class="btn sm primary" data-act="save-email">Save email</button><button class="btn sm" data-act="test-email">Send a test email</button></div>';
+  h+='<div class="row" style="margin-top:12px"><input class="inp" id="s-pin" type="password" inputmode="numeric" maxlength="8" placeholder="New PIN" style="max-width:180px"><button class="btn sm" data-act="save-pin">Change my PIN</button></div></div>';
+  if(!isOwner())return h+'<div class="sec"><h3>Crew link</h3><p class="note" style="margin:0">Text your crew the same web address you used to open this page. They pick their name the first time.</p></div></div>';
+  // owner only
+  var ze=mgr.zoneEdit||d.zones.map(function(z){return {old:z,name:z}});
+  h+='<div class="sec"><h3>Zones</h3><p class="note" style="margin:0 0 8px">Renaming a zone keeps its crew, sites and managers.</p>'+ze.map(function(x,i){return '<div class="crewrow" style="margin-bottom:6px"><input class="inp" data-zn="'+i+'" id="zn-'+i+'" value="'+esc(x.name)+'" aria-label="Zone name"><button class="btn sm danger" data-act="zn-del" data-v="'+i+'">Remove</button></div>'}).join('')+'<div class="row" style="margin-top:8px"><button class="btn sm" data-act="zn-add">+ Add zone</button><span style="flex:1"></span>'+(mgr.zoneEdit?'<button class="btn sm ghost" data-act="zn-cancel">Cancel</button><button class="btn sm primary" data-act="zn-save">Save zones</button>':'')+'</div></div>';
+  // managers
+  h+='<div class="sec"><h3>Managers</h3><p class="note" style="margin:0 0 8px">Each manager signs in with their own PIN and sees only their zone. Owners see every zone. Leave PIN blank to keep the current one.</p>';
+  if(!mgr.mgrs)h+='<button class="btn sm" data-act="mgrs-load">Show managers</button>';
+  else{
+    var ml=mgr.mgrEdit||mgr.mgrs.map(function(m){return {old:m.name,name:m.name,zone:m.zone,role:m.role,email:m.email,pin:''}});
+    h+=ml.map(function(m,i){return '<div class="mgrrow"><input class="inp" data-mg="'+i+'" data-k="name" id="mgn-'+i+'" value="'+esc(m.name)+'" placeholder="Name"><select class="inp" data-mg="'+i+'" data-k="role" id="mgr-'+i+'"><option value="manager"'+(m.role!=='owner'?' selected':'')+'>Zone manager</option><option value="owner"'+(m.role==='owner'?' selected':'')+'>Owner</option></select><select class="inp" data-mg="'+i+'" data-k="zone" id="mgz-'+i+'"'+(m.role==='owner'?' disabled':'')+'>'+['<option value="">Zone…</option>'].concat(d.zones.map(function(z){return '<option value="'+esc(z)+'"'+(z===m.zone?' selected':'')+'>'+esc(z)+'</option>'})).join('')+'</select><input class="inp" data-mg="'+i+'" data-k="email" id="mge-'+i+'" type="email" value="'+esc(m.email)+'" placeholder="Email"><input class="inp" data-mg="'+i+'" data-k="pin" id="mgp-'+i+'" type="password" inputmode="numeric" maxlength="8" value="'+esc(m.pin||'')+'" placeholder="'+(m.old?'New PIN (optional)':'PIN')+'"><button class="btn sm danger" data-act="mg-del" data-v="'+i+'">Remove</button></div>'}).join('');
+    h+='<div class="row" style="margin-top:8px"><button class="btn sm" data-act="mg-add">+ Add manager</button><span style="flex:1"></span>'+(mgr.mgrEdit?'<button class="btn sm ghost" data-act="mg-cancel">Cancel</button><button class="btn sm primary" data-act="mg-save">Save managers</button>':'')+'</div>';
+  }
+  h+='</div>';
+  // sites by zone
+  if(!d.zone){
+    h+='<div class="sec"><h3>Sites by zone</h3><p class="note" style="margin:0 0 8px">Pick the zone for each property. Zone managers only see their own zone’s sites.</p><div class="sitezones">'+d.sites.map(function(x){return '<label class="szrow"><span>'+esc(x.name)+'<small>'+esc(String(x.address).split(',')[0])+'</small></span><select data-sitezone="'+x.id+'" id="sz-'+x.id+'">'+['<option value="">No zone</option>'].concat(d.zones.map(function(z){return '<option value="'+esc(z)+'"'+(z===x.zone?' selected':'')+'>'+esc(z)+'</option>'})).join('')+'</select></label>'}).join('')+'</div></div>';
+  }else h+='<div class="sec"><h3>Sites by zone</h3><p class="note" style="margin:0">Switch to <b>All zones</b> at the top to set which zone each property is in.</p></div>';
+  // route types, weather, import
+  var tl=mgr.typeEdit||d.types.map(function(t){return {old:t,name:t}});
+  h+='<div class="sec"><h3>Route types</h3><p class="note" style="margin:0 0 8px">Each type is its own set of routes, like zero tolerance salt or normal walkways. Renaming keeps the sites on it. Removing a type takes its sites off that route.</p>'+tl.map(function(x,i){return '<div class="crewrow" style="margin-bottom:6px"><input class="inp" data-rt="'+i+'" id="rt-'+i+'" value="'+esc(x.name)+'" aria-label="Route type name"><button class="btn sm danger" data-act="rt-del" data-v="'+i+'">Remove</button></div>'}).join('')+'<div class="row" style="margin-top:8px"><button class="btn sm" data-act="rt-add">+ Add route type</button><span style="flex:1"></span>'+(mgr.typeEdit?'<button class="btn sm ghost" data-act="rt-cancel">Cancel</button><button class="btn sm primary" data-act="rt-save">Save route types</button>':'')+'</div></div>';
+  h+='<div class="sec"><h3>Weather station</h3><p class="note" style="margin:0 0 8px">Weather in the log comes from this National Weather Service station. KROC is Rochester airport.</p><div class="row"><input class="inp" id="s-wx" value="'+esc((mgr.log&&mgr.log.station)||'KROC')+'" maxlength="4" style="max-width:120px;text-transform:uppercase"><button class="btn sm" data-act="save-wx">Save and test</button></div></div>';
+  h+='<div class="sec"><h3>Import from the stake map</h3><p class="note" style="margin:0 0 8px">Load the stake map file to bring in all your sites, photos and stakes. Importing again updates the sites and keeps their zones, routes and hours.</p>';
+  if(mgr.importing){var im=mgr.importing;h+='<div class="prog"><i style="width:'+Math.round(100*im.done/im.total)+'%"></i></div><p class="note">'+(im.err?'<span class="queue">'+esc(im.err)+'</span>':im.done<im.total?'Importing '+(im.done+1)+' of '+im.total+': '+esc(im.name)+'…':'Imported '+im.total+' sites.')+'</p>'}
+  else if(mgr.driveImport)h+='<div class="prog"><i style="width:60%"></i></div><p class="note">Importing from Google Drive. This takes about a minute; keep this screen open.</p>';
+  else h+='<div class="row"><button class="btn primary" data-act="import-drive">Import from Google Drive</button><label class="btn" for="f-import">Choose file instead</label><input class="file" type="file" id="f-import" accept=".json,application/json"></div><p class="note">Google Drive import looks for <b>stake-map-data.json</b> in your Drive.</p>';
+  h+='</div><div class="sec"><h3>Crew link</h3><p class="note" style="margin:0">Text every crew member the same web address you used to open this page. They pick their name the first time.</p></div></div>';
+  return h;
+}
+
+/* ---------- render ---------- */
+function cur(){if(ui.mode==='mgr')return mgr.editing;return ui.sel?siteById(ui.sel):null}
+function render(){
+  var y=window.scrollY,ps=document.querySelector('.photo-scroll'),pl=ps?ps.scrollLeft:0,pt=ps?ps.scrollTop:0,pz=ui._pz;ui._pz=ui.zoom;
+  var fid=document.activeElement&&document.activeElement.id,fs=null;try{fs=fid&&document.activeElement.selectionStart}catch(e){}
+  var h='';
+  if(ui.mode==='pick')h=pickHTML();
+  else if(ui.mode==='mgr-login')h=loginHTML();
+  else if(ui.mode==='mgr')h=mgrHTML();
+  else{var s=ui.view==='detail'&&ui.sel?siteById(ui.sel):null;if(ui.view==='detail'&&!s){ui.view='list';ui.sel=null}h=s?crewSiteHTML(s):crewListHTML()}
+  app.className='app'+(editing()&&mgr.editing?' editing':'');
+  app.innerHTML=h;
+  window.scrollTo(0,y);applyFit();
+  var ns=document.querySelector('.photo-scroll');if(ns&&ps&&pz===ui.zoom){ns.scrollLeft=pl;ns.scrollTop=pt}
+  if(fid){var el=document.getElementById(fid);if(el&&el.focus){el.focus();try{if(fs!=null)el.setSelectionRange(fs,fs)}catch(e){}}}
+}
+setInterval(function(){
+  var a=document.getElementById('shiftclock');if(a&&crew.shift)a.textContent=dur(Date.now()-crew.shift.clockIn);
+  var b=document.getElementById('visitclock'),ov=openVisit();if(b&&ov)b.textContent=tick(Date.now()-ov.start);
+},1000);
+setInterval(function(){
+  if(document.hidden)return;
+  if(ui.mode==='crew')sync();
+  else if(ui.mode==='mgr'&&ui.tab==='live'&&mgr.token)loadMgr().catch(function(){});
+  else if(ui.mode==='mgr'&&ui.tab==='log'&&mgr.token)loadLog();
+},60000+Math.floor(Math.random()*15000));
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&ui.mode==='crew')sync()});
+window.addEventListener('online',function(){if(ui.mode==='crew')sync()});
+
+/* ---------- photos for the manager editor ---------- */
+function compress(file){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file),img=new Image();
+    img.onload=function(){var max=2400,q=.8,out='';for(var i=0;i<8;i++){var sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);out=c.toDataURL('image/webp',q);if(out.indexOf('data:image/webp')!==0)out=c.toDataURL('image/jpeg',q);if(out.length<380000)break;q-=.06;if(q<.5){max=Math.round(max*.85);q=.7}}URL.revokeObjectURL(url);res(out)};
+    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('bad image'))};img.src=url;
+  });
+}
+function setPhoto(file){
+  var s=mgr.editing;if(!s||!file)return;
+  if(!/^image\//.test(file.type)){toast('That file is not an image. Use a screenshot (PNG or JPG).');return}
+  toast('Adding photo…');
+  compress(file).then(function(d){s._img=d;s._newImg=true;mgr.dirty=true;render();toast('Photo added. Save the site to keep it.')},function(){toast('Could not read that image.')});
+}
+function saveSite(){
+  var s=mgr.editing;if(!s||mgr.saving)return;mgr.saving=true;render();
+  var hc=null;if(s.hours){hc={};Object.keys(s.hours).forEach(function(k){var x=s.hours[k];if(x===null)hc[k]=null;else if(x&&x[0]&&x[1])hc[k]=x});if(!Object.keys(hc).length)hc=null}
+  var body={id:s.id,name:s.name,address:s.address,notes:s.notes,marks:s.marks,hours:hc,zone:s.zone||''};
+  mgrCall('mgrSaveSite',body).then(function(){return s._newImg?mgrCall('mgrPhoto',s.id,s._img):true}).then(function(){
+    delete s._newImg;mgr.saving=false;mgr.dirty=false;s._isNew=false;toast('Saved. Crew phones get it within a minute.');return loadMgr();
+  }).catch(function(e){mgr.saving=false;render();toast('Could not save: '+e.message)});
+}
+function runImport(file){
+  var rd=new FileReader();
+  rd.onload=function(){
+    var j;try{j=JSON.parse(rd.result)}catch(e){toast('That file is not a stake map file.');return}
+    var list=(j.sites||[]).filter(function(s){return s&&s.id&&s.name});if(!list.length){toast('No sites found in that file.');return}
+    mgr.importing={done:0,total:list.length,name:list[0].name};render();
+    var i=0;(function next(){
+      if(i>=list.length){mgr.importing.done=list.length;render();toast('Imported '+list.length+' sites. Assign them under Routes.');loadMgr().then(function(){setTimeout(function(){mgr.importing=null;render()},4000)});return}
+      var s=list[i];mgr.importing.name=s.name;mgr.importing.done=i;render();
+      mgrCall('mgrImport',{id:s.id,name:s.name,address:s.address,notes:s.notes||'',route:s.route,marks:s.marks||[],img:s.img||''}).then(function(){i++;next()},function(e){mgr.importing.err='Stopped at '+s.name+': '+e.message+'. Choose the file again to continue.';render();setTimeout(function(){mgr.importing=null;render()},8000)});
+    })();
+  };
+  rd.readAsText(file);
+}
+
+/* ---------- events ---------- */
+app.addEventListener('click',function(e){
+  var mkEl=e.target.closest('[data-mark]');
+  if(suppress&&e.target.closest('.photo-scroll')){suppress=false;return}
+  if(mkEl){var id=mkEl.getAttribute('data-mark');ui.mark=ui.mark===id?null:id;render();return}
+  var photo=e.target.closest('#photo');
+  if(photo&&editing()&&(ui.tool==='h'||ui.tool==='p'))return;
+  if(photo&&editing()){var s0=mgr.editing;var r=photo.getBoundingClientRect();var x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;if(x<0||x>1||y<0||y>1)return;var m={id:uid(),k:ui.tool,x:+x.toFixed(4),y:+y.toFixed(4),note:''};s0.marks=s0.marks||[];s0.marks.push(m);ui.mark=m.id;mgr.dirty=true;render();return}
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var a=b.getAttribute('data-act'),v=b.getAttribute('data-v'),bid=b.getAttribute('data-id');
+  // shared
+  if(a==='tool'){ui.tool=v;render()}
+  else if(a==='zoom'){var sc0=document.querySelector('.photo-scroll');if(sc0){var rr=sc0.getBoundingClientRect();setZoom(v==='fit'?1:zf()*(v==='in'?1.6:1/1.6),rr.left+sc0.clientWidth/2,rr.top+sc0.clientHeight/2)}}
+  else if(a==='undo'){var su=mgr.editing;if(su&&su.marks.length){su.marks.pop();ui.mark=null;mgr.dirty=true;render()}}
+  else if(a==='del-mark'){var sd=mgr.editing;if(sd){sd.marks=sd.marks.filter(function(m){return m.id!==bid});ui.mark=null;mgr.dirty=true;render()}}
+  // crew
+  else if(a==='iam'){me=v;lsSet('snow.me',me);loadCrew();ui.mode='crew';ui.view='list';render();sync()}
+  else if(a==='switch'){if(crew.shift){toast('Clock out before switching to another name.');return}lsDel('snow.me');me=null;ui.mode='pick';ui.ended=null;render();refreshBoot()}
+  else if(a==='open'){if(bid){ui.sel=bid;ui.view='detail';ui.zoom=0;ui.mark=null;ui.again=false;render();window.scrollTo(0,0)}}
+  else if(a==='back'){ui.view='list';ui.sel=null;render();window.scrollTo(0,0)}
+  else if(a==='clockin')clockIn();
+  else if(a==='startsite')startSite(bid);
+  else if(a==='stopsite')stopSite();
+  else if(a==='again'){ui.again=true;render()}
+  else if(a==='end'){ui.ending=true;ui.view='list';render();window.scrollTo(0,0)}
+  else if(a==='cancel-end'){ui.ending=false;render()}
+  else if(a==='clockout')clockOut();
+  // manager
+  else if(a==='to-mgr'){ui.mode=mgr.token?'mgr':'mgr-login';if(mgr.token)loadMgr().catch(function(){});else api('mgrHasPin').then(function(h){ui.firstPin=!h;var p=document.getElementById('pin'),pv=p?p.value:'';render();var q=document.getElementById('pin');if(q&&pv)q.value=pv},function(){});render()}
+  else if(a==='to-crew'){ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
+  else if(a==='login'){var pin=(document.getElementById('pin')||{}).value;api('mgrLogin',pin).then(function(r){if(r.error){toast(r.error);return}mgr.token=r.token;mgr.me=r.me;lsSet('snow.mgr',r.token);lsSet('snow.mgrme',r.me);if(r.me.role!=='owner')mgr.zone=r.me.zone;ui.mode='mgr';ui.tab='live';render();loadMgr()},function(e){toast('Could not sign in: '+e.message)})}
+  else if(a==='mgr-out'){if(mgr.dirty){toast('Save or discard your site changes first.');return}mgr.token=null;mgr.d=null;mgr.me=null;mgr.mgrs=null;lsDel('snow.mgr');lsDel('snow.mgrme');ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
+  else if(a==='tab'){if(mgr.dirty){toast('Save or discard your site changes first.');return}ui.tab=v;ui.confirm=false;mgr.editing=null;ui.zoom=0;render();if(v==='live'||v==='routes')loadMgr().catch(function(){});if(v==='log')loadLog()}
+  else if(a==='refresh'){loadMgr().then(function(){toast('Updated.')},function(){})}
+  else if(a==='ask-out'){ui.confirm='out:'+v;render()}
+  else if(a==='cancel-x'){ui.confirm=false;render()}
+  else if(a==='force-out'){ui.confirm=false;mgrCall('mgrClockOut',v,zv()).then(function(d){mgr.d=d;render();toast(v+' is clocked out. Their route email is on its way.')},function(e){toast('Could not clock out: '+e.message)})}
+  else if(a==='r-up'||a==='r-down'){var T=ui.rtype,rr=mgr.d.routes.filter(function(r){return r.type===T&&r.site===bid})[0];if(!rr)return;var list=mgr.d.routes.filter(function(r){return r.type===T&&r.crew===rr.crew}).sort(function(p,q){return p.order-q.order});var ix=list.indexOf(rr)+(a==='r-up'?-1:1);
+    list.splice(list.indexOf(rr),1);list.splice(ix,0,rr);list.forEach(function(x,k){x.order=k+1});render();
+    mgrCall('mgrAssign',bid,rr.crew,ix,T,mgr.tempMode,zv()).then(function(d){mgr.d=d;render()},function(e){toast('Could not move: '+e.message);loadMgr()})}
+  else if(a==='rtype'){ui.rtype=v;render()}
+  else if(a==='tempmode'){mgr.tempMode=v==='1';render()}
+  else if(a==='pick-zone'){setZone(v)}
+  else if(a==='duty'){mgrCall('mgrDuty',zv(),zv()).then(function(d){mgr.d=d;render();toast('You are on duty for '+zv()+'. Its route emails and printouts come to you.')},function(e){toast(e.message)})}
+  else if(a==='zn-add'){mgr.zoneEdit=mgr.zoneEdit||mgr.d.zones.map(function(z){return {old:z,name:z}});mgr.zoneEdit.push({old:'',name:''});render()}
+  else if(a==='zn-del'){mgr.zoneEdit=mgr.zoneEdit||mgr.d.zones.map(function(z){return {old:z,name:z}});mgr.zoneEdit.splice(+v,1);render()}
+  else if(a==='zn-cancel'){mgr.zoneEdit=null;render()}
+  else if(a==='zn-save'){var zl=(mgr.zoneEdit||[]).filter(function(x){return x.name.trim()});mgrCall('mgrSetZones',zl,zv()).then(function(d){mgr.d=d;mgr.zoneEdit=null;if(mgr.zone&&d.zones.indexOf(mgr.zone)<0){mgr.zone='';lsSet('snow.zone','')}render();toast('Zones saved.')},function(e){toast(e.message)})}
+  else if(a==='mgrs-load'){mgrCall('mgrManagers').then(function(l){mgr.mgrs=l;render()},function(e){toast(e.message)})}
+  else if(a==='mg-add'){mgr.mgrEdit=mgr.mgrEdit||mgr.mgrs.map(function(m){return {old:m.name,name:m.name,zone:m.zone,role:m.role,email:m.email,pin:''}});mgr.mgrEdit.push({old:'',name:'',zone:zv()||'',role:'manager',email:'',pin:''});render()}
+  else if(a==='mg-del'){mgr.mgrEdit=mgr.mgrEdit||mgr.mgrs.map(function(m){return {old:m.name,name:m.name,zone:m.zone,role:m.role,email:m.email,pin:''}});mgr.mgrEdit.splice(+v,1);render()}
+  else if(a==='mg-cancel'){mgr.mgrEdit=null;render()}
+  else if(a==='mg-save'){mgrCall('mgrSetManagers',mgr.mgrEdit||[]).then(function(l){mgr.mgrs=l;mgr.mgrEdit=null;render();toast('Managers saved. Give each one their PIN.');loadMgr()},function(e){toast(e.message)})}
+  else if(a==='route-menu'){ui.pickRoute=!ui.pickRoute;render()}
+  else if(a==='pick-route')pickRoute(v);
+  else if(a==='rt-add'){mgr.typeEdit=mgr.typeEdit||mgr.d.types.map(function(t){return {old:t,name:t}});mgr.typeEdit.push({old:'',name:''});render();var lt=document.getElementById('rt-'+(mgr.typeEdit.length-1));if(lt)lt.focus()}
+  else if(a==='rt-del'){mgr.typeEdit=mgr.typeEdit||mgr.d.types.map(function(t){return {old:t,name:t}});mgr.typeEdit.splice(+v,1);render()}
+  else if(a==='rt-cancel'){mgr.typeEdit=null;render()}
+  else if(a==='rt-save'){var tl=(mgr.typeEdit||[]).filter(function(x){return x.name.trim()});var sn={};if(tl.some(function(x){var k=x.name.trim().toLowerCase();if(sn[k])return true;sn[k]=1})){toast('Two route types have the same name.');return}
+    mgrCall('mgrSetTypes',tl,zv()).then(function(d){mgr.d=d;mgr.typeEdit=null;render();toast('Route types saved.')},function(e){toast('Could not save: '+e.message)})}
+  else if(a==='hrs-copy'){var hs=mgr.editing;if(!hs)return;hs.hours=hs.hours||{};var mo=hs.hours[1];[2,3,4,5].forEach(function(d){if(mo===undefined)delete hs.hours[d];else hs.hours[d]=mo===null?null:mo.slice()});mgr.dirty=true;render()}
+  else if(a==='hrs-clear'){if(mgr.editing){mgr.editing.hours=null;mgr.dirty=true;render()}}
+  else if(a==='edit-site'){var es=msiteById(bid);if(es){mgr.editing=JSON.parse(JSON.stringify(es));ui.mark=null;ui.zoom=0;ui.tool='s';render();window.scrollTo(0,0)}}
+  else if(a==='close-site'){if(mgr.dirty){toast('Save or discard your changes first.');return}mgr.editing=null;ui.confirm=false;render()}
+  else if(a==='add-site'){mgr.editing={id:'s'+uid(),name:'New site',address:'',notes:'',marks:[],hours:null,photo:'',zone:zv()||'',_isNew:true};mgr.dirty=true;render();var fn=document.getElementById('f-name');if(fn){fn.focus();fn.select()}}
+  else if(a==='discard'){var dsrc=mgr.editing&&msiteById(mgr.editing.id);mgr.dirty=false;mgr.editing=dsrc?JSON.parse(JSON.stringify(dsrc)):null;render()}
+  else if(a==='save-site')saveSite();
+  else if(a==='del-site'){var ds=mgr.editing;if(!ds)return;if(ui.confirm!=='del'){ui.confirm='del';render();return}ui.confirm=false;if(ds._isNew){mgr.editing=null;mgr.dirty=false;render();return}mgrCall('mgrDeleteSite',ds.id).then(function(){mgr.editing=null;mgr.dirty=false;toast('Site deleted.');return loadMgr()},function(e){toast('Could not delete: '+e.message)})}
+  else if(a==='crew-add'){mgr.crewEdit=(mgr.crewEdit||zoneCrew());mgr.crewEdit.push({name:'',active:true});render();var last=document.getElementById('cr-'+(mgr.crewEdit.length-1));if(last)last.focus()}
+  else if(a==='crew-del'){mgr.crewEdit=(mgr.crewEdit||zoneCrew());mgr.crewEdit.splice(+v,1);render()}
+  else if(a==='crew-cancel'){mgr.crewEdit=null;render()}
+  else if(a==='crew-save'){var cl=(mgr.crewEdit||[]).filter(function(c){return c.name.trim()});var seen={},dup=cl.some(function(c){var k=c.name.trim().toLowerCase();if(seen[k])return true;seen[k]=1});if(dup){toast('Two people have the same name. Add a last initial to tell them apart.');return}
+    mgrCall('mgrSetCrew',cl,zv()).then(function(d){mgr.d=d;mgr.crewEdit=null;render();toast('Crew saved.')},function(e){toast('Could not save crew: '+e.message)})}
+  else if(a==='import-drive'){mgr.driveImport=true;render();mgrCall('mgrImportDrive').then(function(r){mgr.driveImport=false;toast(r.left?'Added '+r.added+' sites. '+r.left+' still to go: tap Import from Google Drive again to finish.':(r.added?'Added '+r.added+' sites. All '+r.total+' are in.':'All '+r.total+' sites were already imported.'));return loadMgr()},function(e){mgr.driveImport=false;render();toast(e.message)})}
+  else if(a==='start-storm'){var nm=(document.getElementById('st-name')||{}).value||'';mgrCall('mgrStartStorm',nm,zv()).then(function(d){mgr.d=d;render();toast('Storm started. Crew clock-ins now count toward it.')},function(e){toast(e.message)})}
+  else if(a==='ask-endstorm'){ui.confirm='endstorm';render()}
+  else if(a==='end-storm'){ui.confirm=false;mgr.ending=true;toast('Ending the storm and making printouts. This takes about a minute.');mgrCall('mgrEndStorm',zv()).then(function(d){mgr.d=d;render();toast('Storm ended. Printouts are in your email and in Drive.')},function(e){toast('Could not end the storm: '+e.message)})}
+  else if(a==='lg-scope'){mgr.lg.scope=v;mgr.log=null;render();loadLog()}
+  else if(a==='lg-kind'){mgr.lg.kind=v;render()}
+  else if(a==='lg-to'){mgr.lg.to=mgr.lg.to===v?'':v;render()}
+  else if(a==='lg-add'){var tx=(document.getElementById('lg-text')||{}).value||'',k=mgr.lg.kind;if(k==='call'&&!mgr.lg.to){toast('Pick who you called.');return}if(k==='note'&&!tx.trim()){toast('Type a note first.');return}
+    b.disabled=true;mgrCall('mgrNote',k,k==='call'?mgr.lg.to:'',tx,mgr.lg.scope,zv()).then(function(r){mgr.log=r;mgr.lg.to='';var el=document.getElementById('lg-text');if(el)el.value='';render();toast(k==='conditions'?'Weather added to the log.':'Added to the log.')},function(e){b.disabled=false;toast(e.message)})}
+  else if(a==='save-wx'){var code=(document.getElementById('s-wx')||{}).value||'';mgrCall('mgrSetStation',code).then(function(w){toast(w)},function(e){toast(e.message)})}
+  else if(a==='save-email'){var em=(document.getElementById('s-email')||{}).value;mgrCall('mgrMyEmail',em).then(function(){mgr.d.myEmail=em;toast('When you are on duty, emails go to '+em+'.')},function(e){toast('Could not save: '+e.message)})}
+  else if(a==='test-email'){mgrCall('mgrTestEmail').then(function(to){toast('Test email sent to '+to+'.')},function(e){toast('Could not send: '+e.message)})}
+  else if(a==='save-pin'){var np=(document.getElementById('s-pin')||{}).value;if(!/^\d{4,8}$/.test(np)){toast('PIN must be 4 to 8 digits.');return}mgrCall('mgrMyPin',np).then(function(){toast('PIN changed.');document.getElementById('s-pin').value=''},function(e){toast('Could not change PIN: '+e.message)})}
+});
+app.addEventListener('input',function(e){
+  var t=e.target;
+  if(t.id==='q'){ui.q=t.value;render();return}
+  if(t.hasAttribute('data-zn')){mgr.zoneEdit=mgr.zoneEdit||mgr.d.zones.map(function(x){return {old:x,name:x}});mgr.zoneEdit[+t.getAttribute('data-zn')].name=t.value;if(!document.querySelector('[data-act="zn-save"]'))render();return}
+  if(t.hasAttribute('data-mg')&&t.tagName==='INPUT'){mgr.mgrEdit=mgr.mgrEdit||mgr.mgrs.map(function(m){return {old:m.name,name:m.name,zone:m.zone,role:m.role,email:m.email,pin:''}});mgr.mgrEdit[+t.getAttribute('data-mg')][t.getAttribute('data-k')]=t.value;if(!document.querySelector('[data-act="mg-save"]'))render();return}
+  if(t.hasAttribute('data-rt')){mgr.typeEdit=mgr.typeEdit||mgr.d.types.map(function(x){return {old:x,name:x}});mgr.typeEdit[+t.getAttribute('data-rt')].name=t.value;if(!document.querySelector('[data-act="rt-save"]'))render();return}
+  if(t.hasAttribute('data-crew')){mgr.crewEdit=(mgr.crewEdit||zoneCrew());mgr.crewEdit[+t.getAttribute('data-crew')].name=t.value;if(!document.querySelector('[data-act="crew-save"]'))render();return}
+  var f=t.getAttribute('data-field');
+  if(f&&mgr.editing){mgr.editing[f]=t.value;if(!mgr.dirty){mgr.dirty=true;render()}}
+});
+app.addEventListener('change',function(e){
+  var t=e.target;
+  if(t.hasAttribute('data-assign')){var id=t.getAttribute('data-assign'),to=t.value,T=ui.rtype;var s=msiteById(id);mgrCall('mgrAssign',id,to,null,T,mgr.tempMode,zv()).then(function(d){mgr.d=d;render();toast(to?(s?s.name:'Site')+' is on '+to+'’s '+T+' route.':(s?s.name:'Site')+' is off the '+T+' route.')},function(err){toast('Could not move: '+err.message);loadMgr()});return}
+  if(t.hasAttribute('data-zonesel')){setZone(t.value);return}
+  if(t.hasAttribute('data-help')){var hw=t.getAttribute('data-help'),hz=t.value;mgrCall('mgrHelp',hw,hz,zv()).then(function(d){mgr.d=d;render();toast(hz?hw+' is helping '+hz+' this storm. Their phone shows it.':hw+' is back in their own zone.')},function(err){toast(err.message);loadMgr()});return}
+  if(t.hasAttribute('data-sitezone')){var sid=t.getAttribute('data-sitezone'),sz=t.value;mgrCall('mgrSiteZone',sid,sz).then(function(){var x=msiteById(sid);if(x)x.zone=sz;toast((x?x.name:'Site')+(sz?' is in '+sz+'.':' has no zone.'))},function(err){toast(err.message)});return}
+  if(t.hasAttribute('data-mg')){mgr.mgrEdit=mgr.mgrEdit||mgr.mgrs.map(function(m){return {old:m.name,name:m.name,zone:m.zone,role:m.role,email:m.email,pin:''}});var mi=+t.getAttribute('data-mg'),mk=t.getAttribute('data-k');mgr.mgrEdit[mi][mk]=t.value;if(mk==='role'||!document.querySelector('[data-act="mg-save"]'))render();return}
+  if(t.id==='f-zone'&&mgr.editing){mgr.editing.zone=t.value;if(!mgr.dirty){mgr.dirty=true;render()}return}
+  if(t.hasAttribute('data-active')){var who=t.getAttribute('data-active'),rt=t.value;mgrCall('mgrSetActive',who,rt,zv()).then(function(d){mgr.d=d;render();toast(rt?who+' is on the '+rt+' route. Their phone switches within a minute.':who+' has no route set.')},function(err){toast('Could not set the route: '+err.message);loadMgr()});return}
+  if(t.hasAttribute('data-hx')||t.hasAttribute('data-ho')||t.hasAttribute('data-hc')){hrsFromForm();return}
+  if(t.id==='lg-auto'){mgr.lg.auto=t.checked;lsSet('snow.lgauto',t.checked);render();return}
+  if(t.hasAttribute('data-crewon')){mgr.crewEdit=(mgr.crewEdit||zoneCrew());mgr.crewEdit[+t.getAttribute('data-crewon')].active=t.checked;render();return}
+  if(t.getAttribute('data-field')){var hd=app.querySelector('.d-title h2');if(hd&&t.id==='f-name')hd.textContent=t.value||'New site';return}
+  if(t.id==='f-import'&&t.files&&t.files[0]){runImport(t.files[0]);return}
+  if(t.type==='file'&&t.files&&t.files[0])setPhoto(t.files[0]);
+});
+app.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='pin'){var b=document.querySelector('[data-act="login"]');if(b)b.click()}});
+
+/* ---------- zoom, pinch, drawing (from the stake map) ---------- */
+function applyFit(){var sc=document.querySelector('.photo-scroll'),im=sc&&sc.querySelector('img');if(!im||!im.naturalWidth||!sc.clientWidth)return;var f=Math.min(1,window.innerHeight*0.78*im.naturalWidth/im.naturalHeight/sc.clientWidth);sc.style.setProperty('--fit',f.toFixed(4))}
+app.addEventListener('load',function(e){if(e.target&&e.target.tagName==='IMG')applyFit()},true);
+app.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='IMG'&&t.getAttribute('data-pid')&&/drive\.google/.test(t.src)){driveBad[t.getAttribute('data-pid')]=1;render()}},true);
+window.addEventListener('resize',applyFit);
+function setZoom(z,cx,cy){
+  var sc=document.querySelector('.photo-scroll'),el=document.getElementById('photo');if(!sc||!el)return;
+  z=Math.min(ZMAX,Math.max(1,z));if(z<1.03)z=1;
+  var r=sc.getBoundingClientRect(),ox=cx-r.left,oy=cy-r.top;
+  var fx=(sc.scrollLeft+ox-el.offsetLeft)/el.offsetWidth,fy=(sc.scrollTop+oy)/Math.max(1,el.offsetHeight);
+  ui.zoom=z===1?0:z;ui._pz=ui.zoom;
+  el.style.width='calc('+(z*100)+'% * var(--fit,1))';el.classList.toggle('big',z>=3);
+  sc.scrollLeft=fx*el.offsetWidth+el.offsetLeft-ox;sc.scrollTop=fy*el.offsetHeight-oy;
+  var zv=document.getElementById('zv');if(zv)zv.textContent=z.toFixed(1).replace(/\.0$/,'')+'×';
+}
+function tdist(a,b){return Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)}
+app.addEventListener('touchstart',function(e){
+  if(e.touches.length<2)return;var sc=e.target.closest('.photo-scroll');if(!sc)return;
+  if(drag){if(drag.mode==='draw'&&drag.el)drag.el.remove();if(drag.mode==='move'&&drag.m&&drag.m.w==null){drag.m.x=drag.ox;drag.m.y=drag.oy;drag.el.style.left=drag.ox*100+'%';drag.el.style.top=drag.oy*100+'%'}drag=null}
+  var a=e.touches[0],b=e.touches[1];pinch={d:tdist(a,b)||1,z:zf()};suppress=true;e.preventDefault();
+},{passive:false});
+app.addEventListener('touchmove',function(e){if(!pinch||e.touches.length<2)return;e.preventDefault();var a=e.touches[0],b=e.touches[1];setZoom(pinch.z*tdist(a,b)/pinch.d,(a.clientX+b.clientX)/2,(a.clientY+b.clientY)/2)},{passive:false});
+function endPinch(e){if(pinch&&e.touches.length<2){pinch=null;setTimeout(function(){suppress=false},400)}}
+app.addEventListener('touchend',endPinch);app.addEventListener('touchcancel',endPinch);
+app.addEventListener('wheel',function(e){if(!e.ctrlKey)return;var sc=e.target.closest('.photo-scroll');if(!sc)return;e.preventDefault();setZoom(zf()*Math.exp(-e.deltaY*0.01),e.clientX,e.clientY)},{passive:false});
+['gesturestart','gesturechange'].forEach(function(n){app.addEventListener(n,function(e){if(e.target.closest&&e.target.closest('.photo-scroll'))e.preventDefault()},{passive:false})});
+function frac(e,r){return {x:Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y:Math.min(1,Math.max(0,(e.clientY-r.top)/r.height))}}
+function findMark(id){var s=mgr.editing;return s&&(s.marks||[]).filter(function(m){return m.id===id})[0]}
+app.addEventListener('pointerdown',function(e){
+  if(!editing()||!mgr.editing||pinch||!e.isPrimary)return;
+  var photo=e.target.closest('#photo');if(!photo)return;
+  var r=photo.getBoundingClientRect(),p=frac(e,r),hd=e.target.closest('[data-handle]'),mk=e.target.closest('[data-mark]');
+  if(hd){drag={mode:'size',m:findMark(hd.getAttribute('data-handle')),el:hd.parentNode,r:r,sx:e.clientX,sy:e.clientY,moved:false}}
+  else if(mk){var m2=findMark(mk.getAttribute('data-mark'));drag={mode:'move',m:m2,el:mk,r:r,sx:e.clientX,sy:e.clientY,ox:m2.x,oy:m2.y,px:p.x,py:p.y,moved:false}}
+  else if(ui.tool==='h'||ui.tool==='p'){var el=document.createElement('div');el.className='zone '+ui.tool+' draft';photo.appendChild(el);drag={mode:'draw',el:el,r:r,sx:e.clientX,sy:e.clientY,px:p.x,py:p.y,moved:false}}
+  else return;
+  e.preventDefault();try{(drag.mode==='draw'?photo:drag.el).setPointerCapture(e.pointerId)}catch(err){}
+});
+app.addEventListener('pointermove',function(e){
+  if(!drag||pinch)return;
+  if(!drag.moved&&Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)<6)return;
+  drag.moved=true;e.preventDefault();
+  var p=frac(e,drag.r),m=drag.m,el=drag.el;
+  if(drag.mode==='draw'){var x=Math.min(p.x,drag.px),y=Math.min(p.y,drag.py),w=Math.abs(p.x-drag.px),h=Math.abs(p.y-drag.py);drag.box={x:x,y:y,w:w,h:h};el.style.left=x*100+'%';el.style.top=y*100+'%';el.style.width=w*100+'%';el.style.height=h*100+'%'}
+  else if(drag.mode==='move'){if(m.w!=null){m.x=Math.min(1-m.w,Math.max(0,drag.ox+p.x-drag.px));m.y=Math.min(1-m.h,Math.max(0,drag.oy+p.y-drag.py))}else{m.x=p.x;m.y=p.y}el.style.left=m.x*100+'%';el.style.top=m.y*100+'%'}
+  else{m.w=Math.max(.02,p.x-m.x);m.h=Math.max(.02,p.y-m.y);el.style.width=m.w*100+'%';el.style.height=m.h*100+'%'}
+});
+function r4(v){return +(+v).toFixed(4)}
+app.addEventListener('pointerup',function(){
+  if(!drag)return;var d=drag;drag=null;
+  if(d.mode==='draw'){var s=mgr.editing,b=d.box;if(!d.moved||!b||(b.w<.015&&b.h<.015))b={x:Math.max(0,d.px-.05),y:Math.max(0,d.py-.04),w:.1,h:.08};b.w=Math.min(b.w,1-b.x);b.h=Math.min(b.h,1-b.y);var m={id:uid(),k:ui.tool,x:r4(b.x),y:r4(b.y),w:r4(b.w),h:r4(b.h),note:''};s.marks=s.marks||[];s.marks.push(m);ui.mark=m.id;mgr.dirty=true;suppress=true;render();setTimeout(function(){suppress=false},350);return}
+  if(d.moved){var m2=d.m;m2.x=r4(m2.x);m2.y=r4(m2.y);if(m2.w!=null){m2.w=r4(m2.w);m2.h=r4(m2.h)}ui.mark=m2.id;mgr.dirty=true;suppress=true;render();setTimeout(function(){suppress=false},350)}
+});
+app.addEventListener('pointercancel',function(){if(drag){drag=null;render()}});
+document.addEventListener('paste',function(e){if(!editing()||!mgr.editing||!e.clipboardData)return;var fs=e.clipboardData.files||[];for(var i=0;i<fs.length;i++){if(/^image\//.test(fs[i].type)){e.preventDefault();setPhoto(fs[i]);return}}});
+window.addEventListener('beforeunload',function(e){if(mgr.dirty||(crew.queue&&crew.queue.length)){e.preventDefault();e.returnValue=''}});
+
+/* ---------- start ---------- */
+function refreshBoot(){api('boot').then(function(b){data.crew=b.crew;data.crewZones=b.crewZones||[];data.zones=b.zones||[];data.loaded=true;if(me&&b.crew.indexOf(me)<0){lsDel('snow.me');me=null;ui.mode='pick'}render()},function(){data.loaded=true;render()})}
+if(me){loadCrew();ui.mode='crew';render();sync();prefetch(crew.route)}else render();
+refreshBoot();
+})();
+</script>
+<script>if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});</script>
+</body></html>
