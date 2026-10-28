@@ -534,7 +534,7 @@ function sync(){
     if(r.error==='unknown_crew'){toast('Your name was removed from the crew list. Pick your name again.');lsDel('snow.me');me=null;ui.mode='pick';refreshBoot();return}
     var doneIds=r.done||[];crew.queue=crew.queue.filter(function(o){return doneIds.indexOf(o.opId)<0});
     var first=crew.ver<0,beforeType=eff(),before=crew.route.slice(),msg='';
-    if(typeof r.helping==='string'&&r.helping!==crew.helping){if(!first&&r.helping)msg='You are helping '+r.helping+' this storm.';crew.helping=r.helping}
+    if(typeof r.helping==='string'&&r.helping!==crew.helping){if(!first&&r.helping)msg='You are helping '+r.helping+' this event.';crew.helping=r.helping}
     if(typeof r.active==='string'&&r.active!==crew.active){crew.active=r.active;if(!first&&r.active){crew.pick='';msg='The office set your route: '+r.active+'.'}}
     if(r.routes){crew.routes=r.routes;crew.types=r.types||crew.types;crew.ver=r.ver;var all=[];Object.keys(r.routes).forEach(function(k){all=all.concat(r.routes[k])});prefetch(crew.route.concat(all))}
     applyRoute();
@@ -654,7 +654,7 @@ function crewHeader(){
     if(ui.pickRoute)h+='<div class="routepick">'+mt.map(function(t){var n=crew.routes[t].length;return '<button class="btn'+(t===eff()?' primary':'')+'" data-act="pick-route" data-v="'+esc(t)+'"><span>'+esc(t)+'</span><span class="cnt">'+n+' stop'+(n===1?'':'s')+(t===crew.active?' · office pick':'')+'</span></button>'}).join('')+'<p class="note" style="margin:0">Only change it if the office told you to or conditions call for it. The office sees the switch.</p></div>';
   }
   if(sh)h+='<div class="shiftbar"><span class="pill on"><i class="blink"></i>On the clock</span><span>since '+clock(sh.clockIn)+' · <b id="shiftclock">'+dur(Date.now()-sh.clockIn)+'</b></span><span class="sp"></span><span class="cnt">'+done+' of '+crew.route.length+' done'+(skp?' · '+skp+' skipped':'')+'</span></div>';
-  if(crew.helping)h+='<p class="helpbar">Helping <b>'+esc(crew.helping)+'</b> this storm</p>';
+  if(crew.helping)h+='<p class="helpbar">Helping <b>'+esc(crew.helping)+'</b> this event</p>';
   if(crew.offline)h+='<p class="offline">No signal right now. Everything you tap is saved on this phone.</p>';
   if(crew.queue.length)h+='<p class="queue" style="margin:8px 0 0">'+crew.queue.length+' update'+(crew.queue.length===1?'':'s')+' waiting for signal. They send on their own; keep the app open.</p>';
   return h;
@@ -669,7 +669,7 @@ function crewListHTML(){
   var h=crewHeader(),sh=crew.shift;
   if(ui.ended){var e=ui.ended;h+='<div class="card confirm" style="margin-top:14px"><h3>Route sent to the office</h3><div class="sumrow"><span>On site</span><b>'+clock(e.clockIn)+'</b></div><div class="sumrow"><span>Clocked out</span><b>'+clock(e.clockOut)+'</b></div><div class="sumrow"><span>Total time</span><b>'+dur(e.clockOut-e.clockIn)+'</b></div><div class="sumrow"><span>Sites done</span><b>'+e.done+' of '+e.total+'</b></div>'+(crew.queue.length?'<p class="queue">Still sending. Keep the app open until this message goes away.</p>':'<p class="note">The office has your times. Nice work.</p>')+'</div>'}
   if(!sh){
-    h+='<div class="card confirm" style="margin-top:14px"><h3>'+(ui.ended?'Next storm':'Ready to go?')+'</h3><p class="note" style="margin:0">Tap this when you get to your machine. It starts your clock.</p><button class="btn big go" data-act="clockin">On site · Clock in</button></div>';
+    h+='<div class="card confirm" style="margin-top:14px"><h3>'+(ui.ended?'Next event':'Ready to go?')+'</h3><p class="note" style="margin:0">Tap this when you get to your machine. It starts your clock.</p><button class="btn big go" data-act="clockin">On site · Clock in</button></div>';
   }else if(ui.ending){
     var done=sh.visits.filter(function(v){return v.stop}).length,ov=openVisit();
     h+='<div class="card confirm" style="margin-top:14px"><h3>Finish route and clock out?</h3><div class="sumrow"><span>On the clock</span><b>'+dur(Date.now()-sh.clockIn)+'</b></div><div class="sumrow"><span>Sites done</span><b>'+done+' of '+crew.route.length+'</b></div>'+(ov?'<p class="queue">You are still working at '+esc((siteById(ov.site)||{}).name||'a site')+'. Clocking out will stop it too.</p>':'')+'<label class="fieldlbl">Note for the office (optional)<textarea class="inp" id="o-note" placeholder="Anything they should know: damage, a site you skipped and why"></textarea></label><div class="row"><button class="btn ghost" data-act="cancel-end">Keep working</button><span style="flex:1"></span><button class="btn stop" data-act="clockout">Clock out and send</button></div></div>';
@@ -732,7 +732,7 @@ function mgrHTML(){
   h+='<nav class="tabs mtabs" role="tablist">'+t('live','Live')+t('routes','Routes')+t('log','Log')+t('sites','Stakes')+t('crew','Settings')+'</nav>';
   if(!d)return h+'<div class="panel"><p class="note">Loading…</p></div>';
   var needZone=isOwner()&&!d.zone&&(ui.tab==='routes'||ui.tab==='log');
-  if(needZone)h+='<div class="panel"><div class="empty">Pick a zone at the top to see its '+(ui.tab==='log'?'storm log':'routes')+'.</div>'+zonePickHTML(d)+'</div>';
+  if(needZone)h+='<div class="panel"><div class="empty">Pick a zone at the top to see its '+(ui.tab==='log'?'event log':'routes')+'.</div>'+zonePickHTML(d)+'</div>';
   else if(ui.tab==='live')h+=liveHTML(d);
   else if(ui.tab==='log')h+=logHTML(d);
   else if(ui.tab==='routes')h+=routesHTML(d);
@@ -744,21 +744,21 @@ function stormHTML(d){
   var st=d.storm,h='<div class="lc" style="background:var(--surface);border-width:2px;border-color:'+(st?'var(--accent)':'var(--line)')+'"><div class="meta" style="text-transform:uppercase;letter-spacing:.06em;font-weight:700">'+esc(d.zone)+'</div>';
   if(st){
     var on=d.live.filter(function(l){return l.shift}).length;
-    h+='<div class="row"><h3>'+esc(st.name)+'</h3><span style="flex:1"></span><span class="pill now"><i class="blink"></i>Storm running</span></div><div class="meta">Started '+new Date(st.start).toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'})+' at '+clock(st.start)+' · '+dur(Date.now()-st.start)+' · '+on+' on the clock now</div>';
-    h+=ui.confirm==='endstorm'?'<p style="margin:0">End the storm?'+(on?' <b>'+on+' still clocked in</b> will be clocked out now.':'')+' Each person’s printout is made and emailed to you.</p><div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm danger armed" data-act="end-storm">End storm and make printouts</button></div>':'<button class="btn primary" style="align-self:flex-start" data-act="ask-endstorm">End storm</button><p class="note" style="margin:0">Crew can clock in and out as many times as they need. Their printout covers the whole storm.</p>';
+    h+='<div class="row"><h3>'+esc(st.name)+'</h3><span style="flex:1"></span><span class="pill now"><i class="blink"></i>Event running</span></div><div class="meta">Started '+new Date(st.start).toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'})+' at '+clock(st.start)+' · '+dur(Date.now()-st.start)+' · '+on+' on the clock now</div>';
+    h+=ui.confirm==='endstorm'?'<p style="margin:0">End the event?'+(on?' <b>'+on+' still clocked in</b> will be clocked out now.':'')+' Each person’s printout is made and emailed to you.</p><div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm danger armed" data-act="end-storm">End event and make printouts</button></div>':'<button class="btn primary" style="align-self:flex-start" data-act="ask-endstorm">End event</button><p class="note" style="margin:0">Crew can clock in and out as many times as they need. Their printout covers the whole event.</p>';
   }else{
-    h+='<div class="row"><h3>No storm running</h3></div><div class="crewrow"><input class="inp" id="st-name" placeholder="Name, e.g. Dec 8 storm (optional)"><button class="btn primary" data-act="start-storm">Start storm</button></div><p class="note" style="margin:0">Starting the storm puts you on duty for '+esc(d.zone)+'. If you forget, the first person in this zone to clock in starts one.</p>';
+    h+='<div class="row"><h3>No snow event running</h3></div><div class="crewrow"><input class="inp" id="st-name" placeholder="Name, e.g. Dec 8 overnight (optional)"><button class="btn primary" data-act="start-storm">Start snow event</button></div><p class="note" style="margin:0">Starting the event puts you on duty for '+esc(d.zone)+'. If you forget, the first person in this zone to clock in starts one.</p>';
   }
   h+='</div>';
-  if(d.storms&&d.storms.filter(function(s){return s.end}).length)h+='<div class="sec"><h3>Recent storms</h3>'+d.storms.filter(function(s){return s.end}).map(function(s){return '<div class="sumrow"><span><b>'+esc(s.name)+'</b><br><span class="note">'+new Date(s.start).toLocaleDateString([], {month:'short',day:'numeric'})+' '+clock(s.start)+' – '+clock(s.end)+' · '+s.people+' people · '+s.hours+' h · '+s.sites+' visits</span></span>'+(s.printouts?'<a class="btn sm" href="'+esc(s.printouts)+'" target="_blank" rel="noopener">Printouts</a>':'')+'</div>'}).join('')+'</div>';
+  if(d.storms&&d.storms.filter(function(s){return s.end}).length)h+='<div class="sec"><h3>Recent snow events</h3>'+d.storms.filter(function(s){return s.end}).map(function(s){return '<div class="sumrow"><span><b>'+esc(s.name)+'</b><br><span class="note">'+new Date(s.start).toLocaleDateString([], {month:'short',day:'numeric'})+' '+clock(s.start)+' – '+clock(s.end)+' · '+s.people+' people · '+s.hours+' h · '+s.sites+' visits</span></span>'+(s.printouts?'<a class="btn sm" href="'+esc(s.printouts)+'" target="_blank" rel="noopener">Printouts</a>':'')+'</div>'}).join('')+'</div>';
   return h;
 }
 function loadLog(){return mgrCall('mgrLog',mgr.lg.scope,zv()).then(function(r){mgr.log=r;if(ui.tab==='log')render()},function(e){toast('Could not load the log: '+e.message)})}
-var LGT={note:'Note',call:'Call',conditions:'Weather',clock:'Clock',work:'Work',route:'Route',storm:'Storm'};
+var LGT={note:'Note',call:'Call',conditions:'Weather',clock:'Clock',work:'Work',route:'Route',storm:'Event'};
 function logHTML(d){
   var L=mgr.log,g=mgr.lg,names=d.crew.filter(function(c){return c.active}).map(function(c){return c.name});
   var seg=function(act,cur,k,l){return '<button data-act="'+act+'" data-v="'+k+'" aria-pressed="'+(cur===k)+'">'+l+'</button>'};
-  var h='<div class="panel"><div class="row"><h3 style="font-size:18px">'+(L?(L.storm?esc(L.storm)+(L.running?' <span class="pill now"><i class="blink"></i>Running</span>':''):'No storms yet'):'Storm log')+'</h3><span style="flex:1"></span><div class="seg" style="min-width:220px">'+seg('lg-scope',g.scope,'storm','This storm')+seg('lg-scope',g.scope,'all','Everything')+'</div></div>';
+  var h='<div class="panel"><div class="row"><h3 style="font-size:18px">'+(L?(L.storm?esc(L.storm)+(L.running?' <span class="pill now"><i class="blink"></i>Running</span>':''):'No snow events yet'):'Event log')+'</h3><span style="flex:1"></span><div class="seg" style="min-width:220px">'+seg('lg-scope',g.scope,'storm','This event')+seg('lg-scope',g.scope,'all','Everything')+'</div></div>';
   h+='<div class="lc" style="background:var(--surface)"><div class="seg">'+seg('lg-kind',g.kind,'note','Note')+seg('lg-kind',g.kind,'call','Call')+seg('lg-kind',g.kind,'conditions','Weather')+'</div>';
   if(g.kind==='call')h+='<div class="row">'+names.map(function(n){return '<button class="btn sm'+(g.to===n?' primary':'')+'" data-act="lg-to" data-v="'+esc(n)+'">'+esc(n)+'</button>'}).join('')+'<button class="btn sm'+(g.to==='a customer'?' primary':'')+'" data-act="lg-to" data-v="a customer">Customer</button><button class="btn sm'+(g.to==='the salt supplier'?' primary':'')+'" data-act="lg-to" data-v="the salt supplier">Salt supplier</button></div>';
   if(g.kind==='conditions')h+='<p class="note" style="margin:0">Adds the current temperature, sky, wind and visibility from the National Weather Service, with your own note if you add one.</p>';
@@ -767,7 +767,7 @@ function logHTML(d){
   h+='<label style="display:flex;gap:8px;align-items:center;font-size:14px"><input type="checkbox" style="width:20px;height:20px;flex:none" id="lg-auto"'+(g.auto?' checked':'')+'>Show crew activity (clock in/out, sites started and finished)</label>';
   if(!L)return h+'<p class="note">Loading the log…</p></div>';
   var list=L.entries.filter(function(e){return g.auto||!(e.type==='clock'||e.type==='work')});
-  if(!list.length)return h+'<div class="empty">Nothing logged yet'+(g.scope==='storm'?' for this storm':'')+'. Notes you add, calls, weather, and crew clock-ins all show up here.</div></div>';
+  if(!list.length)return h+'<div class="empty">Nothing logged yet'+(g.scope==='storm'?' for this event':'')+'. Notes you add, calls, weather, and crew clock-ins all show up here.</div></div>';
   var day='';
   h+='<div class="loglist">'+list.map(function(e){
     var dd=new Date(e.t).toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'}),hd='';
@@ -775,9 +775,9 @@ function logHTML(d){
     var mine=(e.by&&e.by!=='Weather')||e.type==='note'||e.type==='call';
     return hd+'<div class="logrow'+(mine?' mine':'')+'"><span class="lt">'+clock(e.t)+'</span><span class="ltype t-'+esc(e.type)+'">'+(LGT[e.type]||esc(e.type))+'</span><span class="ltx">'+esc(e.text)+(e.by&&e.by!=='Weather'?' <span class="lby">'+esc(e.by)+'</span>':'')+'</span></div>';
   }).join('')+'</div>';
-  return h+'<p class="note">Everything here is also saved in the <b>Log</b> tab of your Google Sheet, and the whole storm’s log comes with the end-of-storm email.</p></div>';
+  return h+'<p class="note">Everything here is also saved in the <b>Log</b> tab of your Google Sheet, and the whole event’s log comes with the end-of-event email.</p></div>';
 }
-function zonePickHTML(d){return '<div class="livegrid">'+d.zoneInfo.map(function(z){return '<div class="lc"><div class="row"><h3>'+esc(z.name)+'</h3><span style="flex:1"></span>'+(z.storm?'<span class="pill now"><i class="blink"></i>Storm</span>':'<span class="pill off">No storm</span>')+'</div><div class="meta">'+(z.storm?esc(z.storm.name)+' since '+clock(z.storm.start)+' · ':'')+z.onClock+' on the clock</div><div class="meta">On duty: <b>'+(z.duty?esc(z.duty):'nobody')+'</b>'+(z.managers.length?' · Managers: '+z.managers.map(esc).join(', '):'')+'</div><div class="meta">'+z.crew+' crew · '+z.sites+' sites</div><button class="btn sm" style="align-self:flex-start" data-act="pick-zone" data-v="'+esc(z.name)+'">Open '+esc(z.name)+'</button></div>'}).join('')+'</div>'}
+function zonePickHTML(d){return '<div class="livegrid">'+d.zoneInfo.map(function(z){return '<div class="lc"><div class="row"><h3>'+esc(z.name)+'</h3><span style="flex:1"></span>'+(z.storm?'<span class="pill now"><i class="blink"></i>Event</span>':'<span class="pill off">No event</span>')+'</div><div class="meta">'+(z.storm?esc(z.storm.name)+' since '+clock(z.storm.start)+' · ':'')+z.onClock+' on the clock</div><div class="meta">On duty: <b>'+(z.duty?esc(z.duty):'nobody')+'</b>'+(z.managers.length?' · Managers: '+z.managers.map(esc).join(', '):'')+'</div><div class="meta">'+z.crew+' crew · '+z.sites+' sites</div><button class="btn sm" style="align-self:flex-start" data-act="pick-zone" data-v="'+esc(z.name)+'">Open '+esc(z.name)+'</button></div>'}).join('')+'</div>'}
 function dutyHTML(d){
   var zi=d.zoneInfo.filter(function(z){return z.name===d.zone})[0]||{},mine=mgr.me&&zi.duty===mgr.me.name;
   return '<div class="duty'+(zi.duty?'':' none')+'"><span>On duty tonight</span><b>'+(zi.duty?esc(zi.duty):'Nobody yet')+'</b><span class="note" style="margin:0">'+(zi.duty?'Gets '+esc(d.zone)+'’s route emails and printouts':'Emails go to the owner until someone is on duty')+'</span><span class="sp"></span>'+(mine?'<span class="chip done">You</span>':'<button class="btn sm primary" data-act="duty">I’m on duty</button>')+'</div>';
@@ -790,10 +790,10 @@ function leftOf(l){if(!l||!l.route)return [];var cur=l.current&&l.current.siteId
 function shortAddr(a){return String(a||'').split(',')[0]}
 function compactStorm(d){
   var st=d.storm;
-  if(!st)return '<div class="sbar off"><div class="sbtx"><b>No storm running</b><span>'+esc(d.zone)+'</span></div><button class="btn sm primary" data-act="ask-startstorm">Start storm</button></div>'+(ui.confirm==='startstorm'?'<div class="lc" style="background:var(--surface)"><input class="inp" id="st-name" placeholder="Name, e.g. Dec 8 storm (optional)"><div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm primary" data-act="start-storm">Start storm</button></div><p class="note" style="margin:0">Starting the storm puts you on duty for '+esc(d.zone)+'.</p></div>':'');
+  if(!st)return '<div class="sbar off"><div class="sbtx"><b>No snow event running</b><span>'+esc(d.zone)+'</span></div><button class="btn sm primary" data-act="ask-startstorm">Start snow event</button></div>'+(ui.confirm==='startstorm'?'<div class="lc" style="background:var(--surface)"><input class="inp" id="st-name" placeholder="Name, e.g. Dec 8 overnight (optional)"><div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm primary" data-act="start-storm">Start snow event</button></div><p class="note" style="margin:0">Starting the event puts you on duty for '+esc(d.zone)+'.</p></div>':'');
   var on=d.live.filter(function(l){return l.shift}).length;
   var h='<div class="sbar"><i class="blink"></i><div class="sbtx"><b>'+esc(st.name)+'</b><span>'+dur(Date.now()-st.start)+' · '+on+' on the clock</span></div><button class="btn sm" data-act="ask-endstorm">End</button></div>';
-  if(ui.confirm==='endstorm')h+='<div class="lc" style="background:var(--surface)"><p style="margin:0">End '+esc(st.name)+'?'+(on?' <b>'+on+' still clocked in</b> will be clocked out now.':'')+' Each person’s printout is made and emailed.</p><div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm danger armed" data-act="end-storm">End storm</button></div></div>';
+  if(ui.confirm==='endstorm')h+='<div class="lc" style="background:var(--surface)"><p style="margin:0">End '+esc(st.name)+'?'+(on?' <b>'+on+' still clocked in</b> will be clocked out now.':'')+' Each person’s printout is made and emailed.</p><div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm danger armed" data-act="end-storm">End event</button></div></div>';
   return h;
 }
 function dutyLine(d){
@@ -829,7 +829,7 @@ function liveHTML(d){
     }
     return r;
   }).join('')+'</div>';
-  if(d.storms&&d.storms.filter(function(s){return s.end}).length)h+='<details class="sec"><summary>Recent storms</summary>'+d.storms.filter(function(s){return s.end}).map(function(s){return '<div class="sumrow"><span><b>'+esc(s.name)+'</b><br><span class="note">'+new Date(s.start).toLocaleDateString([], {month:'short',day:'numeric'})+' '+clock(s.start)+' – '+clock(s.end)+' · '+s.people+' people · '+s.hours+' h</span></span>'+(s.printouts?'<a class="btn sm" href="'+esc(s.printouts)+'" target="_blank" rel="noopener">Printouts</a>':'')+'</div>'}).join('')+'</details>';
+  if(d.storms&&d.storms.filter(function(s){return s.end}).length)h+='<details class="sec"><summary>Recent snow events</summary>'+d.storms.filter(function(s){return s.end}).map(function(s){return '<div class="sumrow"><span><b>'+esc(s.name)+'</b><br><span class="note">'+new Date(s.start).toLocaleDateString([], {month:'short',day:'numeric'})+' '+clock(s.start)+' – '+clock(s.end)+' · '+s.people+' people · '+s.hours+' h</span></span>'+(s.printouts?'<a class="btn sm" href="'+esc(s.printouts)+'" target="_blank" rel="noopener">Printouts</a>':'')+'</div>'}).join('')+'</details>';
   return h+'<p class="note">Updated '+clock(mgr.loaded)+' · refreshes every minute · <a href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">Google Sheet</a></p></div>';
 }
 function rtype(d){if(!ui.rtype||d.types.indexOf(ui.rtype)<0)ui.rtype=d.types[0]||'';return ui.rtype}
@@ -837,7 +837,7 @@ function selIds(){return Object.keys(ui.rsel||{})}
 function routesHTML(d){
   var T=rtype(d),byId={};d.sites.forEach(function(x){byId[x.id]=x});
   var h='<div class="panel"><div class="typeseg" role="tablist" aria-label="Route type">'+d.types.map(function(t){var n=d.routes.filter(function(r){return r.type===t}).length;return '<button data-act="rtype" data-v="'+esc(t)+'" aria-pressed="'+(t===T)+'">'+esc(t)+' <span class="cnt">'+n+'</span></button>'}).join('')+'</div>';
-  if(d.storm)h+='<div class="tempbar"><span>Moves are</span><div class="seg"><button data-act="tempmode" data-v="1" aria-pressed="'+stormOnly(d)+'">This storm only</button><button data-act="tempmode" data-v="0" aria-pressed="'+!stormOnly(d)+'">Permanent</button></div></div>';
+  if(d.storm)h+='<div class="tempbar"><span>Moves are</span><div class="seg"><button data-act="tempmode" data-v="1" aria-pressed="'+stormOnly(d)+'">This event only</button><button data-act="tempmode" data-v="0" aria-pressed="'+!stormOnly(d)+'">Permanent</button></div></div>';
   var names=d.crew.map(function(c){return c.name}),on={};
   var rank={now:0,on:1,off:2};names.sort(function(a,b){return rank[stat(liveOf(a))]-rank[stat(liveOf(b))]||a.localeCompare(b)});
   h+='<p class="note" style="margin:0">Tap a person to open their route. Tap sites to pick them, then move them. Drag <b>≡</b> to change the order.</p>';
@@ -847,7 +847,7 @@ function routesHTML(d){
     var done=(l&&l.doneIds)||[];
     h+='<div class="rc'+(open?' open':'')+'"><button class="rchead" data-act="rcrew" data-v="'+esc(g)+'" aria-expanded="'+open+'"><span class="dot '+stat(l)+'"></span><b>'+esc(g)+'</b>'+(cz.zone&&cz.zone!==d.zone?'<span class="chip">from '+esc(cz.zone)+'</span>':'')+(d.active[g]===T?'<span class="chip done">today</span>':'')+'<span style="flex:1"></span><span class="cnt">'+list.length+'</span><span class="chev">›</span></button>';
     if(open){
-      h+='<div class="rlist" data-crew="'+esc(g)+'">'+list.map(function(r,i){var x=byId[r.site],sel=ui.rsel&&ui.rsel[x.id];return '<div class="rr'+(sel?' sel':'')+(done.indexOf(x.id)>=0?' dn':'')+'" data-site="'+x.id+'"><span class="hnd" data-drag="'+x.id+'" aria-label="Drag to reorder">≡</span><button class="rtx" data-act="rsel" data-id="'+x.id+'"><span class="num">'+(i+1)+'</span><span class="rnm"><span class="rl"><b>'+esc(x.name)+'</b>'+(r.temp?'<span class="chip tmp">storm</span>':'')+(done.indexOf(x.id)>=0?'<span class="chip done">done</span>':'')+'</span><small>'+esc(shortAddr(x.address))+'</small></span><span class="ck" aria-hidden="true"></span></button></div>'}).join('')+'</div>';
+      h+='<div class="rlist" data-crew="'+esc(g)+'">'+list.map(function(r,i){var x=byId[r.site],sel=ui.rsel&&ui.rsel[x.id];return '<div class="rr'+(sel?' sel':'')+(done.indexOf(x.id)>=0?' dn':'')+'" data-site="'+x.id+'"><span class="hnd" data-drag="'+x.id+'" aria-label="Drag to reorder">≡</span><button class="rtx" data-act="rsel" data-id="'+x.id+'"><span class="num">'+(i+1)+'</span><span class="rnm"><span class="rl"><b>'+esc(x.name)+'</b>'+(r.temp?'<span class="chip tmp">event</span>':'')+(done.indexOf(x.id)>=0?'<span class="chip done">done</span>':'')+'</span><small>'+esc(shortAddr(x.address))+'</small></span><span class="ck" aria-hidden="true"></span></button></div>'}).join('')+'</div>';
       if(!list.length)h+='<p class="note" style="padding:0 12px">Nothing on '+esc(g)+'’s '+esc(T)+' route yet.</p>';
       h+='<div class="rfoot"><button class="btn sm" data-act="addsites" data-v="'+esc(g)+'">+ Add sites</button>'+(list.length?'<button class="btn sm ghost" data-act="selall" data-v="'+esc(g)+'">Select all</button>':'')+'</div>';
     }
@@ -868,7 +868,7 @@ function actBar(d){
 function sheetHTML(d){
   if(!ui.sheet||!d)return '';
   var T=rtype(d),h='<div class="scrim" data-act="sheetclose"></div><div class="sheet" role="dialog" aria-modal="true">';
-  var temp=d.storm?'<div class="tempbar"><span>Moves are</span><div class="seg"><button data-act="tempmode" data-v="1" aria-pressed="'+stormOnly(d)+'">This storm only</button><button data-act="tempmode" data-v="0" aria-pressed="'+!stormOnly(d)+'">Permanent</button></div></div>':'';
+  var temp=d.storm?'<div class="tempbar"><span>Moves are</span><div class="seg"><button data-act="tempmode" data-v="1" aria-pressed="'+stormOnly(d)+'">This event only</button><button data-act="tempmode" data-v="0" aria-pressed="'+!stormOnly(d)+'">Permanent</button></div></div>':'';
   if(ui.sheet==='move'){
     var ids=selIds(),from={};ids.forEach(function(id){var r=d.routes.filter(function(x){return x.type===T&&x.site===id})[0];from[r?r.crew:'']=1});
     var names=d.crew.map(function(c){return c.name});
@@ -892,7 +892,7 @@ function localMove(ids,to,index,T,temp){
 function doMove(ids,to,index,msg){
   var d=mgr.d,T=rtype(d),temp=stormOnly(d);
   localMove(ids,to,index,T,temp);ui.rsel={};ui.sheet=null;mgr.busy=(mgr.busy||0)+1;render();
-  if(msg)toast(msg+(temp?' For this storm only.':''));
+  if(msg)toast(msg+(temp?' For this event only.':''));
   mgrCall('mgrMove',ids,to,index,T,temp,zv()).then(function(nd){mgr.busy--;if(!mgr.busy){mgr.d=nd;render()}},function(e){mgr.busy--;toast('Could not move: '+e.message);loadMgr().catch(function(){})});
 }
 var rd=null;
@@ -1092,7 +1092,7 @@ app.addEventListener('click',function(e){
   else if(a==='lopen'){ui.liveOpen=ui.liveOpen===v?null:v;ui.confirm=false;render()}
   else if(a==='ask-startstorm'){ui.confirm=ui.confirm==='startstorm'?false:'startstorm';render();var sn=document.getElementById('st-name');if(sn)sn.focus()}
   else if(a==='setactive'){var wc=b.getAttribute('data-c');if(b.getAttribute('data-empty'))toast(v+' has no sites for '+wc+' yet. Add them under Routes.');mgr.d.active[wc]=v;render();mgrCall('mgrSetActive',wc,v,zv()).then(function(d){mgr.d=d;render();toast(wc+' is on the '+v+' route. Their phone switches within a minute.')},function(err){toast('Could not set the route: '+err.message);loadMgr()})}
-  else if(a==='sethelp'){var hc=b.getAttribute('data-c');mgrCall('mgrHelp',hc,v,zv()).then(function(d){mgr.d=d;render();toast(v?hc+' is helping '+v+' this storm. Their phone shows it.':hc+' is back in their own zone.')},function(err){toast(err.message);loadMgr()})}
+  else if(a==='sethelp'){var hc=b.getAttribute('data-c');mgrCall('mgrHelp',hc,v,zv()).then(function(d){mgr.d=d;render();toast(v?hc+' is helping '+v+' this event. Their phone shows it.':hc+' is back in their own zone.')},function(err){toast(err.message);loadMgr()})}
   else if(a==='goroute'){var gl=liveOf(v);ui.tab='routes';ui.rcrew=v;ui.rsel={};if(gl&&gl.route)ui.rtype=gl.route;render();window.scrollTo(0,0)}
   else if(a==='moveleft'){var ml=liveOf(v);if(!ml||!ml.route)return;ui.rtype=ml.route;ui.rsel={};leftOf(ml).forEach(function(r){ui.rsel[r.site]=1});ui.sheet='move';render()}
   else if(a==='rcrew'){ui.rcrew=ui.rcrew===v?null:v;ui.rsel={};render()}
@@ -1137,9 +1137,9 @@ app.addEventListener('click',function(e){
   else if(a==='crew-save'){var cl=(mgr.crewEdit||[]).filter(function(c){return c.name.trim()});var seen={},dup=cl.some(function(c){var k=c.name.trim().toLowerCase();if(seen[k])return true;seen[k]=1});if(dup){toast('Two people have the same name. Add a last initial to tell them apart.');return}
     mgrCall('mgrSetCrew',cl,zv()).then(function(d){mgr.d=d;mgr.crewEdit=null;render();toast('Crew saved.')},function(e){toast('Could not save crew: '+e.message)})}
   else if(a==='import-drive'){mgr.driveImport=true;render();mgrCall('mgrImportDrive').then(function(r){mgr.driveImport=false;toast(r.left?'Added '+r.added+' sites. '+r.left+' still to go: tap Import from Google Drive again to finish.':(r.added?'Added '+r.added+' sites. All '+r.total+' are in.':'All '+r.total+' sites were already imported.'));return loadMgr()},function(e){mgr.driveImport=false;render();toast(e.message)})}
-  else if(a==='start-storm'){var nm=(document.getElementById('st-name')||{}).value||'';mgrCall('mgrStartStorm',nm,zv()).then(function(d){mgr.d=d;ui.confirm=false;render();toast('Storm started. Crew clock-ins now count toward it.')},function(e){toast(e.message)})}
+  else if(a==='start-storm'){var nm=(document.getElementById('st-name')||{}).value||'';mgrCall('mgrStartStorm',nm,zv()).then(function(d){mgr.d=d;ui.confirm=false;render();toast('Snow event started. Crew clock-ins now count toward it.')},function(e){toast(e.message)})}
   else if(a==='ask-endstorm'){ui.confirm='endstorm';render()}
-  else if(a==='end-storm'){ui.confirm=false;mgr.ending=true;toast('Ending the storm and making printouts. This takes about a minute.');mgrCall('mgrEndStorm',zv()).then(function(d){mgr.d=d;render();toast('Storm ended. Printouts are in your email and in Drive.')},function(e){toast('Could not end the storm: '+e.message)})}
+  else if(a==='end-storm'){ui.confirm=false;mgr.ending=true;toast('Ending the event and making printouts. This takes about a minute.');mgrCall('mgrEndStorm',zv()).then(function(d){mgr.d=d;render();toast('Snow event ended. Printouts are in your email and in Drive.')},function(e){toast('Could not end the event: '+e.message)})}
   else if(a==='lg-scope'){mgr.lg.scope=v;mgr.log=null;render();loadLog()}
   else if(a==='lg-kind'){mgr.lg.kind=v;render()}
   else if(a==='lg-to'){mgr.lg.to=mgr.lg.to===v?'':v;render()}
@@ -1165,7 +1165,7 @@ app.addEventListener('change',function(e){
   var t=e.target;
   if(t.hasAttribute('data-assign')){var id=t.getAttribute('data-assign'),to=t.value,T=ui.rtype;var s=msiteById(id);mgrCall('mgrAssign',id,to,null,T,mgr.tempMode,zv()).then(function(d){mgr.d=d;render();toast(to?(s?s.name:'Site')+' is on '+to+'’s '+T+' route.':(s?s.name:'Site')+' is off the '+T+' route.')},function(err){toast('Could not move: '+err.message);loadMgr()});return}
   if(t.hasAttribute('data-zonesel')){setZone(t.value);return}
-  if(t.hasAttribute('data-help')){var hw=t.getAttribute('data-help'),hz=t.value;mgrCall('mgrHelp',hw,hz,zv()).then(function(d){mgr.d=d;render();toast(hz?hw+' is helping '+hz+' this storm. Their phone shows it.':hw+' is back in their own zone.')},function(err){toast(err.message);loadMgr()});return}
+  if(t.hasAttribute('data-help')){var hw=t.getAttribute('data-help'),hz=t.value;mgrCall('mgrHelp',hw,hz,zv()).then(function(d){mgr.d=d;render();toast(hz?hw+' is helping '+hz+' this event. Their phone shows it.':hw+' is back in their own zone.')},function(err){toast(err.message);loadMgr()});return}
   if(t.hasAttribute('data-sitezone')){var sid=t.getAttribute('data-sitezone'),sz=t.value;mgrCall('mgrSiteZone',sid,sz).then(function(){var x=msiteById(sid);if(x)x.zone=sz;toast((x?x.name:'Site')+(sz?' is in '+sz+'.':' has no zone.'))},function(err){toast(err.message)});return}
   if(t.hasAttribute('data-mg')){mgr.mgrEdit=mgr.mgrEdit||mgr.mgrs.map(function(m){return {old:m.name,name:m.name,zone:m.zone,role:m.role,email:m.email,pin:''}});var mi=+t.getAttribute('data-mg'),mk=t.getAttribute('data-k');mgr.mgrEdit[mi][mk]=t.value;if(mk==='role'||!document.querySelector('[data-act="mg-save"]'))render();return}
   if(t.id==='f-zone'&&mgr.editing){mgr.editing.zone=t.value;if(!mgr.dirty){mgr.dirty=true;render()}return}
