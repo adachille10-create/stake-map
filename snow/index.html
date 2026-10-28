@@ -427,6 +427,17 @@ details.sec summary{cursor:pointer;font-weight:700;padding:6px 0}
   .mgrmode .brand h1{font-size:17px}
   .mgrmode .brand .sum{font-size:12px}
 }
+/* stops in order, skip with a reason */
+.chip.skip{background:#FFF0DB;color:#8A4B00;border-color:#F0B464}
+.chip.next{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.stop.skipped{opacity:.75}
+.stop.skipped .nm{text-decoration:line-through;text-decoration-thickness:1px}
+.stop.upnext{border-color:var(--ink);border-width:2px}
+.stop.locked{opacity:.6}
+.skipbox{display:flex;flex-direction:column;gap:10px}
+.skipbox h3{font-size:18px}
+.skr{display:flex;flex-wrap:wrap;gap:6px}
+.skiptx{color:#8A4B00}
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
@@ -566,14 +577,35 @@ function hoursTable(s){
 function openVisit(){return crew.shift&&crew.shift.visits.filter(function(v){return !v.stop})[0]}
 function visitsFor(id){var t=eff();return crew.shift?crew.shift.visits.filter(function(v){return v.site===id&&(!v.route||v.route===t)}):[]}
 function siteById(id,list){list=list||crew.route;for(var i=0;i<list.length;i++)if(list[i].id===id)return list[i];return null}
-function nextStop(afterId){
-  var r=crew.route,i=afterId?r.findIndex(function(s){return s.id===afterId}):-1;
-  for(var k=1;k<=r.length;k++){var s=r[(i+k+r.length)%r.length];if(s&&!visitsFor(s.id).some(function(v){return v.stop}))return s}
-  return null;
+var SKIPR=['Closed / not open yet','Cars or gate blocking','No snow to clear','Customer said skip','Equipment problem','Not safe','Other'];
+function isSkip(v){return /^Skipped/.test(v.svc||'')}
+function skipWhy(v){return String(v.svc||'').replace(/^Skipped – ?/,'')}
+function resolved(id){return visitsFor(id).some(function(v){return v.stop})}
+/** Stops go in route order: the first one not done or skipped. */
+function upNext(){var ov=openVisit();for(var i=0;i<crew.route.length;i++){var s=crew.route[i];if(!resolved(s.id)&&!(ov&&ov.site===s.id))return s}return null}
+function nextStop(){return upNext()}
+function skipSite(id){
+  var s=siteById(id);if(!s||!crew.shift)return;
+  var why=ui.skipWhy,note=((document.getElementById('sk-note')||{}).value||'').trim();
+  if(!why){toast('Pick a reason first.');return}
+  if(why==='Other'&&!note){toast('Say why in the box.');var n=document.getElementById('sk-note');if(n)n.focus();return}
+  var t=Date.now(),ov=openVisit(),v;
+  if(ov&&ov.site===id){v=ov;v.stop=t}else{v={id:uid(),site:id,start:t,stop:t,salt:'',route:eff()};crew.shift.visits.push(v)}
+  v.svc='Skipped – '+why;v.note=note;
+  push({type:'skip',id:v.id,shift:crew.shift.id,site:id,siteName:s.name,route:v.route||eff(),t:t,reason:why,note:note});
+  ui.skip=null;ui.skipWhy='';
+  var nx=nextStop();toast('Skipped '+s.name+(nx?'. Next: '+nx.name:'. That was the last stop.'));
+  if(nx){ui.sel=nx.id;ui.view='detail';ui.zoom=0;window.scrollTo(0,0)}else{ui.view='list';ui.sel=null}
+  render();
+}
+function skipForm(s){
+  return '<div class="work skipbox"><h3>Skip '+esc(s.name)+'?</h3><p class="note" style="margin:0">Pick why. The office sees it right away.</p><div class="skr">'+SKIPR.map(function(r){return '<button class="cbtn'+(ui.skipWhy===r?' on':'')+'" data-act="skipwhy" data-v="'+esc(r)+'">'+esc(r)+'</button>'}).join('')+'</div><input class="inp" id="sk-note" placeholder="'+(ui.skipWhy==='Other'?'Why are you skipping it? (needed)':'Anything else? (optional)')+'"><div class="row"><button class="btn ghost" data-act="skipcancel">Cancel</button><button class="btn danger" data-act="skipgo" data-id="'+s.id+'"'+(ui.skipWhy?'':' disabled')+'>Skip this site</button></div></div>';
 }
 function clockIn(){var id=uid();crew.shift={id:id,clockIn:Date.now(),visits:[]};ui.ended=null;push({type:'in',id:id});render();toast('Clocked in at '+clock(crew.shift.clockIn)+'. Drive safe.')}
 function startSite(id){
   var s=siteById(id);if(!s||!crew.shift)return;
+  if(openVisit()){toast('Finish the site you are at first.');return}
+  var un=upNext();if(un&&un.id!==id&&!resolved(id)){toast('Finish or skip '+un.name+' first.');return}
   var v={id:uid(),site:id,start:Date.now(),stop:0,svc:'',salt:'',note:'',route:eff()};crew.shift.visits.push(v);
   push({type:'start',id:v.id,shift:crew.shift.id,site:id,siteName:s.name,route:v.route,t:v.start});ui.again=false;render();
 }
@@ -583,7 +615,7 @@ function stopSite(){
   var salt=(document.getElementById('v-salt')||{}).value||'',note=(document.getElementById('v-note')||{}).value||'';
   v.stop=Date.now();v.svc=svc;v.salt=salt;v.note=note;
   push({type:'stop',id:v.id,t:v.stop,svc:svc,salt:salt,note:note});
-  var nx=nextStop(v.site),s=siteById(v.site);
+  var nx=nextStop(),s=siteById(v.site);
   toast('Done at '+(s?s.name:'site')+' · '+mins(v.stop-v.start)+(nx?'. Next: '+nx.name:'. That was the last stop.'));
   if(nx){ui.sel=nx.id;ui.view='detail';ui.zoom=0;window.scrollTo(0,0)}else{ui.view='list';ui.sel=null}
   render();
@@ -613,7 +645,7 @@ function pickHTML(){
 }
 function icon(){return '<svg width="22" height="34" viewBox="0 0 22 34" aria-hidden="true"><rect x="8" y="2" width="6" height="30" rx="3" fill="var(--accent)"/><rect x="8" y="5" width="6" height="4" fill="var(--surface)"/><rect x="8" y="12" width="6" height="4" fill="var(--surface)"/></svg>'}
 function crewHeader(){
-  var sh=crew.shift,done=sh?sh.visits.filter(function(v){return v.stop}).length:0;
+  var sh=crew.shift,done=sh?sh.visits.filter(function(v){return v.stop&&!isSkip(v)}).length:0,skp=sh?sh.visits.filter(isSkip).length:0;
   var h='<header class="top"><div class="brand">'+icon()+'<div><h1>'+esc(me)+'</h1><div class="sum">'+crew.route.length+' stop'+(crew.route.length===1?'':'s')+(eff()?' · '+esc(eff()):'')+'</div></div></div><button class="btn sm ghost" data-act="switch">Not you?</button></header>';
   var mt=myTypes();
   if(mt.length){
@@ -621,17 +653,17 @@ function crewHeader(){
     h+='<div class="routebar"><span class="lbl">Route</span><b>'+esc(eff())+'</b>'+(how?'<span class="note" style="margin:0">'+how+'</span>':'')+'<span class="sp"></span>'+(mt.length>1?'<button class="btn sm" data-act="route-menu" aria-expanded="'+ui.pickRoute+'">'+(ui.pickRoute?'Close':'Change route')+'</button>':'')+'</div>';
     if(ui.pickRoute)h+='<div class="routepick">'+mt.map(function(t){var n=crew.routes[t].length;return '<button class="btn'+(t===eff()?' primary':'')+'" data-act="pick-route" data-v="'+esc(t)+'"><span>'+esc(t)+'</span><span class="cnt">'+n+' stop'+(n===1?'':'s')+(t===crew.active?' · office pick':'')+'</span></button>'}).join('')+'<p class="note" style="margin:0">Only change it if the office told you to or conditions call for it. The office sees the switch.</p></div>';
   }
-  if(sh)h+='<div class="shiftbar"><span class="pill on"><i class="blink"></i>On the clock</span><span>since '+clock(sh.clockIn)+' · <b id="shiftclock">'+dur(Date.now()-sh.clockIn)+'</b></span><span class="sp"></span><span class="cnt">'+done+' of '+crew.route.length+' done</span></div>';
+  if(sh)h+='<div class="shiftbar"><span class="pill on"><i class="blink"></i>On the clock</span><span>since '+clock(sh.clockIn)+' · <b id="shiftclock">'+dur(Date.now()-sh.clockIn)+'</b></span><span class="sp"></span><span class="cnt">'+done+' of '+crew.route.length+' done'+(skp?' · '+skp+' skipped':'')+'</span></div>';
   if(crew.helping)h+='<p class="helpbar">Helping <b>'+esc(crew.helping)+'</b> this storm</p>';
   if(crew.offline)h+='<p class="offline">No signal right now. Everything you tap is saved on this phone.</p>';
   if(crew.queue.length)h+='<p class="queue" style="margin:8px 0 0">'+crew.queue.length+' update'+(crew.queue.length===1?'':'s')+' waiting for signal. They send on their own; keep the app open.</p>';
   return h;
 }
 function stopRow(s,i){
-  var vs=visitsFor(s.id),done=vs.filter(function(v){return v.stop}),now=vs.filter(function(v){return !v.stop})[0];
-  var chip=now?'<span class="pill now"><i class="blink"></i>Working</span>':(done.length?'<span class="chip done">Done '+mins(done.reduce(function(a,v){return a+(v.stop-v.start)},0))+'</span>':'');
+  var vs=visitsFor(s.id),done=vs.filter(function(v){return v.stop&&!isSkip(v)}),sk=vs.filter(isSkip).pop(),now=vs.filter(function(v){return !v.stop})[0],nx=crew.shift&&!now&&!done.length&&!sk?upNext():null,isNext=nx&&nx.id===s.id,locked=crew.shift&&!now&&!done.length&&!sk&&!isNext;
+  var chip=now?'<span class="pill now"><i class="blink"></i>Working</span>':(done.length?'<span class="chip done">Done '+mins(done.reduce(function(a,v){return a+(v.stop-v.start)},0))+'</span>':sk?'<span class="chip skip">Skipped</span>':isNext&&!openVisit()?'<span class="chip next">Up next</span>':'');
   var fw=nK(s,'f'),hc=(now||done.length)?'':hoursChip(s);
-  return '<button class="stop'+(now?' now':done.length?' done':'')+'" data-act="open" data-id="'+s.id+'"><span class="rt">'+(i+1)+'</span><span style="min-width:0"><span class="nm">'+esc(s.name)+'</span><span class="ad">'+esc(s.address)+'</span></span><span class="rgt">'+chip+hc+(fw?'<span class="chip walk">Walkways</span>':'')+'</span></button>';
+  return '<button class="stop'+(now?' now':done.length?' done':sk?' skipped':isNext?' upnext':locked?' locked':'')+'" data-act="open" data-id="'+s.id+'"><span class="rt">'+(i+1)+'</span><span style="min-width:0"><span class="nm">'+esc(s.name)+'</span><span class="ad">'+esc(s.address)+'</span></span><span class="rgt">'+chip+hc+(fw?'<span class="chip walk">Walkways</span>':'')+'</span></button>';
 }
 function crewListHTML(){
   var h=crewHeader(),sh=crew.shift;
@@ -659,14 +691,18 @@ function crewSiteHTML(s){
   // action card
   h+='<div class="card">';
   if(!crew.shift)h+='<div class="work"><p class="note" style="margin:0">Clock in first, then start this site.</p><button class="btn big go" data-act="clockin">On site · Clock in</button></div>';
+  else if(ui.skip===s.id&&(!ov||ov.site===s.id))h+=skipForm(s);
   else if(ov&&ov.site===s.id){
     h+='<div class="work"><div class="row"><span class="pill now"><i class="blink"></i>Working here</span><span class="note" style="margin:0">since '+clock(ov.start)+'</span></div><div class="timer" id="visitclock">'+tick(Date.now()-ov.start)+'</div>';
     h+='<div class="checks">'+SVC.map(function(x,k){var walk=/walk/i.test(x);var dflt=!walk||nK(s,'f')>0;return '<label><input type="checkbox" data-svc value="'+x+'" id="svc'+k+'"'+(dflt&&k<1?' checked':'')+'>'+x+'</label>'}).join('')+'</div>';
     h+='<label class="fieldlbl">Salt used (optional)<input class="inp" id="v-salt" placeholder="e.g. 4 bags, half a yard"></label><label class="fieldlbl">Note (optional)<input class="inp" id="v-note" placeholder="e.g. car parked in the lot, broken curb"></label>';
-    h+='<button class="btn big stop" data-act="stopsite">Done at this site</button></div>';
+    h+='<button class="btn big stop" data-act="stopsite">Done at this site</button><button class="linkbtn" style="align-self:center" data-act="skipask" data-id="'+s.id+'">Couldn’t finish? Skip with a reason</button></div>';
   }else if(ov){var os=siteById(ov.site);h+='<div class="work"><p class="note" style="margin:0">You are still working at <b>'+esc(os?os.name:'another site')+'</b>. Finish it before starting this one.</p><button class="btn primary" data-act="open" data-id="'+ov.site+'">Go to '+esc(os?os.name:'that site')+'</button></div>'}
-  else if(done.length&&!ui.again){h+='<div class="work"><div class="row"><span class="chip done">Done</span><span class="note" style="margin:0">'+done.map(function(v){return clock(v.start)+'–'+clock(v.stop)+' ('+mins(v.stop-v.start)+')'+(v.svc?' · '+esc(v.svc):'')}).join('<br>')+'</span></div><button class="btn sm ghost" data-act="again" style="align-self:flex-start">Came back to this site? Start it again</button></div>'}
-  else h+='<div class="work"><button class="btn big go" data-act="startsite" data-id="'+s.id+'">Start this site</button><p class="note" style="margin:0">Tap when you start plowing or shoveling here. It records the time.</p></div>';
+  else if(done.length&&!ui.again){var dn=done.filter(function(v){return !isSkip(v)}),sk1=done.filter(isSkip);h+='<div class="work"><div class="row">'+(dn.length?'<span class="chip done">Done</span>':'<span class="chip skip">Skipped</span>')+'<span class="note" style="margin:0">'+dn.map(function(v){return clock(v.start)+'–'+clock(v.stop)+' ('+mins(v.stop-v.start)+')'+(v.svc?' · '+esc(v.svc):'')}).concat(sk1.map(function(v){return 'Skipped '+clock(v.stop)+' · '+esc(skipWhy(v))+(v.note?' · “'+esc(v.note)+'”':'')})).join('<br>')+'</span></div><button class="btn sm ghost" data-act="again" style="align-self:flex-start">Came back to this site? Start it again</button></div>'}
+  else{var un=upNext();
+    if(un&&un.id!==s.id&&!done.length)h+='<div class="work"><p style="margin:0"><b>Do the stops in order.</b> Finish or skip <b>'+esc(un.name)+'</b> first.</p><button class="btn primary" data-act="open" data-id="'+un.id+'">Go to '+esc(un.name)+'</button><p class="note" style="margin:0">If the office wants you to go here first, they can move it up on your route.</p></div>';
+    else h+='<div class="work"><button class="btn big go" data-act="startsite" data-id="'+s.id+'">Start this site</button><p class="note" style="margin:0">Tap when you start plowing or shoveling here. It records the time.</p>'+(done.length?'':'<button class="linkbtn" style="align-self:center" data-act="skipask" data-id="'+s.id+'">Can’t do this one? Skip with a reason</button>')+'</div>';
+  }
   h+='</div>';
   h+=photoCard(s);
   if(s.notes)h+='<div class="card pad sec"><h3>Notes</h3><p class="notes">'+esc(s.notes)+'</p></div>';
@@ -777,7 +813,7 @@ function liveHTML(d){
   h+=L.map(function(l){
     var s=stat(l),open=ui.liveOpen===l.crew,sub;
     if(l.current)sub='At <b>'+esc(l.current.site)+'</b> · '+mins(Date.now()-l.current.start);
-    else if(l.shift)sub=l.lastDone?'Finished '+esc(l.lastDone.site)+' '+clock(l.lastDone.stop):'Clocked in '+clock(l.shift.clockIn);
+    else if(l.shift)sub=l.lastDone?(l.lastDone.skip?'<span class="skiptx">Skipped '+esc(l.lastDone.site)+' · '+esc(l.lastDone.skip)+'</span>':'Finished '+esc(l.lastDone.site)+' '+clock(l.lastDone.stop)):'Clocked in '+clock(l.shift.clockIn);
     else sub=l.lastShift?'Off · last out '+new Date(l.lastShift.clockOut).toLocaleDateString([], {weekday:'short'})+' '+clock(l.lastShift.clockOut):'Off';
     var pct=l.total?Math.min(100,Math.round(100*(l.done||0)/l.total)):0;
     var r='<button class="lrow'+(open?' open':'')+'" data-act="lopen" data-v="'+esc(l.crew)+'" aria-expanded="'+open+'"><span class="dot '+s+'"></span><span class="lmain"><span class="lname">'+esc(l.crew)+(l.zone!==d.zone?' <span class="chip">from '+esc(l.zone)+'</span>':'')+(l.helping&&l.helping!==d.zone?' <span class="chip tmp">in '+esc(l.helping)+'</span>':'')+'</span><span class="lsub">'+sub+'</span></span><span class="lprog"><span>'+(l.route?esc(l.route):'No route')+'</span>'+(l.shift?'<b>'+(l.done||0)+'/'+l.total+'</b><i><u style="width:'+pct+'%"></u></i>':'<b>'+l.total+' sites</b>')+'</span></button>';
@@ -785,7 +821,7 @@ function liveHTML(d){
       r+='<div class="ldet">';
       r+='<div class="flabel">Route today'+(l.picked?' · <b>they switched to '+esc(l.picked)+'</b>':'')+'</div><div class="cgrp">'+d.types.filter(function(t){return routeOf(l.crew,t).length||(d.active[l.crew]||'')===t}).map(function(t){var n=routeOf(l.crew,t).length,on=(d.active[l.crew]||'')===t;return '<button class="cbtn'+(on?' on':'')+'" data-act="setactive" data-c="'+esc(l.crew)+'" data-v="'+esc(t)+'"'+(n?'':' data-empty="1"')+'>'+esc(t)+' <small>'+n+'</small></button>'}).join('')+'</div>'+(d.types.some(function(t){return routeOf(l.crew,t).length})?'':'<div class="note" style="margin:0">No sites on any of '+esc(l.crew)+'’s routes yet. Tap Edit route to add some.</div>');
       if(d.zones.length>1)r+='<div class="flabel">Working in</div><div class="cgrp">'+d.zones.map(function(z){var on=(l.helping||l.zone)===z;return '<button class="cbtn'+(on?' on':'')+'" data-act="sethelp" data-c="'+esc(l.crew)+'" data-v="'+(z===l.zone?'':esc(z))+'">'+esc(z)+(z===l.zone?' <small>home</small>':'')+'</button>'}).join('')+'</div>';
-      if(l.shift)r+='<div class="meta">Clocked in '+clock(l.shift.clockIn)+' · '+dur(Date.now()-l.shift.clockIn)+' · '+(l.done||0)+' visits</div>';
+      if(l.shift)r+='<div class="meta">Clocked in '+clock(l.shift.clockIn)+' · '+dur(Date.now()-l.shift.clockIn)+' · '+(l.done||0)+' done'+(l.skipped?' · <b class="skiptx">'+l.skipped+' skipped</b>':'')+'</div>';
       var left=l.route?leftOf(l).length:0;
       r+='<div class="lacts"><button class="btn sm" data-act="goroute" data-v="'+esc(l.crew)+'">Edit route</button>'+(left?'<button class="btn sm" data-act="moveleft" data-v="'+esc(l.crew)+'">Move '+(l.shift&&l.done?'their '+left+' left':'all '+left)+'…</button>':'');
       if(l.shift)r+=ui.confirm==='out:'+l.crew?'<button class="btn sm danger armed" data-act="force-out" data-v="'+esc(l.crew)+'">Tap again to clock out</button>':'<button class="btn sm ghost" data-act="ask-out" data-v="'+esc(l.crew)+'">Clock out</button>';
@@ -1027,10 +1063,14 @@ app.addEventListener('click',function(e){
   // crew
   else if(a==='iam'){me=v;lsSet('snow.me',me);loadCrew();ui.mode='crew';ui.view='list';render();sync()}
   else if(a==='switch'){if(crew.shift){toast('Clock out before switching to another name.');return}lsDel('snow.me');me=null;ui.mode='pick';ui.ended=null;render();refreshBoot()}
-  else if(a==='open'){if(bid){ui.sel=bid;ui.view='detail';ui.zoom=0;ui.mark=null;ui.again=false;render();window.scrollTo(0,0)}}
+  else if(a==='open'){if(bid){ui.skip=null;ui.sel=bid;ui.view='detail';ui.zoom=0;ui.mark=null;ui.again=false;render();window.scrollTo(0,0)}}
   else if(a==='back'){ui.view='list';ui.sel=null;render();window.scrollTo(0,0)}
   else if(a==='clockin')clockIn();
   else if(a==='startsite')startSite(bid);
+  else if(a==='skipask'){ui.skip=bid;ui.skipWhy='';render()}
+  else if(a==='skipwhy'){var kn=document.getElementById('sk-note'),kv=kn?kn.value:'';ui.skipWhy=v;render();var kn2=document.getElementById('sk-note');if(kn2){kn2.value=kv;if(v==='Other')kn2.focus()}}
+  else if(a==='skipcancel'){ui.skip=null;ui.skipWhy='';render()}
+  else if(a==='skipgo')skipSite(bid);
   else if(a==='stopsite')stopSite();
   else if(a==='again'){ui.again=true;render()}
   else if(a==='end'){ui.ending=true;ui.view='list';render();window.scrollTo(0,0)}
