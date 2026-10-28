@@ -765,7 +765,7 @@ function mgrHTML(){
   var zsel=isOwner()&&d?'<select class="zonesel" id="zonesel" data-zonesel aria-label="Zone">'+['<option value="">All zones</option>'].concat(d.zones.map(function(z){return '<option value="'+esc(z)+'"'+(z===mgr.zone?' selected':'')+'>'+esc(z)+'</option>'})).join('')+'</select>':(mgr.me&&mgr.me.zone?'<span class="zonetag">'+esc(mgr.me.zone)+'</span>':'');
   var h='<header class="top"><div class="brand">'+icon()+'<div><h1>Snow Route</h1><div class="sum">'+who+(d?' · '+d.sites.length+' sites · '+d.crew.filter(function(c){return c.active}).length+' crew':'')+'</div></div></div>'+zsel+'<button class="btn sm ghost" data-act="mgr-out">Sign out</button></header>';
   var t=function(k,l){return '<button role="tab" data-act="tab" data-v="'+k+'" aria-selected="'+(ui.tab===k)+'">'+l+'</button>'};
-  h+='<nav class="tabs mtabs" role="tablist">'+t('live','Live')+t('routes','Routes')+t('log','Log')+t('sites','Stakes')+t('crew','Settings')+'</nav>';
+  h+='<nav class="tabs mtabs" role="tablist">'+t('live','Live')+t('routes','Routes')+t('log','Log')+t('sites','Sites')+t('crew','Settings')+'</nav>';
   if(!d)return h+'<div class="panel">'+(mgr.err?'<div class="queue" style="margin:0"><b>Could not load.</b> '+esc(mgr.err)+'</div><button class="btn primary" style="align-self:flex-start" data-act="refresh">Try again</button>':'<p class="note">Loading…</p>')+'</div>';
   var needZone=isOwner()&&!d.zone&&(ui.tab==='routes'||ui.tab==='log');
   if(needZone)h+='<div class="panel"><div class="empty">Pick a zone at the top to see its '+(ui.tab==='log'?'event log':'routes')+'.</div>'+zonePickHTML(d)+'</div>';
