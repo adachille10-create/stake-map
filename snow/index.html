@@ -333,6 +333,100 @@ img{max-width:100%}
 /* the stake map hid back buttons on wide screens; this app always needs them */
 @media (min-width:900px){.back{display:block!important}}
 .app{max-width:1100px;margin:0 auto}
+
+/* ---------- manager on a phone ---------- */
+.sbar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--accent);color:var(--accent-ink)}
+.sbar.off{background:var(--sunk);color:var(--ink)}
+.sbar .blink{width:10px;height:10px;border-radius:50%;background:currentColor;flex:none}
+.sbtx{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.25}
+.sbtx span{font-size:13px;opacity:.85}
+.sbar .btn{background:var(--surface);color:var(--ink);border-color:transparent}
+.dline{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.dline .linkbtn{margin-left:auto}
+.lhead{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+.lhead span{font-size:13px;color:var(--muted)}
+.llist,.rc{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.llist{display:flex;flex-direction:column}
+.lrow{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;padding:8px 12px;border:0;border-top:1px solid var(--line);background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.llist>.lrow:first-child{border-top:0}
+.lrow.open{background:var(--bg)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--line)}
+.dot.on{background:var(--ok)}
+.dot.now{background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.lmain{display:flex;flex-direction:column;min-width:0;flex:1}
+.lname{font-weight:800;font-size:16px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.lsub{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lsub b{color:var(--ink)}
+.lprog{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none;font-size:12px;color:var(--muted);min-width:64px}
+.lprog b{font-size:14px;color:var(--ink)}
+.lprog i{display:block;width:64px;height:5px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.lprog u{display:block;height:100%;background:var(--ok)}
+.ldet{display:flex;flex-direction:column;gap:8px;padding:4px 12px 14px 32px;background:var(--bg)}
+.flabel{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.flabel b{text-transform:none;letter-spacing:0;color:var(--accent)}
+.cgrp{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-start}
+.cbtn{min-height:40px;padding:0 12px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.cbtn small{font-weight:600;color:var(--muted);margin-left:2px}
+.cbtn.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.cbtn.on small{color:inherit;opacity:.7}
+.lacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+details.sec summary{cursor:pointer;font-weight:700;padding:6px 0}
+.rc{margin-top:8px}
+.rchead{display:flex;align-items:center;gap:8px;width:100%;min-height:54px;padding:8px 12px;border:0;background:transparent;color:inherit;font:inherit;font-size:16px;text-align:left;cursor:pointer}
+.rchead .cnt{font-family:"Overpass Mono",monospace;font-weight:600;color:var(--muted)}
+.chev{font-size:22px;line-height:1;color:var(--muted);transition:transform .15s}
+.rc.open .chev{transform:rotate(90deg)}
+.rc.open .rchead{border-bottom:1px solid var(--line);background:var(--bg)}
+.rlist{display:flex;flex-direction:column}
+.rr{display:flex;align-items:stretch;border-top:1px solid var(--line);background:var(--surface)}
+.rlist>.rr:first-child{border-top:0}
+.rr.sel{background:color-mix(in srgb,var(--sel) 22%,var(--surface))}
+.rr.dn .rnm b{color:var(--muted)}
+.rr.dragging{position:relative;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,.25);border-radius:8px}
+.hnd{display:flex;align-items:center;justify-content:center;width:44px;flex:none;font-size:22px;color:var(--muted);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.rtx{display:flex;align-items:center;gap:10px;flex:1;min-width:0;min-height:54px;padding:6px 12px 6px 0;border:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.rlist:not([data-crew]) .rtx{padding-left:12px}
+.num{font-family:"Overpass Mono",monospace;font-weight:600;font-size:13px;color:var(--muted);width:20px;flex:none;text-align:right}
+.rnm{display:flex;flex-direction:column;min-width:0;flex:1}
+.rnm b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rnm small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ck{width:24px;height:24px;border-radius:6px;border:2px solid var(--line);flex:none;position:relative}
+.sel>.ck,.sel .ck{background:var(--ink);border-color:var(--ink)}
+.sel>.ck::after,.sel .ck::after{content:"";position:absolute;left:6px;top:1px;width:7px;height:13px;border:solid var(--surface);border-width:0 3px 3px 0;transform:rotate(45deg)}
+.rfoot{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--bg)}
+.actbar{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;width:min(560px,calc(100% - 20px));display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:var(--ink);color:var(--surface);box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:40}
+.actbar .btn{border-color:transparent}
+.actbar .x,.shead .x{width:40px;height:40px;border-radius:20px;border:0;background:transparent;color:inherit;font-size:18px;cursor:pointer;flex:none}
+.scrim{position:fixed;inset:0;background:rgba(10,15,20,.45);z-index:50}
+.sheet{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(560px,100%);max-height:85vh;display:flex;flex-direction:column;gap:10px;padding:14px 16px calc(16px + env(safe-area-inset-bottom));background:var(--surface);border-radius:16px 16px 0 0;z-index:51;box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+.shead{display:flex;align-items:center;gap:8px;font-size:18px}
+.shead b{flex:1}
+.slist{display:flex;flex-direction:column;overflow-y:auto;border:1px solid var(--line);border-radius:10px;-webkit-overflow-scrolling:touch}
+.srow{display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 12px;border:0;border-top:1px solid var(--line);background:transparent;color:inherit;font:inherit;font-size:16px;text-align:left;cursor:pointer}
+.slist>.srow:first-child{border-top:0}
+.srow small{color:var(--muted);font-size:13px}
+.srow:disabled{opacity:.45}
+.srow.off b{color:var(--hazard)}
+.srow.sel{background:color-mix(in srgb,var(--sel) 22%,var(--surface))}
+.sheeton{overflow:hidden}
+@media (max-width:899px){
+  .app.mgrmode{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  .mtabs{position:fixed;left:0;right:0;bottom:0;z-index:30;margin:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));gap:2px;background:var(--surface);border-top:1px solid var(--line);overflow:visible}
+  .mtabs button{flex:1 1 0;min-width:0;min-height:52px;padding:0 2px;border-radius:10px;border:0;font-size:13px}
+  .mtabs button[aria-selected="true"]{background:var(--ink);color:var(--surface)}
+  .mtabs+.panel{border-top-left-radius:10px;border-top-right-radius:10px;margin-top:10px}
+  .actbar{bottom:calc(76px + env(safe-area-inset-bottom))}
+}
+.rl{display:flex;gap:6px;align-items:center;min-width:0}
+.rl b{min-width:0}
+.rl .chip{flex:none}
+.btn:disabled{opacity:.45;cursor:default}
+@media (max-width:899px){
+  .mgrmode header.top{gap:8px;padding-bottom:10px}
+  .mgrmode .brand svg{display:none}
+  .mgrmode .brand h1{font-size:17px}
+  .mgrmode .brand .sum{font-size:12px}
+}
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
@@ -366,7 +460,7 @@ var ui={rtype:'',pickRoute:false,mode:'pick',sel:null,view:'list',tool:'s',mark:
 var data={crew:[],crewZones:[],zones:[],ver:-1};
 var me=lsGet('snow.me',null);
 var crew={helping:'',routes:{},types:[],active:'',pick:'',route:[],ver:-1,shift:null,queue:[],last:0,offline:false};
-var mgr={me:lsGet('snow.mgrme',null),zone:lsGet('snow.zone',''),zoneEdit:null,mgrs:null,mgrEdit:null,tempMode:false,typeEdit:null,hrsOpen:false,log:null,lg:{scope:'storm',auto:lsGet('snow.lgauto',true),kind:'note',to:''},token:lsGet('snow.mgr',null),d:null,dirty:false,editing:null,importing:null,crewEdit:null};
+var mgr={me:lsGet('snow.mgrme',null),zone:lsGet('snow.zone',''),zoneEdit:null,mgrs:null,mgrEdit:null,tempMode:null,typeEdit:null,hrsOpen:false,log:null,lg:{scope:'storm',auto:lsGet('snow.lgauto',true),kind:'note',to:''},token:lsGet('snow.mgr',null),d:null,dirty:false,editing:null,importing:null,crewEdit:null};
 var imgs={},imgWait={};
 var toastT=null,suppress=false,drag=null,pinch=null,ZMAX=10;
 
@@ -599,7 +693,7 @@ function mgrHTML(){
   var zsel=isOwner()&&d?'<select class="zonesel" id="zonesel" data-zonesel aria-label="Zone">'+['<option value="">All zones</option>'].concat(d.zones.map(function(z){return '<option value="'+esc(z)+'"'+(z===mgr.zone?' selected':'')+'>'+esc(z)+'</option>'})).join('')+'</select>':(mgr.me&&mgr.me.zone?'<span class="zonetag">'+esc(mgr.me.zone)+'</span>':'');
   var h='<header class="top"><div class="brand">'+icon()+'<div><h1>Snow Route</h1><div class="sum">'+who+(d?' · '+d.sites.length+' sites · '+d.crew.filter(function(c){return c.active}).length+' crew':'')+'</div></div></div>'+zsel+'<button class="btn sm ghost" data-act="mgr-out">Sign out</button></header>';
   var t=function(k,l){return '<button role="tab" data-act="tab" data-v="'+k+'" aria-selected="'+(ui.tab===k)+'">'+l+'</button>'};
-  h+='<div class="tabs" role="tablist">'+t('live','Live')+t('log','Log')+t('routes','Routes')+t('sites','Stakes')+t('crew','Settings')+'</div>';
+  h+='<nav class="tabs mtabs" role="tablist">'+t('live','Live')+t('routes','Routes')+t('log','Log')+t('sites','Stakes')+t('crew','Settings')+'</nav>';
   if(!d)return h+'<div class="panel"><p class="note">Loading…</p></div>';
   var needZone=isOwner()&&!d.zone&&(ui.tab==='routes'||ui.tab==='log');
   if(needZone)h+='<div class="panel"><div class="empty">Pick a zone at the top to see its '+(ui.tab==='log'?'storm log':'routes')+'.</div>'+zonePickHTML(d)+'</div>';
@@ -608,7 +702,7 @@ function mgrHTML(){
   else if(ui.tab==='routes')h+=routesHTML(d);
   else if(ui.tab==='sites')h+=sitesHTML(d);
   else h+=crewSetHTML(d);
-  return h;
+  return h+actBar(d)+sheetHTML(d);
 }
 function stormHTML(d){
   var st=d.storm,h='<div class="lc" style="background:var(--surface);border-width:2px;border-color:'+(st?'var(--accent)':'var(--line)')+'"><div class="meta" style="text-transform:uppercase;letter-spacing:.06em;font-weight:700">'+esc(d.zone)+'</div>';
@@ -652,63 +746,130 @@ function dutyHTML(d){
   var zi=d.zoneInfo.filter(function(z){return z.name===d.zone})[0]||{},mine=mgr.me&&zi.duty===mgr.me.name;
   return '<div class="duty'+(zi.duty?'':' none')+'"><span>On duty tonight</span><b>'+(zi.duty?esc(zi.duty):'Nobody yet')+'</b><span class="note" style="margin:0">'+(zi.duty?'Gets '+esc(d.zone)+'’s route emails and printouts':'Emails go to the owner until someone is on duty')+'</span><span class="sp"></span>'+(mine?'<span class="chip done">You</span>':'<button class="btn sm primary" data-act="duty">I’m on duty</button>')+'</div>';
 }
+function stormOnly(d){d=d||mgr.d;return !!(d&&d.storm)&&(mgr.tempMode==null?true:mgr.tempMode)}
+function liveOf(n){return (mgr.d&&mgr.d.live||[]).filter(function(l){return l.crew===n})[0]}
+function stat(l){return !l||!l.shift?'off':l.current?'now':'on'}
+function routeOf(n,T){return mgr.d.routes.filter(function(r){return r.crew===n&&r.type===T}).sort(function(a,b){return a.order-b.order})}
+function leftOf(l){if(!l||!l.route)return [];var cur=l.current&&l.current.siteId;return routeOf(l.crew,l.route).filter(function(x){return (l.doneIds||[]).indexOf(x.site)<0&&x.site!==cur})}
+function shortAddr(a){return String(a||'').split(',')[0]}
+function compactStorm(d){
+  var st=d.storm;
+  if(!st)return '<div class="sbar off"><div class="sbtx"><b>No storm running</b><span>'+esc(d.zone)+'</span></div><button class="btn sm primary" data-act="ask-startstorm">Start storm</button></div>'+(ui.confirm==='startstorm'?'<div class="lc" style="background:var(--surface)"><input class="inp" id="st-name" placeholder="Name, e.g. Dec 8 storm (optional)"><div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm primary" data-act="start-storm">Start storm</button></div><p class="note" style="margin:0">Starting the storm puts you on duty for '+esc(d.zone)+'.</p></div>':'');
+  var on=d.live.filter(function(l){return l.shift}).length;
+  var h='<div class="sbar"><i class="blink"></i><div class="sbtx"><b>'+esc(st.name)+'</b><span>'+dur(Date.now()-st.start)+' · '+on+' on the clock</span></div><button class="btn sm" data-act="ask-endstorm">End</button></div>';
+  if(ui.confirm==='endstorm')h+='<div class="lc" style="background:var(--surface)"><p style="margin:0">End '+esc(st.name)+'?'+(on?' <b>'+on+' still clocked in</b> will be clocked out now.':'')+' Each person’s printout is made and emailed.</p><div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm danger armed" data-act="end-storm">End storm</button></div></div>';
+  return h;
+}
+function dutyLine(d){
+  var zi=d.zoneInfo.filter(function(z){return z.name===d.zone})[0]||{},mine=mgr.me&&zi.duty===mgr.me.name;
+  return '<div class="dline"><span>On duty: <b>'+(zi.duty?esc(zi.duty):'nobody')+'</b>'+(mine?' (you)':'')+'</span>'+(mine?'':'<button class="linkbtn" data-act="duty">I’m on duty</button>')+'</div>';
+}
 function liveHTML(d){
   if(!d.zone){
     var w=d.unzoned?'<p class="queue" style="margin:0">'+d.unzoned+' site'+(d.unzoned===1?' has':'s have')+' no zone yet. Assign them under Settings → Sites by zone.</p>':'';
-    return '<div class="panel"><h3 style="font-size:18px">All zones</h3>'+w+zonePickHTML(d)+'<p class="note">Open a zone to run its storm, routes and log. Each zone’s on-duty manager gets that zone’s emails.</p></div>';
+    return '<div class="panel"><h3 style="font-size:18px">All zones</h3>'+w+zonePickHTML(d)+'</div>';
   }
-  var h='<div class="panel">'+unzonedNote(d)+dutyHTML(d)+stormHTML(d)+'<div class="row"><span class="note" style="margin:0">Updated '+clock(mgr.loaded)+'. Refreshes every minute.</span><span style="flex:1"></span><button class="btn sm" data-act="refresh">Refresh</button><a class="btn sm" href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">Open full log</a></div>';
+  var h='<div class="panel">'+unzonedNote(d)+compactStorm(d)+dutyLine(d);
   if(!d.live.length)return h+'<div class="empty">Add your crew under <b>Settings</b> first.</div></div>';
-  h+='<div class="livegrid">'+d.live.map(function(l){
-    var st,body='';
-    if(l.shift){
-      st=l.current?'<span class="pill now"><i class="blink"></i>At a site</span>':'<span class="pill on"><i class="blink"></i>On the clock</span>';
-      body+='<div class="meta">Clocked in '+clock(l.shift.clockIn)+' · '+dur(Date.now()-l.shift.clockIn)+'</div>';
-      if(l.current)body+='<div><b>'+esc(l.current.site)+'</b> since '+clock(l.current.start)+' ('+mins(Date.now()-l.current.start)+')</div>';
-      else if(l.lastDone)body+='<div class="meta">Last finished '+esc(l.lastDone.site)+' at '+clock(l.lastDone.stop)+'</div>';
-      var pct=l.total?Math.min(100,Math.round(100*(l.done||0)/l.total)):0;
-      body+='<div class="bar2"><i style="width:'+pct+'%"></i></div><div class="meta">'+(l.done||0)+' visits · '+l.total+' sites on '+(l.route?esc(l.route):'their route')+'</div>';
-      body+=ui.confirm==='out:'+l.crew?'<div class="row"><button class="btn sm ghost" data-act="cancel-x">Cancel</button><button class="btn sm danger armed" data-act="force-out" data-v="'+esc(l.crew)+'">Clock '+esc(l.crew)+' out now</button></div>':'<button class="btn sm ghost" style="align-self:flex-start" data-act="ask-out" data-v="'+esc(l.crew)+'">Clock out for them</button>';
-    }else{
-      st='<span class="pill off">Off</span>';
-      body+=l.lastShift?'<div class="meta">Last shift '+new Date(l.lastShift.clockIn).toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'})+', '+clock(l.lastShift.clockIn)+'–'+clock(l.lastShift.clockOut)+' ('+l.lastShift.hours+' h)</div>':'<div class="meta">No shifts yet</div>';
-      body+='<div class="meta">'+(l.route?l.total+' sites on '+esc(l.route):'No route set')+'</div>';
+  var rank={now:0,on:1,off:2},L=d.live.slice().sort(function(a,b){return rank[stat(a)]-rank[stat(b)]||a.crew.localeCompare(b.crew)});
+  var nOn=L.filter(function(l){return l.shift}).length;
+  h+='<div class="lhead"><b>Crew</b><span>'+nOn+' of '+L.length+' on the clock</span><span style="flex:1"></span><button class="linkbtn" data-act="refresh">Refresh</button></div><div class="llist">';
+  h+=L.map(function(l){
+    var s=stat(l),open=ui.liveOpen===l.crew,sub;
+    if(l.current)sub='At <b>'+esc(l.current.site)+'</b> · '+mins(Date.now()-l.current.start);
+    else if(l.shift)sub=l.lastDone?'Finished '+esc(l.lastDone.site)+' '+clock(l.lastDone.stop):'Clocked in '+clock(l.shift.clockIn);
+    else sub=l.lastShift?'Off · last out '+new Date(l.lastShift.clockOut).toLocaleDateString([], {weekday:'short'})+' '+clock(l.lastShift.clockOut):'Off';
+    var pct=l.total?Math.min(100,Math.round(100*(l.done||0)/l.total)):0;
+    var r='<button class="lrow'+(open?' open':'')+'" data-act="lopen" data-v="'+esc(l.crew)+'" aria-expanded="'+open+'"><span class="dot '+s+'"></span><span class="lmain"><span class="lname">'+esc(l.crew)+(l.zone!==d.zone?' <span class="chip">from '+esc(l.zone)+'</span>':'')+(l.helping&&l.helping!==d.zone?' <span class="chip tmp">in '+esc(l.helping)+'</span>':'')+'</span><span class="lsub">'+sub+'</span></span><span class="lprog"><span>'+(l.route?esc(l.route):'No route')+'</span>'+(l.shift?'<b>'+(l.done||0)+'/'+l.total+'</b><i><u style="width:'+pct+'%"></u></i>':'<b>'+l.total+' sites</b>')+'</span></button>';
+    if(open){
+      r+='<div class="ldet">';
+      r+='<div class="flabel">Route today'+(l.picked?' · <b>they switched to '+esc(l.picked)+'</b>':'')+'</div><div class="cgrp">'+d.types.filter(function(t){return routeOf(l.crew,t).length||(d.active[l.crew]||'')===t}).map(function(t){var n=routeOf(l.crew,t).length,on=(d.active[l.crew]||'')===t;return '<button class="cbtn'+(on?' on':'')+'" data-act="setactive" data-c="'+esc(l.crew)+'" data-v="'+esc(t)+'"'+(n?'':' data-empty="1"')+'>'+esc(t)+' <small>'+n+'</small></button>'}).join('')+'</div>'+(d.types.some(function(t){return routeOf(l.crew,t).length})?'':'<div class="note" style="margin:0">No sites on any of '+esc(l.crew)+'’s routes yet. Tap Edit route to add some.</div>');
+      if(d.zones.length>1)r+='<div class="flabel">Working in</div><div class="cgrp">'+d.zones.map(function(z){var on=(l.helping||l.zone)===z;return '<button class="cbtn'+(on?' on':'')+'" data-act="sethelp" data-c="'+esc(l.crew)+'" data-v="'+(z===l.zone?'':esc(z))+'">'+esc(z)+(z===l.zone?' <small>home</small>':'')+'</button>'}).join('')+'</div>';
+      if(l.shift)r+='<div class="meta">Clocked in '+clock(l.shift.clockIn)+' · '+dur(Date.now()-l.shift.clockIn)+' · '+(l.done||0)+' visits</div>';
+      var left=l.route?leftOf(l).length:0;
+      r+='<div class="lacts"><button class="btn sm" data-act="goroute" data-v="'+esc(l.crew)+'">Edit route</button>'+(left?'<button class="btn sm" data-act="moveleft" data-v="'+esc(l.crew)+'">Move '+(l.shift&&l.done?'their '+left+' left':'all '+left)+'…</button>':'');
+      if(l.shift)r+=ui.confirm==='out:'+l.crew?'<button class="btn sm danger armed" data-act="force-out" data-v="'+esc(l.crew)+'">Tap again to clock out</button>':'<button class="btn sm ghost" data-act="ask-out" data-v="'+esc(l.crew)+'">Clock out</button>';
+      r+='</div></div>';
     }
-    var opts=['<option value="">Not set</option>'].concat(d.types.map(function(t){var n=d.routes.filter(function(r){return r.crew===l.crew&&r.type===t}).length;return '<option value="'+esc(t)+'"'+((d.active[l.crew]||'')===t?' selected':'')+'>'+esc(t)+' ('+n+')</option>'})).join('');
-    var rsel='<label class="routesel"><span>Route today</span><select data-active="'+esc(l.crew)+'" id="ac-'+esc(l.crew).replace(/\W/g,'_')+'">'+opts+'</select></label>'+(l.picked?'<div class="meta"><b>'+esc(l.crew)+' switched to '+esc(l.picked)+'</b></div>':'');
-    var away=l.zone!==d.zone;
-    var hopts=d.zones.map(function(z){return '<option value="'+(z===l.zone?'':esc(z))+'"'+((l.helping||l.zone)===z?' selected':'')+'>'+(z===l.zone?esc(z)+' (home)':'Helping '+esc(z))+'</option>'}).join('');
-    rsel+=(away?'<div class="meta helpfrom">Helping from '+esc(l.zone)+' this storm</div>':'')+'<label class="routesel"><span>Working in</span><select data-help="'+esc(l.crew)+'" id="hp-'+esc(l.crew).replace(/\W/g,'_')+'">'+hopts+'</select></label>';
-    return '<div class="lc"><div class="row"><h3>'+esc(l.crew)+'</h3><span style="flex:1"></span>'+st+'</div>'+rsel+body+'</div>';
+    return r;
   }).join('')+'</div>';
-  return h+'<p class="note">Times and route emails come from each phone. The full history of every shift and site visit is in the log.</p></div>';
+  if(d.storms&&d.storms.filter(function(s){return s.end}).length)h+='<details class="sec"><summary>Recent storms</summary>'+d.storms.filter(function(s){return s.end}).map(function(s){return '<div class="sumrow"><span><b>'+esc(s.name)+'</b><br><span class="note">'+new Date(s.start).toLocaleDateString([], {month:'short',day:'numeric'})+' '+clock(s.start)+' – '+clock(s.end)+' · '+s.people+' people · '+s.hours+' h</span></span>'+(s.printouts?'<a class="btn sm" href="'+esc(s.printouts)+'" target="_blank" rel="noopener">Printouts</a>':'')+'</div>'}).join('')+'</details>';
+  return h+'<p class="note">Updated '+clock(mgr.loaded)+' · refreshes every minute · <a href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">Google Sheet</a></p></div>';
 }
 function rtype(d){if(!ui.rtype||d.types.indexOf(ui.rtype)<0)ui.rtype=d.types[0]||'';return ui.rtype}
+function selIds(){return Object.keys(ui.rsel||{})}
 function routesHTML(d){
-  var names=d.crew.map(function(c){return c.name}),T=rtype(d);
+  var T=rtype(d),byId={};d.sites.forEach(function(x){byId[x.id]=x});
   var h='<div class="panel"><div class="typeseg" role="tablist" aria-label="Route type">'+d.types.map(function(t){var n=d.routes.filter(function(r){return r.type===t}).length;return '<button data-act="rtype" data-v="'+esc(t)+'" aria-pressed="'+(t===T)+'">'+esc(t)+' <span class="cnt">'+n+'</span></button>'}).join('')+'</div>';
-  if(d.storm)h+='<div class="tempbar"><span>Changes are</span><div class="seg"><button data-act="tempmode" data-v="0" aria-pressed="'+!mgr.tempMode+'">Permanent</button><button data-act="tempmode" data-v="1" aria-pressed="'+mgr.tempMode+'">This storm only</button></div></div>'+(mgr.tempMode?'<p class="note" style="margin:0"><b>This storm only:</b> moves you make now go back to the normal routes when you end '+esc(d.storm.name)+'.</p>':'');
-  h+='<p class="note" style="margin:0">'+esc(T)+' route: pick a name to put a site on someone’s '+esc(T)+' route, and use ▲ ▼ to set the order. A site can be on several route types at once. Phones update within a minute.</p>';
-  var byId={};d.sites.forEach(function(x){byId[x.id]=x});
-  var rows=d.routes.filter(function(r){return r.type===T&&byId[r.site]});
+  if(d.storm)h+='<div class="tempbar"><span>Moves are</span><div class="seg"><button data-act="tempmode" data-v="1" aria-pressed="'+stormOnly(d)+'">This storm only</button><button data-act="tempmode" data-v="0" aria-pressed="'+!stormOnly(d)+'">Permanent</button></div></div>';
+  var names=d.crew.map(function(c){return c.name}),on={};
+  var rank={now:0,on:1,off:2};names.sort(function(a,b){return rank[stat(liveOf(a))]-rank[stat(liveOf(b))]||a.localeCompare(b)});
+  h+='<p class="note" style="margin:0">Tap a person to open their route. Tap sites to pick them, then move them. Drag <b>≡</b> to change the order.</p>';
   names.forEach(function(g){
-    var list=rows.filter(function(r){return r.crew===g}).sort(function(a,b){return a.order-b.order});
-    var live=d.live.filter(function(l){return l.crew===g})[0];
-    var cz=(d.crew.filter(function(c){return c.name===g})[0]||{});
-    h+='<div class="group"><h3>'+esc(g)+(cz.zone&&cz.zone!==d.zone?' <span class="chip">from '+esc(cz.zone)+'</span>':'')+' <small>'+list.length+' site'+(list.length===1?'':'s')+(d.active[g]===T?' · route today':'')+(live&&live.shift?' · on the clock':'')+'</small></h3>';
-    if(!list.length)h+='<p class="note">No sites on '+esc(g)+'’s '+esc(T)+' route.</p>';
-    h+=list.map(function(r,i){var x=byId[r.site];return rrow(x,i,list.length,g,names,r.temp)}).join('');
+    var list=routeOf(g,T).filter(function(r){return byId[r.site]}),open=ui.rcrew===g,l=liveOf(g),cz=(d.crew.filter(function(c){return c.name===g})[0]||{});
+    list.forEach(function(r){on[r.site]=1});
+    var done=(l&&l.doneIds)||[];
+    h+='<div class="rc'+(open?' open':'')+'"><button class="rchead" data-act="rcrew" data-v="'+esc(g)+'" aria-expanded="'+open+'"><span class="dot '+stat(l)+'"></span><b>'+esc(g)+'</b>'+(cz.zone&&cz.zone!==d.zone?'<span class="chip">from '+esc(cz.zone)+'</span>':'')+(d.active[g]===T?'<span class="chip done">today</span>':'')+'<span style="flex:1"></span><span class="cnt">'+list.length+'</span><span class="chev">›</span></button>';
+    if(open){
+      h+='<div class="rlist" data-crew="'+esc(g)+'">'+list.map(function(r,i){var x=byId[r.site],sel=ui.rsel&&ui.rsel[x.id];return '<div class="rr'+(sel?' sel':'')+(done.indexOf(x.id)>=0?' dn':'')+'" data-site="'+x.id+'"><span class="hnd" data-drag="'+x.id+'" aria-label="Drag to reorder">≡</span><button class="rtx" data-act="rsel" data-id="'+x.id+'"><span class="num">'+(i+1)+'</span><span class="rnm"><span class="rl"><b>'+esc(x.name)+'</b>'+(r.temp?'<span class="chip tmp">storm</span>':'')+(done.indexOf(x.id)>=0?'<span class="chip done">done</span>':'')+'</span><small>'+esc(shortAddr(x.address))+'</small></span><span class="ck" aria-hidden="true"></span></button></div>'}).join('')+'</div>';
+      if(!list.length)h+='<p class="note" style="padding:0 12px">Nothing on '+esc(g)+'’s '+esc(T)+' route yet.</p>';
+      h+='<div class="rfoot"><button class="btn sm" data-act="addsites" data-v="'+esc(g)+'">+ Add sites</button>'+(list.length?'<button class="btn sm ghost" data-act="selall" data-v="'+esc(g)+'">Select all</button>':'')+'</div>';
+    }
     h+='</div>';
   });
-  var on={};rows.forEach(function(r){if(names.indexOf(r.crew)>=0)on[r.site]=1});
-  var off=d.sites.filter(function(x){return !on[x.id]});
-  h+='<div class="group"><h3>Not on this route <small>'+off.length+' site'+(off.length===1?'':'s')+'</small></h3>'+off.map(function(x,i){return rrow(x,i,off.length,'',names)}).join('')+'</div>';
+  var off=d.sites.filter(function(x){return !on[x.id]}),oo=ui.rcrew==='';
+  h+='<div class="rc'+(oo?' open':'')+'"><button class="rchead" data-act="rcrew" data-v="" aria-expanded="'+oo+'"><b>Not on a '+esc(T)+' route</b><span style="flex:1"></span><span class="cnt">'+off.length+'</span><span class="chev">›</span></button>';
+  if(oo)h+='<div class="rlist">'+off.map(function(x){var sel=ui.rsel&&ui.rsel[x.id];return '<div class="rr'+(sel?' sel':'')+'"><button class="rtx" data-act="rsel" data-id="'+x.id+'"><span class="rnm"><b>'+esc(x.name)+'</b><small>'+esc(shortAddr(x.address))+'</small></span><span class="ck" aria-hidden="true"></span></button></div>'}).join('')+'</div>';
+  h+='</div>';
   if(!names.length)h+='<div class="empty">Add crew names under <b>Settings</b>, then build routes here.</div>';
   return h+'</div>';
 }
-function rrow(x,i,n,g,names,temp){
-  return '<div class="rrow"><span class="rt">'+(g?i+1:'–')+'</span><div style="min-width:0"><div class="nm">'+esc(x.name)+(temp?' <span class="chip tmp">This storm</span>':'')+'</div><div class="ad">'+esc(x.address)+'</div></div><div class="ctl">'+(g?'<button data-act="r-up" data-id="'+x.id+'" aria-label="Move up"'+(i?'':' disabled')+'>▲</button><button data-act="r-down" data-id="'+x.id+'" aria-label="Move down"'+(i<n-1?'':' disabled')+'>▼</button>':'')+'<select data-assign="'+x.id+'" id="as-'+x.id+'" aria-label="Who has '+esc(x.name)+'">'+['<option value="">Not on this route</option>'].concat(names.map(function(nm){return '<option value="'+esc(nm)+'"'+(nm===g?' selected':'')+'>'+esc(nm)+'</option>'})).join('')+'</select></div></div>';
+function actBar(d){
+  var ids=selIds();if(!ids.length||ui.tab!=='routes'||ui.sheet)return '';
+  var T=rtype(d),one=ids.length===1&&d.routes.filter(function(r){return r.type===T&&r.site===ids[0]})[0];
+  return '<div class="actbar"><button class="x" data-act="selnone" aria-label="Clear">✕</button><b>'+ids.length+' picked</b><span style="flex:1"></span>'+(one?'<button class="btn sm" data-act="r-up" data-id="'+ids[0]+'" aria-label="Move up">▲</button><button class="btn sm" data-act="r-down" data-id="'+ids[0]+'" aria-label="Move down">▼</button>':'')+'<button class="btn sm primary" data-act="sheet" data-v="move">Move to…</button></div>';
 }
+function sheetHTML(d){
+  if(!ui.sheet||!d)return '';
+  var T=rtype(d),h='<div class="scrim" data-act="sheetclose"></div><div class="sheet" role="dialog" aria-modal="true">';
+  var temp=d.storm?'<div class="tempbar"><span>Moves are</span><div class="seg"><button data-act="tempmode" data-v="1" aria-pressed="'+stormOnly(d)+'">This storm only</button><button data-act="tempmode" data-v="0" aria-pressed="'+!stormOnly(d)+'">Permanent</button></div></div>':'';
+  if(ui.sheet==='move'){
+    var ids=selIds(),from={};ids.forEach(function(id){var r=d.routes.filter(function(x){return x.type===T&&x.site===id})[0];from[r?r.crew:'']=1});
+    var names=d.crew.map(function(c){return c.name});
+    h+='<div class="shead"><b>Move '+(ids.length===1?esc((msiteById(ids[0])||{}).name||'1 site'):ids.length+' sites')+' to…</b><button class="x" data-act="sheetclose" aria-label="Close">✕</button></div><div class="note" style="margin:0">'+esc(T)+' route</div>'+temp+'<div class="slist">'+names.map(function(n){var l=liveOf(n),c=routeOf(n,T).length,same=Object.keys(from).length===1&&from[n];return '<button class="srow" data-act="moveto" data-v="'+esc(n)+'"'+(same?' disabled':'')+'><span class="dot '+stat(l)+'"></span><b>'+esc(n)+'</b><span style="flex:1"></span><small>'+(same?'already here':c+' sites'+(l&&l.shift?' · on the clock':''))+'</small></button>'}).join('')+'<button class="srow off" data-act="moveto" data-v=""><b>Take off the '+esc(T)+' route</b></button></div>';
+  }else if(ui.sheet==='add'){
+    var g=ui.addTo,mine={};routeOf(g,T).forEach(function(r){mine[r.site]=1});
+    var owner={};d.routes.forEach(function(r){if(r.type===T)owner[r.site]=r.crew});
+    var pool=d.sites.filter(function(x){return !mine[x.id]}).sort(function(a,b){return (owner[a.id]?1:0)-(owner[b.id]?1:0)||(owner[a.id]||'').localeCompare(owner[b.id]||'')||a.name.localeCompare(b.name)});
+    var q=(ui.addQ||'').toLowerCase();if(q)pool=pool.filter(function(x){return (x.name+' '+x.address).toLowerCase().indexOf(q)>=0});
+    var n=Object.keys(ui.addSel||{}).length;
+    h+='<div class="shead"><b>Add to '+esc(g)+'’s '+esc(T)+' route</b><button class="x" data-act="sheetclose" aria-label="Close">✕</button></div>'+temp+'<input class="inp" id="addq" placeholder="Search sites" value="'+esc(ui.addQ||'')+'" autocomplete="off"><div class="slist">'+pool.map(function(x){var s=ui.addSel&&ui.addSel[x.id];return '<button class="srow'+(s?' sel':'')+'" data-act="addpick" data-id="'+x.id+'"><span class="rnm"><b>'+esc(x.name)+'</b><small>'+(owner[x.id]?'On '+esc(owner[x.id])+'’s route':'Not on a route')+' · '+esc(shortAddr(x.address))+'</small></span><span class="ck"></span></button>'}).join('')+(pool.length?'':'<p class="note">No sites match.</p>')+'</div><button class="btn primary big" data-act="addgo"'+(n?'':' disabled')+'>'+(n?'Add '+n+' site'+(n===1?'':'s')+' to '+esc(g):'Pick sites to add')+'</button>';
+  }
+  return h+'</div>';
+}
+function localMove(ids,to,index,T,temp){
+  var R=mgr.d.routes,froms={};
+  ids.forEach(function(id){for(var i=R.length-1;i>=0;i--)if(R[i].type===T&&R[i].site===id){froms[R[i].crew]=1;R.splice(i,1)}});
+  if(to){var list=routeOf(to,T),at=index==null?list.length:Math.max(0,Math.min(list.length,index));var ins=ids.map(function(id){return {type:T,site:id,crew:to,order:0,temp:temp?1:0}});list.splice.apply(list,[at,0].concat(ins));list.forEach(function(r,k){r.order=k+1});ins.forEach(function(r){R.push(r)})}
+  Object.keys(froms).forEach(function(c){if(c!==to)routeOf(c,T).forEach(function(r,k){r.order=k+1})});
+}
+function doMove(ids,to,index,msg){
+  var d=mgr.d,T=rtype(d),temp=stormOnly(d);
+  localMove(ids,to,index,T,temp);ui.rsel={};ui.sheet=null;mgr.busy=(mgr.busy||0)+1;render();
+  if(msg)toast(msg+(temp?' For this storm only.':''));
+  mgrCall('mgrMove',ids,to,index,T,temp,zv()).then(function(nd){mgr.busy--;if(!mgr.busy){mgr.d=nd;render()}},function(e){mgr.busy--;toast('Could not move: '+e.message);loadMgr().catch(function(){})});
+}
+var rd=null;
+app.addEventListener('pointerdown',function(e){var hd=e.target.closest('[data-drag]');if(!hd)return;e.preventDefault();var row=hd.closest('.rr');var box=row.parentNode;rd={row:row,box:box,id:hd.getAttribute('data-drag'),y0:e.clientY,from:[].indexOf.call(box.children,row)};row.classList.add('dragging');try{hd.setPointerCapture(e.pointerId)}catch(x){}});
+window.addEventListener('pointermove',function(e){
+  if(!rd)return;e.preventDefault();var me_=rd.row,n,p,k=0;
+  while((n=me_.nextElementSibling)&&k++<50){var nr=n.getBoundingClientRect();if(e.clientY>nr.top+nr.height/2)rd.box.insertBefore(n,me_);else break}
+  while((p=me_.previousElementSibling)&&k++<100){var pr=p.getBoundingClientRect();if(e.clientY<pr.top+pr.height/2)rd.box.insertBefore(me_,p);else break}
+  [].forEach.call(rd.box.querySelectorAll('.num'),function(x,i){x.textContent=i+1});
+  if(e.clientY<90)window.scrollBy(0,-14);else if(e.clientY>window.innerHeight-150)window.scrollBy(0,14);
+},{passive:false});
+function endDrag(){if(!rd)return;var r=rd;rd=null;r.row.classList.remove('dragging');var ix=[].indexOf.call(r.box.children,r.row);if(ix!==r.from){doMove([r.id],r.box.getAttribute('data-crew'),ix)}else render()}
+window.addEventListener('pointerup',endDrag);window.addEventListener('pointercancel',endDrag);
 function unzonedNote(d){return isOwner()&&d.zone&&d.unzoned?'<p class="queue" style="margin:0">'+d.unzoned+' site'+(d.unzoned===1?' has':'s have')+' no zone yet, so '+(d.unzoned===1?'it is':'they are')+' hidden in '+esc(d.zone)+'. Pick <b>All zones</b> at the top, then set zones under Settings → Sites by zone.</p>':''}
 function sitesHTML(d){
   var s=mgr.editing;
@@ -784,6 +945,7 @@ function crewSetHTML(d){
 /* ---------- render ---------- */
 function cur(){if(ui.mode==='mgr')return mgr.editing;return ui.sel?siteById(ui.sel):null}
 function render(){
+  if(rd)return;
   var y=window.scrollY,ps=document.querySelector('.photo-scroll'),pl=ps?ps.scrollLeft:0,pt=ps?ps.scrollTop:0,pz=ui._pz;ui._pz=ui.zoom;
   var fid=document.activeElement&&document.activeElement.id,fs=null;try{fs=fid&&document.activeElement.selectionStart}catch(e){}
   var h='';
@@ -791,7 +953,7 @@ function render(){
   else if(ui.mode==='mgr-login')h=loginHTML();
   else if(ui.mode==='mgr')h=mgrHTML();
   else{var s=ui.view==='detail'&&ui.sel?siteById(ui.sel):null;if(ui.view==='detail'&&!s){ui.view='list';ui.sel=null}h=s?crewSiteHTML(s):crewListHTML()}
-  app.className='app'+(editing()&&mgr.editing?' editing':'');
+  app.className='app'+(editing()&&mgr.editing?' editing':'')+(ui.mode==='mgr'?' mgrmode':'')+(ui.sheet?' sheeton':'');
   app.innerHTML=h;
   window.scrollTo(0,y);applyFit();
   var ns=document.querySelector('.photo-scroll');if(ns&&ps&&pz===ui.zoom){ns.scrollLeft=pl;ns.scrollTop=pt}
@@ -879,16 +1041,30 @@ app.addEventListener('click',function(e){
   else if(a==='to-crew'){ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
   else if(a==='login'){var pin=(document.getElementById('pin')||{}).value;api('mgrLogin',pin).then(function(r){if(r.error){toast(r.error);return}mgr.token=r.token;mgr.me=r.me;lsSet('snow.mgr',r.token);lsSet('snow.mgrme',r.me);if(r.me.role!=='owner')mgr.zone=r.me.zone;ui.mode='mgr';ui.tab='live';render();loadMgr()},function(e){toast('Could not sign in: '+e.message)})}
   else if(a==='mgr-out'){if(mgr.dirty){toast('Save or discard your site changes first.');return}mgr.token=null;mgr.d=null;mgr.me=null;mgr.mgrs=null;lsDel('snow.mgr');lsDel('snow.mgrme');ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
-  else if(a==='tab'){if(mgr.dirty){toast('Save or discard your site changes first.');return}ui.tab=v;ui.confirm=false;mgr.editing=null;ui.zoom=0;render();if(v==='live'||v==='routes')loadMgr().catch(function(){});if(v==='log')loadLog()}
+  else if(a==='tab'){if(mgr.dirty){toast('Save or discard your site changes first.');return}ui.tab=v;ui.sheet=null;ui.rsel={};ui.confirm=false;mgr.editing=null;ui.zoom=0;render();if(v==='live'||v==='routes')loadMgr().catch(function(){});if(v==='log')loadLog()}
   else if(a==='refresh'){loadMgr().then(function(){toast('Updated.')},function(){})}
   else if(a==='ask-out'){ui.confirm='out:'+v;render()}
   else if(a==='cancel-x'){ui.confirm=false;render()}
   else if(a==='force-out'){ui.confirm=false;mgrCall('mgrClockOut',v,zv()).then(function(d){mgr.d=d;render();toast(v+' is clocked out. Their route email is on its way.')},function(e){toast('Could not clock out: '+e.message)})}
-  else if(a==='r-up'||a==='r-down'){var T=ui.rtype,rr=mgr.d.routes.filter(function(r){return r.type===T&&r.site===bid})[0];if(!rr)return;var list=mgr.d.routes.filter(function(r){return r.type===T&&r.crew===rr.crew}).sort(function(p,q){return p.order-q.order});var ix=list.indexOf(rr)+(a==='r-up'?-1:1);
-    list.splice(list.indexOf(rr),1);list.splice(ix,0,rr);list.forEach(function(x,k){x.order=k+1});render();
-    mgrCall('mgrAssign',bid,rr.crew,ix,T,mgr.tempMode,zv()).then(function(d){mgr.d=d;render()},function(e){toast('Could not move: '+e.message);loadMgr()})}
-  else if(a==='rtype'){ui.rtype=v;render()}
+  else if(a==='r-up'||a==='r-down'){var T=rtype(mgr.d),rr=mgr.d.routes.filter(function(r){return r.type===T&&r.site===bid})[0];if(!rr)return;var list=routeOf(rr.crew,T),ix=list.indexOf(rr)+(a==='r-up'?-1:1);if(ix<0||ix>=list.length)return;var keep={};keep[bid]=1;doMove([bid],rr.crew,ix);ui.rsel=keep;render()}
+  else if(a==='rtype'){ui.rtype=v;ui.rsel={};render()}
   else if(a==='tempmode'){mgr.tempMode=v==='1';render()}
+  else if(a==='lopen'){ui.liveOpen=ui.liveOpen===v?null:v;ui.confirm=false;render()}
+  else if(a==='ask-startstorm'){ui.confirm=ui.confirm==='startstorm'?false:'startstorm';render();var sn=document.getElementById('st-name');if(sn)sn.focus()}
+  else if(a==='setactive'){var wc=b.getAttribute('data-c');if(b.getAttribute('data-empty'))toast(v+' has no sites for '+wc+' yet. Add them under Routes.');mgr.d.active[wc]=v;render();mgrCall('mgrSetActive',wc,v,zv()).then(function(d){mgr.d=d;render();toast(wc+' is on the '+v+' route. Their phone switches within a minute.')},function(err){toast('Could not set the route: '+err.message);loadMgr()})}
+  else if(a==='sethelp'){var hc=b.getAttribute('data-c');mgrCall('mgrHelp',hc,v,zv()).then(function(d){mgr.d=d;render();toast(v?hc+' is helping '+v+' this storm. Their phone shows it.':hc+' is back in their own zone.')},function(err){toast(err.message);loadMgr()})}
+  else if(a==='goroute'){var gl=liveOf(v);ui.tab='routes';ui.rcrew=v;ui.rsel={};if(gl&&gl.route)ui.rtype=gl.route;render();window.scrollTo(0,0)}
+  else if(a==='moveleft'){var ml=liveOf(v);if(!ml||!ml.route)return;ui.rtype=ml.route;ui.rsel={};leftOf(ml).forEach(function(r){ui.rsel[r.site]=1});ui.sheet='move';render()}
+  else if(a==='rcrew'){ui.rcrew=ui.rcrew===v?null:v;ui.rsel={};render()}
+  else if(a==='rsel'){ui.rsel=ui.rsel||{};if(ui.rsel[bid])delete ui.rsel[bid];else ui.rsel[bid]=1;render()}
+  else if(a==='selall'){ui.rsel={};routeOf(v,rtype(mgr.d)).forEach(function(r){ui.rsel[r.site]=1});render()}
+  else if(a==='selnone'){ui.rsel={};render()}
+  else if(a==='sheet'){ui.sheet=v;render()}
+  else if(a==='sheetclose'){ui.sheet=null;render()}
+  else if(a==='moveto'){var ids=selIds();if(!ids.length)return;var nm=ids.length===1?((msiteById(ids[0])||{}).name||'Site'):ids.length+' sites';doMove(ids,v,null,v?nm+(ids.length===1?' is':' are')+' on '+v+'’s '+rtype(mgr.d)+' route.':nm+(ids.length===1?' is':' are')+' off the '+rtype(mgr.d)+' route.')}
+  else if(a==='addsites'){ui.addTo=v;ui.addSel={};ui.addQ='';ui.sheet='add';render()}
+  else if(a==='addpick'){ui.addSel=ui.addSel||{};if(ui.addSel[bid])delete ui.addSel[bid];else ui.addSel[bid]=1;render()}
+  else if(a==='addgo'){var ai=Object.keys(ui.addSel||{});if(!ai.length)return;ui.rcrew=ui.addTo;doMove(ai,ui.addTo,null,ai.length+' site'+(ai.length===1?'':'s')+' added to '+ui.addTo+'’s route.')}
   else if(a==='pick-zone'){setZone(v)}
   else if(a==='duty'){mgrCall('mgrDuty',zv(),zv()).then(function(d){mgr.d=d;render();toast('You are on duty for '+zv()+'. Its route emails and printouts come to you.')},function(e){toast(e.message)})}
   else if(a==='zn-add'){mgr.zoneEdit=mgr.zoneEdit||mgr.d.zones.map(function(z){return {old:z,name:z}});mgr.zoneEdit.push({old:'',name:''});render()}
@@ -921,7 +1097,7 @@ app.addEventListener('click',function(e){
   else if(a==='crew-save'){var cl=(mgr.crewEdit||[]).filter(function(c){return c.name.trim()});var seen={},dup=cl.some(function(c){var k=c.name.trim().toLowerCase();if(seen[k])return true;seen[k]=1});if(dup){toast('Two people have the same name. Add a last initial to tell them apart.');return}
     mgrCall('mgrSetCrew',cl,zv()).then(function(d){mgr.d=d;mgr.crewEdit=null;render();toast('Crew saved.')},function(e){toast('Could not save crew: '+e.message)})}
   else if(a==='import-drive'){mgr.driveImport=true;render();mgrCall('mgrImportDrive').then(function(r){mgr.driveImport=false;toast(r.left?'Added '+r.added+' sites. '+r.left+' still to go: tap Import from Google Drive again to finish.':(r.added?'Added '+r.added+' sites. All '+r.total+' are in.':'All '+r.total+' sites were already imported.'));return loadMgr()},function(e){mgr.driveImport=false;render();toast(e.message)})}
-  else if(a==='start-storm'){var nm=(document.getElementById('st-name')||{}).value||'';mgrCall('mgrStartStorm',nm,zv()).then(function(d){mgr.d=d;render();toast('Storm started. Crew clock-ins now count toward it.')},function(e){toast(e.message)})}
+  else if(a==='start-storm'){var nm=(document.getElementById('st-name')||{}).value||'';mgrCall('mgrStartStorm',nm,zv()).then(function(d){mgr.d=d;ui.confirm=false;render();toast('Storm started. Crew clock-ins now count toward it.')},function(e){toast(e.message)})}
   else if(a==='ask-endstorm'){ui.confirm='endstorm';render()}
   else if(a==='end-storm'){ui.confirm=false;mgr.ending=true;toast('Ending the storm and making printouts. This takes about a minute.');mgrCall('mgrEndStorm',zv()).then(function(d){mgr.d=d;render();toast('Storm ended. Printouts are in your email and in Drive.')},function(e){toast('Could not end the storm: '+e.message)})}
   else if(a==='lg-scope'){mgr.lg.scope=v;mgr.log=null;render();loadLog()}
@@ -935,6 +1111,7 @@ app.addEventListener('click',function(e){
   else if(a==='save-pin'){var np=(document.getElementById('s-pin')||{}).value;if(!/^\d{4,8}$/.test(np)){toast('PIN must be 4 to 8 digits.');return}mgrCall('mgrMyPin',np).then(function(){toast('PIN changed.');document.getElementById('s-pin').value=''},function(e){toast('Could not change PIN: '+e.message)})}
 });
 app.addEventListener('input',function(e){
+  if(e.target.id==='addq'){ui.addQ=e.target.value;render();return}
   var t=e.target;
   if(t.id==='q'){ui.q=t.value;render();return}
   if(t.hasAttribute('data-zn')){mgr.zoneEdit=mgr.zoneEdit||mgr.d.zones.map(function(x){return {old:x,name:x}});mgr.zoneEdit[+t.getAttribute('data-zn')].name=t.value;if(!document.querySelector('[data-act="zn-save"]'))render();return}
