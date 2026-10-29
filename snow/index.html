@@ -567,7 +567,7 @@ function sync(){
   if(!me)return;
   if(syncing){syncAgain=true;return}
   syncing=true;var sent=crew.queue.slice();
-  api('crewSync',me,sent,crew.ver).then(function(r){
+  api('crewSync',me,sent,crew.ver,crew.shift&&!sent.length?crew.shift.id:'').then(function(r){
     syncing=false;crew.offline=false;crew.last=Date.now();if(typeof r.direct==='boolean'&&r.direct!==direct){direct=r.direct;lsSet('snow.direct',direct)}
     if(r.error==='unknown_crew'){toast('Your name was removed from the crew list. Pick your name again.');lsDel('snow.me');me=null;ui.mode='pick';refreshBoot();return}
     var doneIds=r.done||[];crew.queue=crew.queue.filter(function(o){return doneIds.indexOf(o.opId)<0});
@@ -588,7 +588,7 @@ function sync(){
     if(msg)toast(msg);
     if(!crew.queue.length){
       var had=crew.shift;
-      crew.shift=r.shift?{id:r.shift.id,clockIn:r.shift.clockIn,visits:r.shift.visits}:null;
+      if(!(r.shift&&r.shift.same&&had&&had.id===r.shift.id))crew.shift=r.shift?{id:r.shift.id,clockIn:r.shift.clockIn,visits:r.shift.visits}:null;
       if(had&&!crew.shift&&!ui.ended)toast('Your shift was closed by the office.');
     }
     saveCrew();if(ui.mode==='crew')render();
