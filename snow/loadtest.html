@@ -1,0 +1,169 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>Snow Route load test</title>
+<style>
+:root{--bg:#EDF1F4;--card:#fff;--ink:#141C24;--muted:#56636E;--line:#D0D8DF;--ok:#2B8A3E;--bad:#C92A2A;--warn:#B76E00;--acc:#E8590C}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}p{margin:6px 0}.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{font:inherit;font-weight:700;min-height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer}
+button.go{background:var(--acc);color:#fff;border-color:var(--acc)}button:disabled{opacity:.5;cursor:default}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:var(--bg);border-radius:10px;padding:10px}.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-size:12px;text-transform:uppercase}
+.pass{color:var(--ok);font-weight:800}.fail{color:var(--bad);font-weight:800}.warn{color:var(--warn);font-weight:800}
+.bar{height:8px;background:var(--bg);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}
+pre{white-space:pre-wrap;background:var(--bg);padding:10px;border-radius:8px;font-size:12px;max-height:240px;overflow:auto}
+</style><script>window.SNOW_API="https://script.google.com/macros/s/AKfycby5VV5ginbWwLdaM4om5lWtzv9GN2K9s_DcwLZvnBc_YELxUVlGDNZAVfuocTX4dyWO5A/exec";</script>
+</head><body><main>
+<h1>Snow Route · load test</h1>
+<p class="muted">Runs 30 pretend phones and 3 pretend managers against your real Google script, using the separate LOAD TEST sheet. Your real data is not touched. Keep this tab open and the computer awake until it finishes.</p>
+<div class="card">
+  <p><b>Before you start:</b> run <b>setupLoadTest</b> in the Apps Script editor. Don’t run this during a real snow event, since both share the same script.</p>
+  <div class="row" style="margin-top:10px">
+    <button class="go" id="normal">Start · normal night (15 min)</button>
+    <button class="go" id="stress">Start · stress test (10 min)</button>
+    <button id="stop" disabled>Stop early</button>
+  </div>
+  <p class="muted" id="mode" style="margin-top:8px">Normal: phones check in once a minute and finish a site every few minutes, like a real night. Stress: about 5 times that, and all 30 clock in within the same 5 seconds.</p>
+</div>
+<div class="card" id="live" hidden>
+  <div class="row" style="justify-content:space-between"><b id="phase">Starting…</b><span class="muted" id="clock"></span></div>
+  <div class="bar" style="margin:8px 0 12px"><i id="prog" style="width:0"></i></div>
+  <div class="stats">
+    <div class="stat"><span>Requests</span><b id="s-req">0</b></div>
+    <div class="stat"><span>Answered OK</span><b id="s-ok">0</b></div>
+    <div class="stat"><span>Failed (retried)</span><b id="s-fail">0</b></div>
+    <div class="stat"><span>Taps waiting</span><b id="s-wait">0</b></div>
+    <div class="stat"><span>On the clock</span><b id="s-on">0</b></div>
+    <div class="stat"><span>Sites finished</span><b id="s-done">0</b></div>
+  </div>
+  <table style="margin-top:14px"><thead><tr><th>Call</th><th>Count</th><th>Typical</th><th>Slowest 5%</th><th>Slowest</th></tr></thead><tbody id="lat"></tbody></table>
+  <div id="errs"></div>
+</div>
+<div class="card" id="result" hidden></div>
+</main>
+<script>
+(function(){
+var API=window.SNOW_API||'';
+var S=null;
+function now(){return Date.now()}
+function rnd(a,b){return a+Math.random()*(b-a)}
+function uid(){return now().toString(36)+Math.random().toString(36).slice(2,8)}
+function wait(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function pct(a,p){if(!a.length)return 0;var b=a.slice().sort(function(x,y){return x-y});return b[Math.min(b.length-1,Math.floor(p*b.length))]}
+function sec(ms){return (ms/1000).toFixed(1)+' s'}
+function call(fn,args){
+  S.req++;S.inflight++;var t0=now();
+  return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args||[],test:'LOADTEST'}),redirect:'follow'})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()})
+    .then(function(t){var j;try{j=JSON.parse(t)}catch(e){throw new Error('Bad answer: '+t.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0,120))}if(!j.ok)throw new Error(j.error||'Server error');return j.result})
+    .then(function(r){S.inflight--;S.ok++;(S.lat[fn]=S.lat[fn]||[]).push(now()-t0);return r},
+          function(e){S.inflight--;S.fail++;var m=String(e&&e.message||e).slice(0,160);S.errs[m]=(S.errs[m]||0)+1;(S.lat[fn]=S.lat[fn]||[]).push(now()-t0);throw e});
+}
+function callR(fn,args,n){n=n==null?6:n;return call(fn,args).catch(function(e){if(n<=0)throw e;return wait(3000).then(function(){return callR(fn,args,n-1)})})}
+function Phone(name,cfg){this.name=name;this.cfg=cfg;this.queue=[];this.ver=-1;this.stops=[];this.shift=null;this.busy=false}
+Phone.prototype.sync=function(){
+  var p=this;if(p.busy){p.again=true;return Promise.resolve()}p.busy=true;var sent=p.queue.slice();
+  return call('crewSync',[p.name,sent,p.ver]).then(function(r){
+    var acked=r.done||[];p.queue=p.queue.filter(function(o){return acked.indexOf(o.opId)<0});
+    sent.forEach(function(o){if(acked.indexOf(o.opId)>=0){if(o.type==='in')S.ackShifts[o.id]=1;if(o.type==='start')S.ackVisits[o.id]=1}});
+    if(r.routes){p.ver=r.ver;var t=r.active||Object.keys(r.routes)[0];p.stops=(r.routes[t]||[]).map(function(s){return s.id});p.type=t}
+    p.busy=false;if(p.again){p.again=false;return p.sync()}
+  },function(){p.busy=false;S.retries++;return wait(rnd(5000,15000)).then(function(){if(p.queue.length)return p.sync()})});
+};
+Phone.prototype.push=function(op){op.opId=uid();op.t=now();this.queue.push(op);return this.sync()};
+Phone.prototype.run=function(){
+  var p=this,c=p.cfg,end=S.end;
+  var poll=function(){if(S.stopped||now()>end)return;p.sync().then(function(){setTimeout(poll,rnd(c.poll[0],c.poll[1]))})};
+  return wait(rnd(c.start[0],c.start[1])).then(function(){return p.sync()}).then(function(){
+    setTimeout(poll,rnd(c.poll[0],c.poll[1]));
+    p.shift=uid();S.on++;return p.push({type:'in',id:p.shift});
+  }).then(function loop(){
+    var i=p.stopIdx||0;
+    if(S.stopped||now()>end-c.work[1]||i>=p.stops.length)return;
+    p.stopIdx=i+1;var site=p.stops[i],v=uid();
+    return wait(rnd(c.gap[0],c.gap[1])).then(function(){if(S.stopped)return;return p.push({type:'start',id:v,shift:p.shift,site:site,route:p.type})})
+      .then(function(){return wait(rnd(c.work[0],c.work[1]))})
+      .then(function(){return p.push({type:'stop',id:v,svc:/salt/i.test(p.type)?'Salted lot':/walk/i.test(p.type)?'Shoveled walks, Salted walks':'Plowed lot',salt:/salt/i.test(p.type)?'3 bags':'',note:''})})
+      .then(function(){S.done++}).then(loop);
+  }).then(function(){if(!p.shift)return;S.on--;return p.push({type:'out',shift:p.shift,note:'load test'})});
+};
+function Manager(zone,cfg){this.zone=zone;this.cfg=cfg}
+Manager.prototype.run=function(){
+  var m=this,c=m.cfg;
+  return callR('mgrLogin',['9999']).then(function(r){m.tok=r.token;
+    var tick=function(){if(S.stopped||now()>S.end)return Promise.resolve();
+      return call('mgrData',[m.tok,m.zone]).then(function(d){
+        if(Math.random()<c.moveOdds){var rs=d.routes.filter(function(x){return x.type==='Plow'}),crew=[];rs.forEach(function(x){if(crew.indexOf(x.crew)<0)crew.push(x.crew)});
+          if(rs.length&&crew.length>1){var x=rs[Math.floor(Math.random()*rs.length)],to=crew.filter(function(n){return n!==x.crew})[0];
+            return call('mgrMove',[m.tok,[x.site],to,null,'Plow',false,m.zone]).then(function(){return wait(20000)}).then(function(){return call('mgrMove',[m.tok,[x.site],x.crew,x.order-1,'Plow',false,m.zone])})}}
+      }).catch(function(){}).then(function(){return wait(rnd(c.mpoll[0],c.mpoll[1]))}).then(tick)};
+    return tick();
+  }).catch(function(){});
+};
+var CFG={
+  normal:{mins:15,poll:[60000,75000],start:[0,90000],gap:[45000,120000],work:[120000,300000],mpoll:[60000,70000],moveOdds:.25},
+  selftest:{mins:.6,poll:[2000,4000],start:[0,1000],gap:[300,800],work:[500,1500],mpoll:[2000,3000],moveOdds:.5},
+  stress:{mins:10,poll:[15000,25000],start:[0,5000],gap:[5000,15000],work:[25000,60000],mpoll:[15000,25000],moveOdds:.5}
+};
+var $=function(id){return document.getElementById(id)};
+function render(){
+  if(!S)return;var el=now()-S.t0,tot=S.end-S.t0;
+  $('prog').style.width=Math.min(100,100*el/tot)+'%';$('clock').textContent=Math.floor(el/60000)+':'+('0'+Math.floor(el/1000)%60).slice(-2)+' of '+S.cfg.mins+':00';
+  $('s-req').textContent=S.req;$('s-ok').textContent=S.ok;$('s-fail').textContent=S.fail;$('s-on').textContent=S.on;$('s-done').textContent=S.done;
+  $('s-wait').textContent=S.phones.reduce(function(a,p){return a+p.queue.length},0);
+  $('lat').innerHTML=Object.keys(S.lat).map(function(k){var a=S.lat[k];return '<tr><td>'+k+'</td><td>'+a.length+'</td><td>'+sec(pct(a,.5))+'</td><td>'+sec(pct(a,.95))+'</td><td>'+sec(Math.max.apply(null,a))+'</td></tr>'}).join('');
+  var e=Object.keys(S.errs);$('errs').innerHTML=e.length?'<p style="margin-top:12px"><b>Errors seen</b> (phones retry these on their own):</p><pre>'+e.map(function(k){return S.errs[k]+'× '+k}).join('\n')+'</pre>':'';
+}
+function start(kind){
+  if(!API){alert('This page is missing the script address.');return}
+  var cfg=CFG[kind];
+  S={cfg:cfg,kind:kind,t0:now(),end:now()+cfg.mins*60000,req:0,ok:0,fail:0,retries:0,inflight:0,on:0,done:0,lat:{},errs:{},ackShifts:{},ackVisits:{},phones:[],stopped:false};
+  $('normal').disabled=$('stress').disabled=true;$('stop').disabled=false;$('live').hidden=false;$('result').hidden=true;$('phase').textContent='Getting the test crew…';
+  var iv=setInterval(render,1000);
+  callR('boot',[]).then(function(b){
+    var names=b.crew.filter(function(n){return /^Load /.test(n)}),zones=b.zones||[];
+    if(!names.length)throw new Error('No test crew found. Run setupLoadTest in the editor first.');
+    $('phase').textContent=(kind==='stress'?'Stress test':'Normal night')+' running · '+names.length+' phones, '+zones.length+' managers';
+    S.phones=names.map(function(n){return new Phone(n,cfg)});
+    var runs=S.phones.map(function(p){return p.run()}).concat(zones.map(function(z){return new Manager(z,cfg).run()}));
+    return Promise.all(runs);
+  }).then(function(){
+    $('phase').textContent='Sending the last taps…';
+    var t=now();return (function flush(){var w=S.phones.reduce(function(a,p){return a+p.queue.length},0);if(!w||now()-t>120000)return;return Promise.all(S.phones.map(function(p){return p.queue.length?p.sync():null})).then(function(){return wait(3000)}).then(flush)})();
+  }).then(function(){
+    $('phase').textContent='Checking what got saved…';
+    return wait(4000).then(function(){return callR('loadTestCheck',[{visits:Object.keys(S.ackVisits),shifts:Object.keys(S.ackShifts)}])});
+  }).then(function(chk){clearInterval(iv);render();report(chk)},function(e){clearInterval(iv);render();report(null,e)});
+}
+function report(chk,err){
+  $('normal').disabled=$('stress').disabled=false;$('stop').disabled=true;$('phase').textContent='Finished';
+  var cs=S.lat.crewSync||[],md=S.lat.mgrData||[],waiting=S.phones.reduce(function(a,p){return a+p.queue.length},0);
+  var p95=pct(cs,.95),mp95=pct(md,.95),failRate=S.req?S.fail/S.req:0;
+  var L=[],tag=function(ok,warn){return ok?'<span class="pass">PASS</span>':warn?'<span class="warn">CHECK</span>':'<span class="fail">FAIL</span>'};
+  if(err)L.push([false,'The test could not finish: '+err.message]);
+  if(chk){
+    L.push([chk.missingVisits===0&&chk.missingShifts===0,'Nothing lost: '+(chk.missingVisits+chk.missingShifts)+' confirmed taps missing from the sheet']);
+    L.push([chk.dupVisits===0&&chk.dupShifts===0,'No doubles: '+chk.dupVisits+' duplicate site visits, '+chk.dupShifts+' duplicate shifts (phones resent '+S.retries+' times)']);
+    L.push([waiting===0,'Every tap delivered: '+waiting+' still waiting on phones at the end']);
+    L.push([chk.openShifts===0&&chk.unfinished===0,'Everyone wrapped up: '+chk.openShifts+' shifts left open, '+chk.unfinished+' sites left unfinished']);
+  }
+  L.push([p95<3000,'Phone speed: typical '+sec(pct(cs,.5))+', slowest 5% '+sec(p95)+' (goal under 3 s)',p95<8000]);
+  L.push([mp95<5000,'Manager screen speed: typical '+sec(pct(md,.5))+', slowest 5% '+sec(mp95)+' (goal under 5 s)',mp95<10000]);
+  L.push([failRate<0.01,'Errors: '+S.fail+' of '+S.req+' requests ('+(failRate*100).toFixed(1)+'%), all retried by the phones',failRate<0.05]);
+  var allPass=L.every(function(x){return x[0]});
+  var h='<h2 style="margin:0 0 8px">'+(allPass?'<span class="pass">Passed</span>':'<span class="fail">Needs a look</span>')+' · '+(S.kind==='stress'?'stress test':'normal night')+'</h2><table><tbody>'+L.map(function(x){return '<tr><td style="width:80px">'+tag(x[0],x[2])+'</td><td>'+x[1]+'</td></tr>'}).join('')+'</tbody></table>';
+  if(chk)h+='<p class="muted" style="margin-top:10px">Saved in the test sheet: '+chk.shifts+' shifts, '+chk.visits+' site visits, '+chk.log+' log lines, '+chk.emails+' emails that would have gone out. <a href="'+chk.sheet+'" target="_blank" rel="noopener">Open the test sheet</a> to see the Tonight and zone tabs.</p>';
+  var txt=['Snow Route load test · '+S.kind+' · '+new Date().toLocaleString()].concat(L.map(function(x){return (x[0]?'PASS ':x[2]?'CHECK ':'FAIL ')+x[1]})).concat(['Requests '+S.req+', ok '+S.ok+', failed '+S.fail+', retries '+S.retries]).concat(Object.keys(S.lat).map(function(k){var a=S.lat[k];return k+': n='+a.length+' p50='+sec(pct(a,.5))+' p95='+sec(pct(a,.95))+' max='+sec(Math.max.apply(null,a))})).concat(Object.keys(S.errs).map(function(k){return 'ERR '+S.errs[k]+'x '+k})).concat(chk?['Sheet: '+JSON.stringify(chk)]:[]).join('\n');
+  h+='<p style="margin-top:12px"><b>Send these results to Claude:</b></p><pre id="txt">'+txt.replace(/</g,'&lt;')+'</pre><button id="copy">Copy results</button>';
+  $('result').innerHTML=h;$('result').hidden=false;
+  $('copy').onclick=function(){try{navigator.clipboard.writeText(txt);$('copy').textContent='Copied'}catch(e){}};
+}
+window.__start=start;window.__S=function(){return S};
+$('normal').onclick=function(){start('normal')};$('stress').onclick=function(){start('stress')};
+$('stop').onclick=function(){if(S){S.stopped=true;S.end=now();$('phase').textContent='Stopping…'}};
+})();
+</script></body></html>
