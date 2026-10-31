@@ -468,9 +468,34 @@ details.sec summary{cursor:pointer;font-weight:700;padding:6px 0}
   .app.mgrmode{padding-bottom:calc(66px + env(safe-area-inset-bottom))}
   .actbar{bottom:calc(66px + env(safe-area-inset-bottom))}
 }
+/* Fix tool */
+.sheet.fix{overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:90vh}
+.fxshift{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.fxhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.fxrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fxrow label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;color:var(--muted)}
+.fxrow .inp{font-size:14px;min-height:40px}
+.fxvis{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.fxv{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:0;border-top:1px solid var(--line);background:var(--surface);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.fxvis>.fxv:first-child{border-top:0}
+.fxv span{display:flex;flex-direction:column;min-width:0;flex:1}
+.fxv small{color:var(--muted);font-size:12px}
+.fxv .fxe{flex:none;color:var(--accent);font-weight:700;font-size:13px}
+.fxv.on{flex-direction:column;align-items:stretch;background:var(--bg);cursor:default}
+.fxsvc{display:flex;flex-wrap:wrap;gap:6px}
+.fxsvc label{display:flex;align-items:center;gap:6px;font-size:13px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.fxmore summary{cursor:pointer;font-size:13px;color:var(--muted);padding:4px 0}
+.fxmore{display:flex;flex-direction:column;gap:8px}
+.fxrow .inp{min-width:0;width:100%}
+@media (max-width:520px){.fxrow{grid-template-columns:1fr}}
+
+.chk{display:flex;flex-direction:column;gap:4px;font-size:14px}.chk .ok{color:var(--ink)}.chk .bad{color:#b45309;font-weight:600}
+.saltpick{display:grid;grid-template-columns:1fr 1.2fr;gap:8px;margin-top:4px}.saltq{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.saltq .cbtn{min-width:48px}
+.photobtn{cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
+var WANT_VER='2026-10-30.1'; // must match APP_VERSION in Code.gs
 'use strict';
 /* ---------- server bridge ---------- */
 function api(fn){var args=[].slice.call(arguments,1);return new Promise(function(res,rej){
@@ -524,9 +549,10 @@ function showing(s){return (ui.mode==='crew'&&ui.sel===s.id)||(ui.mode==='mgr'&&
 function loadImg(s){
   if(!s||!s.photo||imgs[s.photo]!==undefined||imgWait[s.photo])return;
   var k=s.photo;imgWait[k]=1;
-  api('getPhoto',s.id).then(function(u){imgs[k]=u||'';delete imgWait[k];if(showing(s)&&!drag)render()},function(){setTimeout(function(){delete imgWait[k];if(showing(s))loadImg(s)},8000+Math.random()*8000)});
+  api('getPhoto',s.id,authObj()).then(function(u){imgs[k]=u||'';delete imgWait[k];if(showing(s)&&!drag)render()},function(){setTimeout(function(){delete imgWait[k];if(showing(s))loadImg(s)},8000+Math.random()*8000)});
 }
-function prefetch(list){if(direct){list.forEach(function(s){if(s&&s.photo&&!driveBad[s.photo]){var im=new Image();im.onerror=function(){driveBad[s.photo]=1};im.src=driveUrl(s.photo)}});return}var i=0;(function next(){var s=list[i++];if(!s)return;if(!s.photo||imgs[s.photo]!==undefined||imgWait[s.photo]){next();return}var k=s.photo;imgWait[k]=1;api('getPhoto',s.id).then(function(u){imgs[k]=u||'';delete imgWait[k];if(showing(s)&&!drag)render();next()},function(){delete imgWait[k]})})()}
+function authObj(){return ui.mode==='mgr'||ui.mode==='mgr-login'?{mgr:mgr.token}:{crew:me,tok:lsGet('snow.tok.'+me,'')}}
+function prefetch(list){if(direct){list.forEach(function(s){if(s&&s.photo&&!driveBad[s.photo]){var im=new Image();im.onerror=function(){driveBad[s.photo]=1};im.src=driveUrl(s.photo)}});return}var i=0;(function next(){var s=list[i++];if(!s)return;if(!s.photo||imgs[s.photo]!==undefined||imgWait[s.photo]){next();return}var k=s.photo;imgWait[k]=1;api('getPhoto',s.id,authObj()).then(function(u){imgs[k]=u||'';delete imgWait[k];if(showing(s)&&!drag)render();next()},function(){delete imgWait[k]})})()}
 var driveBad={},direct=lsGet('snow.direct',true);
 function driveUrl(id){return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w2400'}
 function srcOf(s){if(s._img)return s._img;if(!s.photo)return '';if(imgs[s.photo])return imgs[s.photo];if(direct&&!driveBad[s.photo]&&!/^data:/.test(s.photo))return driveUrl(s.photo);return imgs[s.photo]}
@@ -561,18 +587,24 @@ function saveCrew(){lsSet(ck('plow'),crew.plow);lsSet(ck('equip'),crew.equip);ls
 function myTypes(){var r=crew.routes||{};var t=(crew.types||[]).filter(function(x){return r[x]&&r[x].length});Object.keys(r).forEach(function(x){if(t.indexOf(x)<0&&r[x].length)t.push(x)});return t}
 function eff(){var r=crew.routes||{};if(crew.pick&&r[crew.pick]&&r[crew.pick].length)return crew.pick;if(crew.active&&r[crew.active]&&r[crew.active].length)return crew.active;return myTypes()[0]||''}
 function applyRoute(){crew.route=(crew.routes||{})[eff()]||[]}
-function push(op){op.opId=uid();op.t=op.t||Date.now();crew.queue.push(op);saveCrew();sync()}
+function push(op){op.opId=uid();op.t=op.t||Date.now();op.sk=skew();crew.queue.push(op);saveCrew();sync()}
 var syncing=false,syncAgain=false;
+/** Keeps what the crew typed on the work card when the screen redraws. */
+function workDraft(){var ov=openVisit();if(!ov)return;ui.wd={id:ov.id,svc:[].slice.call(app.querySelectorAll('[data-svc]:checked')).map(function(x){return x.value}),sn:(document.getElementById('v-saltn')||{}).value||'',su:(document.getElementById('v-saltu')||{}).value||'',note:(document.getElementById('v-note')||{}).value||''}}
+function skew(){var s=+lsGet('snow.skew',0)||0;return Math.abs(s)<5000?0:s}
 function sync(){
   if(!me)return;
   if(syncing){syncAgain=true;return}
-  syncing=true;var sent=crew.queue.slice();
-  api('crewSync',me,sent,crew.ver,crew.shift&&!sent.length?crew.shift.id:'').then(function(r){
-    syncing=false;crew.offline=false;crew.last=Date.now();if(typeof r.direct==='boolean'&&r.direct!==direct){direct=r.direct;lsSet('snow.direct',direct)}
+  syncing=true;var sent=crew.queue.slice(),t0=Date.now();
+  // phone clocks can be minutes off: send each tap's time corrected by how far this phone was off when it was tapped
+  var out=sent.map(function(o){var x={};for(var k in o)if(k!=='sk')x[k]=o[k];if(x.t)x.t=Math.round(x.t+(+o.sk||0));return x});
+  api('crewSync',me,out,crew.ver,crew.shift&&!sent.length?crew.shift.id:'',lsGet('snow.tok.'+me,'')).then(function(r){
+    syncing=false;crew.offline=false;crew.last=Date.now();if(r.now){var rt=Date.now()-t0;if(rt<8000)lsSet('snow.skew',Math.round(r.now-(t0+rt/2)))}if(typeof r.direct==='boolean'&&r.direct!==direct){direct=r.direct;lsSet('snow.direct',direct)}
     if(r.error==='unknown_crew'){toast('Your name was removed from the crew list. Pick your name again.');lsDel('snow.me');me=null;ui.mode='pick';refreshBoot();return}
     var doneIds=r.done||[];crew.queue=crew.queue.filter(function(o){return doneIds.indexOf(o.opId)<0});
     var first=crew.ver<0,beforeType=eff(),before=crew.route.slice(),msg='';
     if(typeof r.equip==='string')crew.equip=r.equip;
+    if(r.order)crew.order=r.order;
     if('plow' in r){var was=crew.plow||{},nowP=r.plow||null,ready=[];
       if(nowP&&!first)Object.keys(nowP).forEach(function(id){if(nowP[id].s==='done'&&was[id]&&was[id].s!=='done'){var ss=siteById(id,allMine());if(ss&&!visitsFor(id).some(function(v){return v.stop&&!isSkip(v)}))ready.push(ss.name)}});
       crew.plow=nowP;if(ready.length&&!msg)msg=(ready.length===1?ready[0]+' is':ready.length+' of your lots are')+' plowed now.'+(ready.length>1?' ('+ready.join(', ')+')':'')}
@@ -591,9 +623,9 @@ function sync(){
       if(!(r.shift&&r.shift.same&&had&&had.id===r.shift.id))crew.shift=r.shift?{id:r.shift.id,clockIn:r.shift.clockIn,visits:r.shift.visits}:null;
       if(had&&!crew.shift&&!ui.ended)toast('Your shift was closed by the office.');
     }
-    saveCrew();if(ui.mode==='crew')render();
-    if(syncAgain){syncAgain=false;sync()}
-  },function(e){syncing=false;var net=!navigator.onLine||/network|connection|failed to fetch|offline/i.test(String(e&&e.message||''));crew.offline=net;if(ui.mode==='crew')render();setTimeout(function(){if(crew.queue.length)sync()},(net?20000:8000)+Math.random()*12000)});
+    saveCrew();if(crew.shift)gpsOn();if(ui.mode==='crew')render();
+    if(syncAgain){syncAgain=false;sync()}else photoSync();
+  },function(e){syncing=false;if(/crew_auth/.test(String(e&&e.message||''))&&!window.__skipPin){lsDel('snow.tok.'+me);askPin();return}var net=!navigator.onLine||/network|connection|failed to fetch|offline/i.test(String(e&&e.message||''));crew.offline=net;if(ui.mode==='crew')render();setTimeout(function(){if(crew.queue.length)sync()},(net?20000:8000)+Math.random()*12000)});
 }
 function pickRoute(t){
   if(openVisit()){toast('Finish the site you are working on before changing routes.');return}
@@ -628,6 +660,35 @@ function plowInfo(id){if(!showPlow())return null;var p=crew.plow[id];if(!p)retur
   if(p.s==='skip')return {c:'pl-skip',t:'Plow skipped',l:p.by+' skipped plowing it: '+p.why};
   if(p.s==='todo')return {c:'pl-todo',t:'Not plowed yet',l:'Not plowed yet. It’s stop #'+p.n+' on '+p.by+'’s plow route.'};
   return null}
+var SALTU=['bags','yards','tons','buckets'],OOR=['Closer / better route','Customer asked','Lot was blocked','Office told me','Other'];
+function eval0(s){s=String(s).trim();var m=/^(\d+)\s*\/\s*(\d+)$/.exec(s);return m?(+m[1])/(+m[2]||1):+s||0}
+/** How strict the stop order is for the route I'm on: strict, ask (any order but say why), or any. */
+function orderMode(){var o=crew.order||{};return o[eff()]||'strict'}
+/* ---------- where the phone is (only while clocked in) ---------- */
+var POS=null,gpsWatch=null;
+function gpsOn(){if(gpsWatch!=null||!navigator.geolocation)return;try{gpsWatch=navigator.geolocation.watchPosition(function(p){POS={a:p.coords.latitude,o:p.coords.longitude,c:Math.round(p.coords.accuracy||0),t:Date.now()}},function(){},{enableHighAccuracy:true,maximumAge:30000,timeout:30000})}catch(e){}}
+function gpsOff(){if(gpsWatch!=null){try{navigator.geolocation.clearWatch(gpsWatch)}catch(e){}gpsWatch=null}}
+function here(){return POS&&Date.now()-POS.t<180000?POS.a.toFixed(5)+','+POS.o.toFixed(5)+','+POS.c:''}
+/* ---------- proof photos: saved on the phone first, sent when there is signal ---------- */
+var PHQ=lsGet('snow.photos',[]),phBusy=false;
+function savePhq(){try{localStorage.setItem('snow.photos',JSON.stringify(PHQ));return true}catch(e){return false}}
+function addProof(file){
+  var ov=openVisit();if(!ov||!file)return;
+  if(!/^image\//.test(file.type)){toast('That is not a photo.');return}
+  if(PHQ.length>=10){toast('10 photos are still waiting to send. Get signal, then add more.');return}
+  toast('Adding photo…');
+  shrink(file).then(function(d){PHQ.push({v:ov.id,d:d,p:uid()});if(!savePhq())toast('Phone storage is full. This photo sends only if the app stays open.');else toast('Photo added. It sends when there is signal.');render();photoSync()},function(){toast('Could not read that photo.')});
+}
+function shrink(file){return new Promise(function(res,rej){var url=URL.createObjectURL(file),img=new Image();img.onload=function(){var sc=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight)),c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',.6))};img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('bad'))};img.src=url})}
+function photoSync(){
+  if(phBusy||!PHQ.length||!me)return;
+  var p=PHQ[0];if(crew.queue.some(function(o){return o.id===p.v&&o.type==='start'}))return; // the visit isn't on the server yet
+  phBusy=true;
+  api('crewPhoto',me,lsGet('snow.tok.'+me,''),p.v,p.d,p.p).then(function(r){phBusy=false;
+    if(r&&r.error==='not_yet'){p.tries=(p.tries||0)+1;if(p.tries>20){PHQ.shift();savePhq()}return}
+    PHQ.shift();savePhq();var v=(crew.shift&&crew.shift.visits||[]).filter(function(x){return x.id===p.v})[0];if(v)v.photos=(v.photos||0)+1;photoSync()},
+   function(e){phBusy=false;if(/Photo too big|not a photo/.test(e.message)){PHQ.shift();savePhq();toast('A photo could not be sent: '+e.message)}});
+}
 function isSkip(v){return /^Skipped/.test(v.svc||'')}
 function skipWhy(v){return String(v.svc||'').replace(/^Skipped – ?/,'')}
 function resolved(id){return visitsFor(id).some(function(v){return v.stop})}
@@ -642,7 +703,7 @@ function skipSite(id){
   var t=Date.now(),ov=openVisit(),v;
   if(ov&&ov.site===id){v=ov;v.stop=t}else{v={id:uid(),site:id,start:t,stop:t,salt:'',route:eff()};crew.shift.visits.push(v)}
   v.svc='Skipped – '+why;v.note=note;
-  push({type:'skip',id:v.id,shift:crew.shift.id,site:id,siteName:s.name,route:v.route||eff(),t:t,reason:why,note:note});
+  push({type:'skip',id:v.id,shift:crew.shift.id,site:id,siteName:s.name,route:v.route||eff(),t:t,reason:why,note:note,gps:here()});
   ui.skip=null;ui.skipWhy='';
   var nx=nextStop();toast('Skipped '+s.name+(nx?'. Next: '+nx.name:'. That was the last stop.'));
   if(nx){ui.sel=nx.id;ui.view='detail';ui.zoom=0;window.scrollTo(0,0)}else{ui.view='list';ui.sel=null}
@@ -651,20 +712,27 @@ function skipSite(id){
 function skipForm(s){
   return '<div class="work skipbox"><h3>Skip '+esc(s.name)+'?</h3><p class="note" style="margin:0">Pick why. The office sees it right away.</p><div class="skr">'+(showPlow()&&SKIPR.indexOf('Not plowed yet')<0?['Not plowed yet']:[]).concat(SKIPR).map(function(r){return '<button class="cbtn'+(ui.skipWhy===r?' on':'')+'" data-act="skipwhy" data-v="'+esc(r)+'">'+esc(r)+'</button>'}).join('')+'</div><input class="inp" id="sk-note" placeholder="'+(ui.skipWhy==='Other'?'Why are you skipping it? (needed)':'Anything else? (optional)')+'"><div class="row"><button class="btn ghost" data-act="skipcancel">Cancel</button><button class="btn danger" data-act="skipgo" data-id="'+s.id+'"'+(ui.skipWhy?'':' disabled')+'>Skip this site</button></div></div>';
 }
-function clockIn(){var id=uid();crew.shift={id:id,clockIn:Date.now(),visits:[]};ui.ended=null;push({type:'in',id:id});render();toast('Clocked in at '+clock(crew.shift.clockIn)+'. Drive safe.')}
+function clockIn(){gpsOn();var id=uid();crew.shift={id:id,clockIn:Date.now(),visits:[]};ui.ended=null;push({type:'in',id:id});render();toast('Clocked in at '+clock(crew.shift.clockIn)+'. Drive safe.')}
 function startSite(id){
   var s=siteById(id);if(!s||!crew.shift)return;
   if(openVisit()){toast('Finish the site you are at first.');return}
-  var un=upNext();if(un&&un.id!==id&&!resolved(id)){toast('Finish or skip '+un.name+' first.');return}
-  var v={id:uid(),site:id,start:Date.now(),stop:0,svc:'',salt:'',note:'',route:eff()};crew.shift.visits.push(v);
-  push({type:'start',id:v.id,shift:crew.shift.id,site:id,siteName:s.name,route:v.route,t:v.start});ui.again=false;render();
+  var un=upNext(),om=orderMode(),why='';
+  if(un&&un.id!==id&&!resolved(id)){
+    if(om==='strict'){toast('Finish or skip '+un.name+' first.');return}
+    if(om==='ask'){why=ui.oowhy||'';if(!why){ui.oo=id;render();return}if(why==='Other')why=((document.getElementById('oo-note')||{}).value||'').trim()||'Other'}
+  }
+  ui.oo=null;ui.oowhy='';gpsOn();
+  var v={id:uid(),site:id,start:Date.now(),stop:0,svc:'',salt:'',note:'',route:eff(),why:why};crew.shift.visits.push(v);
+  push({type:'start',id:v.id,shift:crew.shift.id,site:id,siteName:s.name,route:v.route,t:v.start,gps:here(),why:why});ui.again=false;render();
 }
 function stopSite(){
   var v=openVisit();if(!v)return;
   var svc=[].slice.call(app.querySelectorAll('[data-svc]:checked')).map(function(x){return x.value}).join(', ');
-  var salt=(document.getElementById('v-salt')||{}).value||'',note=(document.getElementById('v-note')||{}).value||'';
-  v.stop=Date.now();v.svc=svc;v.salt=salt;v.note=note;
-  push({type:'stop',id:v.id,t:v.stop,svc:svc,salt:salt,note:note});
+  var sn=((document.getElementById('v-saltn')||{}).value||'').trim(),su=(document.getElementById('v-saltu')||{}).value||'';
+  var salt=sn&&+eval0(sn)>0?sn+' '+(+eval0(sn)===1?su.replace(/s$/,''):su):'',note=((document.getElementById('v-note')||{}).value||'').trim();
+  if(su)lsSet('snow.saltu',su);
+  v.stop=Date.now();v.svc=svc;v.salt=salt;v.note=note;ui.wd=null;
+  push({type:'stop',id:v.id,t:v.stop,svc:svc,salt:salt,note:note,gps:here()});
   var nx=nextStop(),s=siteById(v.site);
   toast('Done at '+(s?s.name:'site')+' · '+mins(v.stop-v.start)+(nx?'. Next: '+nx.name:'. That was the last stop.'));
   if(nx){ui.sel=nx.id;ui.view='detail';ui.zoom=0;window.scrollTo(0,0)}else{ui.view='list';ui.sel=null}
@@ -676,10 +744,21 @@ function clockOut(){
   var ov=openVisit();if(ov){ov.stop=t;push({type:'stop',id:ov.id,t:t,svc:'',salt:'',note:'closed at clock-out'})}
   var sh=crew.shift;ui.ended={clockIn:sh.clockIn,clockOut:t,done:sh.visits.filter(function(v){return v.stop}).length,total:crew.route.length};
   push({type:'out',shift:sh.id,t:t,note:note});
-  crew.shift=null;saveCrew();ui.ending=false;ui.view='list';ui.sel=null;render();window.scrollTo(0,0);
+  crew.shift=null;gpsOff();saveCrew();ui.ending=false;ui.view='list';ui.sel=null;render();window.scrollTo(0,0);
 }
 
 /* ---------- crew screens ---------- */
+function askPin(){if(!me)return;ui.mode='crew-pin';ui.pinInfo=null;render();api('crewHasPin',me).then(function(r){ui.pinInfo=r;render();var p=document.getElementById('cpin');if(p)p.focus()},function(){ui.pinInfo={set:true};render()})}
+function pinHTML(){
+  var i=ui.pinInfo,first=i&&!i.set;
+  var h='<div class="pinbox"><div class="brand">'+icon()+'<h1 style="font-size:22px;text-transform:uppercase;font-weight:800">'+esc(me)+'</h1></div>';
+  if(!i)return h+'<p class="note">Loading…</p></div>';
+  h+='<p>'+(first?'Pick a 4-number PIN. You will type it if you ever sign in on another phone, and it keeps anyone else from using your name.':'Enter your 4-number PIN.')+'</p>';
+  if(crew.queue.length)h+='<p class="queue" style="margin:0">'+crew.queue.length+' tap'+(crew.queue.length===1?' is':'s are')+' saved on this phone and will send as soon as you’re in.</p>';
+  h+='<input class="inp" id="cpin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="PIN"><button class="btn primary big" data-act="crewpin">'+(first?'Set PIN':'Sign in')+'</button>';
+  h+='<button class="linkbtn" data-act="pinback">Not '+esc(me)+'? Pick a different name</button><p class="note" style="margin:0">Forgot it? Your manager can reset it in Settings.</p></div>';
+  return h;
+}
 function pickHTML(){
   var h='<div class="who"><div class="brand">'+icon()+'<h1 style="font-size:22px;text-transform:uppercase;font-weight:800">Snow Route</h1></div>';
   if(!data.loaded)return h+'<p class="note">Loading…</p></div>';
@@ -711,7 +790,7 @@ function crewHeader(){
   return h;
 }
 function stopRow(s,i){
-  var vs=visitsFor(s.id),done=vs.filter(function(v){return v.stop&&!isSkip(v)}),sk=vs.filter(isSkip).pop(),now=vs.filter(function(v){return !v.stop})[0],nx=crew.shift&&!now&&!done.length&&!sk?upNext():null,isNext=nx&&nx.id===s.id,locked=crew.shift&&!now&&!done.length&&!sk&&!isNext;
+  var vs=visitsFor(s.id),done=vs.filter(function(v){return v.stop&&!isSkip(v)}),sk=vs.filter(isSkip).pop(),now=vs.filter(function(v){return !v.stop})[0],nx=crew.shift&&!now&&!done.length&&!sk?upNext():null,isNext=nx&&nx.id===s.id,locked=crew.shift&&!now&&!done.length&&!sk&&!isNext&&orderMode()==='strict';
   var pi=!now&&!done.length?plowInfo(s.id):null;
   var chip=now?'<span class="pill now"><i class="blink"></i>Working</span>':(done.length?'<span class="chip done">Done '+mins(done.reduce(function(a,v){return a+(v.stop-v.start)},0))+'</span>':sk?'<span class="chip skip">Skipped</span>':isNext&&!openVisit()?'<span class="chip next">Up next</span>':'');
   var hc=(now||done.length||sk)?'':hoursChip(s);
@@ -748,13 +827,19 @@ function crewSiteHTML(s){
     h+='<div class="work"><div class="row"><span class="pill now"><i class="blink"></i>Working here</span><span class="note" style="margin:0">since '+clock(ov.start)+'</span></div><div class="timer" id="visitclock">'+tick(Date.now()-ov.start)+'</div>';
     var eq=equipInfo(crew.equip),does=eq?eq.does:SVC,on=eq?eq.on.slice():['Plowed lot'];
     if(eq&&eq.k==='Pickup – plow + salter'&&/salt/i.test(eff()))on=['Salted lot'];
+    var wd=ui.wd&&ui.wd.id===ov.id?ui.wd:null;if(wd&&wd.svc)on=wd.svc;
     h+='<div class="checks">'+does.map(function(x){var k=SVC.indexOf(x);return '<label><input type="checkbox" data-svc value="'+x+'" id="svc'+k+'"'+(on.indexOf(x)>=0?' checked':'')+'>'+x+'</label>'}).join('')+'</div>';
-    h+=(does.some(function(x){return /salt/i.test(x)})?'<label class="fieldlbl">Salt used (optional)<input class="inp" id="v-salt" placeholder="e.g. 4 bags, half a yard"></label>':'')+'<label class="fieldlbl">Note (optional)<input class="inp" id="v-note" placeholder="e.g. car parked in the lot, broken curb"></label>';
+    if(does.some(function(x){return /salt/i.test(x)})){var su=(wd&&wd.su)||lsGet('snow.saltu',/walk/i.test(crew.equip||'')?'bags':'yards');
+      h+='<div class="fieldlbl">Salt used (optional)<div class="saltpick"><input class="inp" id="v-saltn" type="number" inputmode="decimal" min="0" step="0.25" placeholder="0" value="'+esc(wd&&wd.sn||'')+'" aria-label="Amount"><select class="inp" id="v-saltu" aria-label="Unit">'+SALTU.map(function(u){return '<option'+(u===su?' selected':'')+'>'+u+'</option>'}).join('')+'</select></div><div class="saltq">'+(su==='bags'?['1','2','3','4','6','8']:['1/4','1/2','3/4','1','1.5','2']).map(function(q){return '<button class="cbtn" data-act="saltq" data-v="'+q+'">'+q+'</button>'}).join('')+'</div></div>'}
+    h+='<label class="fieldlbl">Note (optional)<input class="inp" id="v-note" placeholder="e.g. car parked in the lot, broken curb" value="'+esc(wd&&wd.note||'')+'"></label>';
+    var np=PHQ.filter(function(p){return p.v===ov.id}).length+((ov.photos)||0);
+    h+='<div class="row"><label class="btn sm ghost photobtn">📷 '+(np?'Add another photo':'Add a photo (optional)')+'<input type="file" accept="image/*" capture="environment" id="v-photo" hidden></label>'+(np?'<span class="note" style="margin:0">'+np+' photo'+(np>1?'s':'')+' added</span>':'')+'</div>';
     h+='<button class="btn big stop" data-act="stopsite">Done at this site</button><button class="linkbtn" style="align-self:center" data-act="skipask" data-id="'+s.id+'">Couldn’t finish? Skip with a reason</button></div>';
   }else if(ov){var os=siteById(ov.site);h+='<div class="work"><p class="note" style="margin:0">You are still working at <b>'+esc(os?os.name:'another site')+'</b>. Finish it before starting this one.</p><button class="btn primary" data-act="open" data-id="'+ov.site+'">Go to '+esc(os?os.name:'that site')+'</button></div>'}
   else if(done.length&&!ui.again){var dn=done.filter(function(v){return !isSkip(v)}),sk1=done.filter(isSkip);h+='<div class="work"><div class="row">'+(dn.length?'<span class="chip done">Done</span>':'<span class="chip skip">Skipped</span>')+'<span class="note" style="margin:0">'+dn.map(function(v){return clock(v.start)+'–'+clock(v.stop)+' ('+mins(v.stop-v.start)+')'+(v.svc?' · '+esc(v.svc):'')}).concat(sk1.map(function(v){return 'Skipped '+clock(v.stop)+' · '+esc(skipWhy(v))+(v.note?' · “'+esc(v.note)+'”':'')})).join('<br>')+'</span></div><button class="btn sm ghost" data-act="again" style="align-self:flex-start">Came back to this site? Start it again</button></div>'}
   else{var un=upNext();
-    if(un&&un.id!==s.id&&!done.length)h+='<div class="work"><p style="margin:0"><b>Do the stops in order.</b> Finish or skip <b>'+esc(un.name)+'</b> first.</p><button class="btn primary" data-act="open" data-id="'+un.id+'">Go to '+esc(un.name)+'</button><p class="note" style="margin:0">If the office wants you to go here first, they can move it up on your route.</p></div>';
+    if(ui.oo===s.id)h+='<div class="work skipbox"><h3>Start '+esc(s.name)+' before '+esc(un?un.name:'the next stop')+'?</h3><p class="note" style="margin:0">Your route says '+esc(un?un.name:'another stop')+' is next. Why are you going here first?</p><div class="skr">'+OOR.map(function(r){return '<button class="cbtn'+(ui.oowhy===r?' on':'')+'" data-act="oowhy" data-v="'+esc(r)+'">'+esc(r)+'</button>'}).join('')+'</div>'+(ui.oowhy==='Other'?'<input class="inp" id="oo-note" placeholder="Why? (needed)">':'')+'<div class="row"><button class="btn ghost" data-act="oocancel">Cancel</button><button class="btn go" data-act="startsite" data-id="'+s.id+'"'+(ui.oowhy?'':' disabled')+'>Start here</button></div></div>';
+    else if(un&&un.id!==s.id&&!done.length&&orderMode()==='strict')h+='<div class="work"><p style="margin:0"><b>Do the stops in order.</b> Finish or skip <b>'+esc(un.name)+'</b> first.</p><button class="btn primary" data-act="open" data-id="'+un.id+'">Go to '+esc(un.name)+'</button><p class="note" style="margin:0">If the office wants you to go here first, they can move it up on your route.</p></div>';
     else h+='<div class="work"><button class="btn big go" data-act="startsite" data-id="'+s.id+'">Start this site</button><p class="note" style="margin:0">Tap when you start working here. It records the time.</p>'+(done.length?'':'<button class="linkbtn" style="align-self:center" data-act="skipask" data-id="'+s.id+'">Can’t do this one? Skip with a reason</button>')+'</div>';
   }
   h+='</div>';
@@ -768,7 +853,7 @@ function crewSiteHTML(s){
 
 /* ---------- manager ---------- */
 function zv(){return mgr.me&&mgr.me.role!=='owner'?mgr.me.zone:mgr.zone}
-function zoneCrew(){return mgr.d.crew.filter(function(c){return c.zone===mgr.d.zone}).map(function(c){return {name:c.name,active:c.active,equip:c.equip||''}})}
+function zoneCrew(){return mgr.d.crew.filter(function(c){return c.zone===mgr.d.zone}).map(function(c){return {name:c.name,active:c.active,equip:c.equip||'',hasPin:!!c.hasPin}})}
 function isOwner(){return !!(mgr.me&&mgr.me.role==='owner')}
 function mgrCall(fn){var a=[].slice.call(arguments,1);return api.apply(null,[fn,mgr.token].concat(a)).catch(function(e){if(/signed_out/.test(e.message)){mgr.token=null;lsDel('snow.mgr');ui.mode='mgr-login';render();toast('Signed out. Enter your PIN again.')}throw e})}
 function loadMgr(){return mgrCall('mgrData',zv()).then(function(d){mgr.d=d;mgr.err='';mgr.loaded=Date.now();render();return d},function(e){mgr.err=String(e&&e.message||e);if(!mgr.d)render();throw e})}
@@ -785,6 +870,7 @@ function mgrHTML(){
   var t=function(k,l){return '<button role="tab" data-act="tab" data-v="'+k+'" aria-selected="'+(ui.tab===k)+'">'+l+'</button>'};
   h+='<nav class="tabs mtabs" role="tablist">'+t('live','Live')+t('routes','Routes')+t('log','Log')+t('sites','Sites')+t('crew','Settings')+'</nav>';
   if(!d)return h+'<div class="panel">'+(mgr.err?'<div class="queue" style="margin:0"><b>Could not load.</b> '+esc(mgr.err)+'</div><button class="btn primary" style="align-self:flex-start" data-act="refresh">Try again</button>':'<p class="note">Loading…</p>')+'</div>';
+  if(isOwner()&&d.version!==WANT_VER)h+='<div class="queue" style="margin:8px 12px 0"><b>The script is out of date.</b> The app is version '+WANT_VER+' but the script says '+esc(d.version||'old')+'. In the script editor: paste the latest Code.gs, Save, then Deploy → Manage deployments → edit → New version → Deploy.</div>';
   var needZone=isOwner()&&!d.zone&&(ui.tab==='routes'||ui.tab==='log');
   if(needZone)h+='<div class="panel"><div class="empty">Pick a zone at the top to see its '+(ui.tab==='log'?'event log':'routes')+'.</div>'+zonePickHTML(d)+'</div>';
   else if(ui.tab==='live')h+=liveHTML(d);
@@ -808,7 +894,7 @@ function stormHTML(d){
   return h;
 }
 function loadLog(){return mgrCall('mgrLog',mgr.lg.scope,zv()).then(function(r){mgr.log=r;if(ui.tab==='log')render()},function(e){toast('Could not load the log: '+e.message)})}
-var LGT={note:'Note',call:'Call',conditions:'Weather',clock:'Clock',work:'Work',route:'Route',storm:'Event'};
+var LGT={note:'Note',call:'Call',conditions:'Weather',clock:'Clock',work:'Work',route:'Route',storm:'Event',fix:'Fix'};
 function logHTML(d){
   var L=mgr.log,g=mgr.lg,names=d.crew.filter(function(c){return c.active}).map(function(c){return c.name});
   var seg=function(act,cur,k,l){return '<button data-act="'+act+'" data-v="'+k+'" aria-pressed="'+(cur===k)+'">'+l+'</button>'};
@@ -878,7 +964,7 @@ function liveHTML(d){
       if(d.zones.length>1)r+='<div class="flabel">Working in</div><div class="cgrp">'+d.zones.map(function(z){var on=(l.helping||l.zone)===z;return '<button class="cbtn'+(on?' on':'')+'" data-act="sethelp" data-c="'+esc(l.crew)+'" data-v="'+(z===l.zone?'':esc(z))+'">'+esc(z)+(z===l.zone?' <small>home</small>':'')+'</button>'}).join('')+'</div>';
       if(l.shift)r+='<div class="meta">Clocked in '+clock(l.shift.clockIn)+' · '+dur(Date.now()-l.shift.clockIn)+' · '+(l.done||0)+' done'+(l.skipped?' · <b class="skiptx">'+l.skipped+' skipped</b>':'')+'</div>';
       var left=l.route?leftOf(l).length:0;
-      r+='<div class="lacts"><button class="btn sm" data-act="goroute" data-v="'+esc(l.crew)+'">Edit route</button>'+(left?'<button class="btn sm" data-act="moveleft" data-v="'+esc(l.crew)+'">Move '+(l.shift&&l.done?'their '+left+' left':'all '+left)+'…</button>':'');
+      r+='<div class="lacts"><button class="btn sm" data-act="goroute" data-v="'+esc(l.crew)+'">Edit route</button><button class="btn sm" data-act="fixopen" data-v="'+esc(l.crew)+'">Fix times</button>'+(left?'<button class="btn sm" data-act="moveleft" data-v="'+esc(l.crew)+'">Move '+(l.shift&&l.done?'their '+left+' left':'all '+left)+'…</button>':'');
       if(l.shift)r+=ui.confirm==='out:'+l.crew?'<button class="btn sm danger armed" data-act="force-out" data-v="'+esc(l.crew)+'">Tap again to clock out</button>':'<button class="btn sm ghost" data-act="ask-out" data-v="'+esc(l.crew)+'">Clock out</button>';
       r+='</div></div>';
     }
@@ -929,8 +1015,34 @@ function actBar(d){
   var T=rtype(d),one=ids.length===1&&d.routes.filter(function(r){return r.type===T&&r.site===ids[0]})[0];
   return '<div class="actbar"><button class="x" data-act="selnone" aria-label="Clear">✕</button><b>'+ids.length+' picked</b><span style="flex:1"></span>'+(one?'<button class="btn sm" data-act="r-up" data-id="'+ids[0]+'" aria-label="Move up">▲</button><button class="btn sm" data-act="r-down" data-id="'+ids[0]+'" aria-label="Move down">▼</button>':'')+'<button class="btn sm primary" data-act="sheet" data-v="move">Move to…</button></div>';
 }
+function dtl(ms){if(!ms)return '';var x=new Date(ms),p=function(n){return ('0'+n).slice(-2)};return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate())+'T'+p(x.getHours())+':'+p(x.getMinutes())}
+function tval(id){var e=document.getElementById(id);return e&&e.value?new Date(e.value).getTime():0}
+function svcBoxes(pre,cur){return '<div class="fxsvc">'+SVC.map(function(x,k){return '<label><input type="checkbox" id="'+pre+k+'" value="'+x+'"'+(new RegExp(x,'i').test(cur||'')?' checked':'')+'>'+x+'</label>'}).join('')+'</div>'}
+function svcRead(pre){return SVC.filter(function(x,k){var e=document.getElementById(pre+k);return e&&e.checked}).join(', ')}
+function fixHTML(d){
+  var f=mgr.fix,h='<div class="shead"><b>Fix · '+esc(f.crew)+'</b><button class="x" data-act="sheetclose" aria-label="Close">✕</button></div><p class="note" style="margin:0">Changes are saved to the sheet and logged as “Fixed by '+esc(mgr.me?mgr.me.name:'manager')+'”.</p>';
+  if(!f.d)return h+'<p class="note">Loading…</p>';
+  if(!f.d.shifts.length)return h+'<div class="empty">No shifts for '+esc(f.crew)+' yet.</div>';
+  var crewNames=d.crew.map(function(c){return c.name}).filter(function(n){return n!==f.crew});
+  h+=f.d.shifts.map(function(sh){
+    var x='<div class="fxshift"><div class="fxhead"><b>'+esc(sh.event||'Shift')+'</b><span class="note" style="margin:0">'+(sh.clockOut?sh.hours+' h':'still clocked in')+'</span></div>';
+    x+='<div class="fxrow"><label>Clock in<input type="datetime-local" class="inp" id="fsi-'+sh.id+'" value="'+dtl(sh.clockIn)+'"></label><label>Clock out<input type="datetime-local" class="inp" id="fso-'+sh.id+'" value="'+dtl(sh.clockOut)+'"></label></div><div class="row"><button class="btn sm" data-act="shiftsave" data-id="'+sh.id+'">Save shift times</button></div>';
+    x+='<div class="fxvis">'+sh.visits.map(function(v){
+      var sk=/^Skipped/.test(v.services);
+      if(f.edit===v.id)return '<div class="fxv on"><b>'+esc(v.site)+'</b><div class="fxrow"><label>Start<input type="datetime-local" class="inp" id="fvs-'+v.id+'" value="'+dtl(v.start)+'"></label><label>Stop<input type="datetime-local" class="inp" id="fve-'+v.id+'" value="'+dtl(v.stop)+'"></label></div>'+(sk?'<p class="note" style="margin:0">'+esc(v.services)+'</p>':svcBoxes('fvc-'+v.id+'-',v.services))+'<label class="fieldlbl">Salt<input class="inp" id="fvl-'+v.id+'" value="'+esc(v.salt)+'"></label><div class="row"><button class="btn sm primary" data-act="fixsave" data-id="'+v.id+'"'+(sk?' data-skip="1"':'')+'>Save</button><button class="btn sm ghost" data-act="fixcancel">Cancel</button><span style="flex:1"></span><button class="btn sm danger'+(ui.confirm==='fxd:'+v.id?' armed':'')+'" data-act="fixdel" data-id="'+v.id+'">'+(ui.confirm==='fxd:'+v.id?'Tap again to remove':'Remove stop')+'</button></div></div>';
+      return '<button class="fxv" data-act="fixedit" data-id="'+v.id+'"><span><b>'+esc(v.site)+'</b><small>'+clock(v.start)+'–'+(v.stop?clock(v.stop):'open')+' · '+esc(v.services||'—')+(v.salt?' · '+esc(v.salt):'')+'</small></span><span class="fxe">Edit</span></button>';
+    }).join('')+'</div>';
+    if(f.edit==='add:'+sh.id)x+='<div class="fxv on"><b>Add a missed stop</b><select class="inp" id="fas-'+sh.id+'"><option value="">Pick the site…</option>'+f.d.sites.map(function(s){return '<option value="'+s.id+'">'+esc(s.name)+' · '+esc(s.address)+'</option>'}).join('')+'</select><div class="fxrow"><label>Start<input type="datetime-local" class="inp" id="faa-'+sh.id+'" value="'+dtl(sh.clockIn)+'"></label><label>Stop<input type="datetime-local" class="inp" id="fab-'+sh.id+'" value="'+dtl(sh.clockIn+20*60000)+'"></label></div>'+svcBoxes('fac-'+sh.id+'-','Plowed lot')+'<label class="fieldlbl">Salt<input class="inp" id="fal-'+sh.id+'"></label><div class="row"><button class="btn sm primary" data-act="fixadd" data-id="'+sh.id+'">Add stop</button><button class="btn sm ghost" data-act="fixcancel">Cancel</button></div></div>';
+    else x+='<button class="btn sm" data-act="fixaddopen" data-id="'+sh.id+'">+ Add a missed stop</button>';
+    x+='<details class="fxmore"><summary>Wrong person or not a real shift?</summary><div class="row"><select class="inp" id="fmv-'+sh.id+'" style="flex:1"><option value="">It was really…</option>'+crewNames.map(function(n){return '<option>'+esc(n)+'</option>'}).join('')+'</select><button class="btn sm" data-act="shiftmove" data-id="'+sh.id+'">Move shift</button></div><button class="btn sm danger'+(ui.confirm==='fsd:'+sh.id?' armed':'')+'" data-act="shiftdel" data-id="'+sh.id+'">'+(ui.confirm==='fsd:'+sh.id?'Tap again to delete this shift and its stops':'Delete this shift')+'</button></details>';
+    return x+'</div>';
+  }).join('');
+  return h;
+}
+function fixDo(ch,msg){ch.from=mgr.fix.crew;mgrCall('mgrFix',ch).then(function(d){mgr.fix.d=d;mgr.fix.edit=null;ui.confirm=false;render();toast(msg||'Saved. Logged as a fix.');loadMgr().catch(function(){})},function(e){toast(e.message)})}
 function sheetHTML(d){
   if(!ui.sheet||!d)return '';
+  if(ui.sheet==='fix')return '<div class="scrim" data-act="sheetclose"></div><div class="sheet fix" role="dialog" aria-modal="true">'+fixHTML(d)+'</div>';
   var T=rtype(d),h='<div class="scrim" data-act="sheetclose"></div><div class="sheet" role="dialog" aria-modal="true">';
   var temp=d.storm?'<div class="tempbar"><span>Moves are</span><div class="seg"><button data-act="tempmode" data-v="1" aria-pressed="'+stormOnly(d)+'">This event only</button><button data-act="tempmode" data-v="0" aria-pressed="'+!stormOnly(d)+'">Permanent</button></div></div>':'';
   if(ui.sheet==='move'){
@@ -1015,7 +1127,7 @@ function crewSetHTML(d){
   if(d.zone){
     var list=mgr.crewEdit||zoneCrew();
     h+='<div class="sec"><h3>'+esc(d.zone)+' crew</h3><p class="note" style="margin:0 0 8px">These names show on the crew screen. Unticking “Working” hides a name without losing their history.</p>';
-    h+=list.map(function(c,i){return '<div class="crewrow" style="margin-bottom:6px"><input class="inp" data-crew="'+i+'" id="cr-'+i+'" value="'+esc(c.name)+'" aria-label="Crew name"><select class="inp eqsel" data-crewequip="'+i+'" id="cre-'+i+'" aria-label="Equipment"><option value="">Equipment…</option>'+EQUIP.map(function(q){return '<option'+(q.k===c.equip?' selected':'')+'>'+esc(q.k)+'</option>'}).join('')+'</select><label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-crewon="'+i+'" id="cro-'+i+'"'+(c.active!==false?' checked':'')+'>Working</label><button class="btn sm danger" data-act="crew-del" data-v="'+i+'">Remove</button></div>'}).join('');
+    h+=list.map(function(c,i){return '<div class="crewrow" style="margin-bottom:6px"><input class="inp" data-crew="'+i+'" id="cr-'+i+'" value="'+esc(c.name)+'" aria-label="Crew name"><select class="inp eqsel" data-crewequip="'+i+'" id="cre-'+i+'" aria-label="Equipment"><option value="">Equipment…</option>'+EQUIP.map(function(q){return '<option'+(q.k===c.equip?' selected':'')+'>'+esc(q.k)+'</option>'}).join('')+'</select><label class="row" style="gap:6px;font-size:13px"><input type="checkbox" data-crewon="'+i+'" id="cro-'+i+'"'+(c.active!==false?' checked':'')+'>Working</label>'+(c.name&&!mgr.crewEdit?'<button class="btn sm ghost" data-act="pinreset" data-v="'+esc(c.name)+'"'+(c.hasPin?'':' disabled title="No PIN set yet"')+'>'+(c.hasPin?'Reset PIN':'No PIN yet')+'</button>':'')+'<button class="btn sm danger" data-act="crew-del" data-v="'+i+'">Remove</button></div>'}).join('');
     h+='<div class="row" style="margin-top:8px"><button class="btn sm" data-act="crew-add">+ Add person</button><span style="flex:1"></span>'+(mgr.crewEdit?'<button class="btn sm ghost" data-act="crew-cancel">Cancel</button><button class="btn sm primary" data-act="crew-save">Save crew</button>':'')+'</div></div>';
   }else h+='<div class="sec"><h3>Crew</h3><p class="note" style="margin:0">Pick a zone at the top to edit its crew.</p></div>';
   // you
@@ -1024,6 +1136,9 @@ function crewSetHTML(d){
   if(!isOwner())return h+'<div class="sec"><h3>Crew link</h3><p class="note" style="margin:0">Text your crew the same web address you used to open this page. They pick their name the first time.</p></div></div>';
   // owner only
   h+='<div class="sec"><h3>Payroll and billing</h3><p class="note" style="margin:0 0 8px">Both are kept up to date in the Google Sheet (Payroll and Billing tabs). Last week’s payroll is emailed to you every Monday morning and last month’s billing on the 1st. Send one now:</p><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn sm" data-act="report" data-k="payroll" data-v="this">Payroll · this week</button><button class="btn sm" data-act="report" data-k="payroll" data-v="last">Payroll · last week</button><button class="btn sm" data-act="report" data-k="billing" data-v="this">Billing · this month</button><button class="btn sm" data-act="report" data-k="billing" data-v="last">Billing · last month</button></div></div>';
+  var od=d.order||{};
+  h+='<div class="sec"><h3>Stop order</h3><p class="note" style="margin:0 0 8px">How strictly crews must follow their route order, for each route type.</p><div class="form">'+d.types.map(function(t,i){var v=od[t]||'strict';return '<label>'+esc(t)+'<select class="inp" id="ord-'+i+'" data-ord="'+esc(t)+'"><option value="strict"'+(v==='strict'?' selected':'')+'>In order (skip needs a reason)</option><option value="ask"'+(v==='ask'?' selected':'')+'>Any order, but say why</option><option value="any"'+(v==='any'?' selected':'')+'>Any order</option></select></label>'}).join('')+'</div><div class="row" style="margin-top:8px"><button class="btn sm primary" data-act="ord-save">Save stop order</button></div></div>';
+  h+='<div class="sec"><h3>System check</h3><p class="note" style="margin:0 0 8px">Checks the sheet, the background updates, email, backups and forgotten clock-ins. Run it before each event.</p>'+(mgr.check?'<div class="chk">'+mgr.check.map(function(x){return '<div class="'+(x.ok?'ok':'bad')+'">'+(x.ok?'✓ ':'! ')+esc(x.text)+'</div>'}).join('')+'</div>':'')+'<div class="row" style="margin-top:8px"><button class="btn sm" data-act="syscheck">Run system check</button><span class="note" style="margin-left:auto">App '+WANT_VER+' · Script '+esc(d.version||'old')+'</span></div></div>';
   var ze=mgr.zoneEdit||d.zones.map(function(z){return {old:z,name:z}});
   h+='<div class="sec"><h3>Zones</h3><p class="note" style="margin:0 0 8px">Renaming a zone keeps its crew, sites and managers.</p>'+ze.map(function(x,i){return '<div class="crewrow" style="margin-bottom:6px"><input class="inp" data-zn="'+i+'" id="zn-'+i+'" value="'+esc(x.name)+'" aria-label="Zone name"><button class="btn sm danger" data-act="zn-del" data-v="'+i+'">Remove</button></div>'}).join('')+'<div class="row" style="margin-top:8px"><button class="btn sm" data-act="zn-add">+ Add zone</button><span style="flex:1"></span>'+(mgr.zoneEdit?'<button class="btn sm ghost" data-act="zn-cancel">Cancel</button><button class="btn sm primary" data-act="zn-save">Save zones</button>':'')+'</div></div>';
   // managers
@@ -1059,6 +1174,7 @@ function render(){
   var fid=document.activeElement&&document.activeElement.id,fs=null;try{fs=fid&&document.activeElement.selectionStart}catch(e){}
   var h='';
   if(ui.mode==='pick')h=pickHTML();
+  else if(ui.mode==='crew-pin')h=pinHTML();
   else if(ui.mode==='mgr-login')h=loginHTML();
   else if(ui.mode==='mgr')h=mgrHTML();
   else{var s=ui.view==='detail'&&ui.sel?siteById(ui.sel):null;if(ui.view==='detail'&&!s){ui.view='list';ui.sel=null}h=s?crewSiteHTML(s):crewListHTML()}
@@ -1134,8 +1250,10 @@ app.addEventListener('click',function(e){
   else if(a==='undo'){var su=mgr.editing;if(su&&su.marks.length){su.marks.pop();ui.mark=null;mgr.dirty=true;render()}}
   else if(a==='del-mark'){var sd=mgr.editing;if(sd){sd.marks=sd.marks.filter(function(m){return m.id!==bid});ui.mark=null;mgr.dirty=true;render()}}
   // crew
-  else if(a==='iam'){me=v;lsSet('snow.me',me);loadCrew();ui.mode='crew';ui.view='list';render();sync()}
-  else if(a==='switch'){if(crew.shift){toast('Clock out before switching to another name.');return}lsDel('snow.me');me=null;ui.mode='pick';ui.ended=null;render();refreshBoot()}
+  else if(a==='iam'){me=v;lsSet('snow.me',me);loadCrew();if(!window.__skipPin&&!lsGet('snow.tok.'+me,'')){askPin();return}ui.mode='crew';ui.view='list';render();sync()}
+  else if(a==='crewpin'){var cp=(document.getElementById('cpin')||{}).value||'';if(!/^\d{4}$/.test(cp)){toast('PINs are 4 numbers.');return}b.disabled=true;api('crewLogin',me,cp).then(function(r){if(r.error){b.disabled=false;toast(r.error);var q=document.getElementById('cpin');if(q){q.value='';q.focus()}return}lsSet('snow.tok.'+me,r.token);ui.mode='crew';ui.view='list';render();sync();toast(ui.pinInfo&&!ui.pinInfo.set?'PIN set. You’re in.':'Signed in.')},function(e){b.disabled=false;toast('Could not sign in: '+e.message)})}
+  else if(a==='pinback'){if(crew.shift||crew.queue.length){toast('Your shift and taps are saved for '+me+'. Sign in as '+me+' to finish them.');}lsDel('snow.me');me=null;ui.mode='pick';render();refreshBoot()}
+  else if(a==='switch'){if(crew.shift){toast('Clock out before switching to another name.');return}if(crew.queue.length){toast('Wait until your taps have sent before switching names.');return}lsDel('snow.me');me=null;ui.mode='pick';ui.ended=null;render();refreshBoot()}
   else if(a==='open'){if(bid){ui.skip=null;ui.sel=bid;ui.view='detail';ui.zoom=0;ui.mark=null;ui.again=false;render();window.scrollTo(0,0)}}
   else if(a==='back'){ui.view='list';ui.sel=null;render();window.scrollTo(0,0)}
   else if(a==='clockin')clockIn();
@@ -1145,6 +1263,9 @@ app.addEventListener('click',function(e){
   else if(a==='skipcancel'){ui.skip=null;ui.skipWhy='';render()}
   else if(a==='skipgo')skipSite(bid);
   else if(a==='stopsite')stopSite();
+  else if(a==='oowhy'){ui.oowhy=b.getAttribute('data-v');render()}
+  else if(a==='oocancel'){ui.oo=null;ui.oowhy='';render()}
+  else if(a==='saltq'){var n=document.getElementById('v-saltn');if(n){var q=b.getAttribute('data-v');n.value=String(eval0(q));workDraft()}}
   else if(a==='again'){ui.again=true;render()}
   else if(a==='end'){ui.ending=true;ui.view='list';render();window.scrollTo(0,0)}
   else if(a==='cancel-end'){ui.ending=false;render()}
@@ -1174,6 +1295,19 @@ app.addEventListener('click',function(e){
   else if(a==='selall'){ui.rsel={};routeOf(v,rtype(mgr.d)).forEach(function(r){ui.rsel[r.site]=1});render()}
   else if(a==='selnone'){ui.rsel={};render()}
   else if(a==='undomove')undoMove();
+  else if(a==='fixopen'){mgr.fix={crew:v,d:null,edit:null};ui.sheet='fix';render();mgrCall('mgrShiftDetail',v).then(function(d){mgr.fix.d=d;render()},function(e){toast(e.message);ui.sheet=null;render()})}
+  else if(a==='fixedit'){mgr.fix.edit=bid;ui.confirm=false;render()}
+  else if(a==='fixcancel'){mgr.fix.edit=null;ui.confirm=false;render()}
+  else if(a==='fixaddopen'){mgr.fix.edit='add:'+bid;render()}
+  else if(a==='fixsave'){var ch={kind:'visit-edit',id:bid,start:tval('fvs-'+bid),stop:tval('fve-'+bid),salt:(document.getElementById('fvl-'+bid)||{}).value||''};if(!b.getAttribute('data-skip'))ch.services=svcRead('fvc-'+bid+'-');fixDo(ch)}
+  else if(a==='fixdel'){if(ui.confirm!=='fxd:'+bid){ui.confirm='fxd:'+bid;render();return}fixDo({kind:'visit-delete',id:bid},'Stop removed. Logged as a fix.')}
+  else if(a==='fixadd'){var site=(document.getElementById('fas-'+bid)||{}).value;if(!site){toast('Pick the site.');return}fixDo({kind:'visit-add',shiftId:bid,siteId:site,start:tval('faa-'+bid),stop:tval('fab-'+bid),services:svcRead('fac-'+bid+'-'),salt:(document.getElementById('fal-'+bid)||{}).value||''},'Stop added. Logged as a fix.')}
+  else if(a==='shiftsave'){fixDo({kind:'shift-edit',id:bid,clockIn:tval('fsi-'+bid),clockOut:tval('fso-'+bid)})}
+  else if(a==='shiftdel'){if(ui.confirm!=='fsd:'+bid){ui.confirm='fsd:'+bid;render();return}fixDo({kind:'shift-delete',id:bid},'Shift deleted. Logged as a fix.')}
+  else if(a==='shiftmove'){var to=(document.getElementById('fmv-'+bid)||{}).value;if(!to){toast('Pick who it really was.');return}fixDo({kind:'shift-move',id:bid,to:to},'Shift moved to '+to+'. Logged as a fix.')}
+  else if(a==='pinreset'){if(ui.confirm!=='pin:'+v){ui.confirm='pin:'+v;toast('Tap Reset PIN again to reset '+v+'’s PIN.');return}ui.confirm=false;mgrCall('mgrResetCrewPin',v).then(function(d){mgr.d=d;render();toast(v+'’s PIN is reset. They pick a new one next time they open the app.')},function(e){toast(e.message)})}
+  else if(a==='ord-save'){var om={};[].slice.call(app.querySelectorAll('[data-ord]')).forEach(function(x){om[x.getAttribute('data-ord')]=x.value});mgrCall('mgrSetOrder',om).then(function(r){mgr.d.order=r;toast('Saved. Crew phones get it within a minute.')},function(e){toast('Could not save: '+e.message)})}
+  else if(a==='syscheck'){toast('Checking…');mgrCall('mgrSystemCheck').then(function(r){mgr.check=r;render()},function(e){toast('Could not check: '+e.message)})}
   else if(a==='report'){toast('Making the report…');mgrCall('mgrReport',b.getAttribute('data-k'),v).then(function(m){toast(m)},function(e){toast('Could not send: '+e.message)})}
   else if(a==='sheet'){ui.sheet=v;render()}
   else if(a==='sheetclose'){ui.sheet=null;render()}
@@ -1227,6 +1361,7 @@ app.addEventListener('click',function(e){
   else if(a==='save-pin'){var np=(document.getElementById('s-pin')||{}).value;if(!/^\d{4,8}$/.test(np)){toast('PIN must be 4 to 8 digits.');return}mgrCall('mgrMyPin',np).then(function(){toast('PIN changed.');document.getElementById('s-pin').value=''},function(e){toast('Could not change PIN: '+e.message)})}
 });
 app.addEventListener('input',function(e){
+  if(/^(v-note|v-saltn)$/.test(e.target.id)){workDraft();return}
   if(e.target.id==='addq'){ui.addQ=e.target.value;render();return}
   var t=e.target;
   if(t.id==='q'){ui.q=t.value;render();return}
@@ -1239,6 +1374,8 @@ app.addEventListener('input',function(e){
 });
 app.addEventListener('change',function(e){
   var t=e.target;
+  if(t.id==='v-photo'){addProof(t.files&&t.files[0]);t.value='';return}
+  if(t.id==='v-saltu'||t.hasAttribute('data-svc')){workDraft();if(t.id==='v-saltu')render();return}
   if(t.hasAttribute('data-assign')){var id=t.getAttribute('data-assign'),to=t.value,T=ui.rtype;var s=msiteById(id);mgrCall('mgrAssign',id,to,null,T,mgr.tempMode,zv()).then(function(d){mgr.d=d;render();toast(to?(s?s.name:'Site')+' is on '+to+'’s '+T+' route.':(s?s.name:'Site')+' is off the '+T+' route.')},function(err){toast('Could not move: '+err.message);loadMgr()});return}
   if(t.hasAttribute('data-zonesel')){setZone(t.value);return}
   if(t.hasAttribute('data-help')){var hw=t.getAttribute('data-help'),hz=t.value;mgrCall('mgrHelp',hw,hz,zv()).then(function(d){mgr.d=d;render();toast(hz?hw+' is helping '+hz+' this event. Their phone shows it.':hw+' is back in their own zone.')},function(err){toast(err.message);loadMgr()});return}
@@ -1254,7 +1391,7 @@ app.addEventListener('change',function(e){
   if(t.id==='f-import'&&t.files&&t.files[0]){runImport(t.files[0]);return}
   if(t.type==='file'&&t.files&&t.files[0])setPhoto(t.files[0]);
 });
-app.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='pin'){var b=document.querySelector('[data-act="login"]');if(b)b.click()}});
+app.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='pin'){var b=document.querySelector('[data-act="login"]');if(b)b.click()}if(e.key==='Enter'&&e.target.id==='cpin'){var c=document.querySelector('[data-act="crewpin"]');if(c)c.click()}});
 
 /* ---------- zoom, pinch, drawing (from the stake map) ---------- */
 function applyFit(){var sc=document.querySelector('.photo-scroll'),im=sc&&sc.querySelector('img');if(!im||!im.naturalWidth||!sc.clientWidth)return;var f=Math.min(1,window.innerHeight*0.78*im.naturalWidth/im.naturalHeight/sc.clientWidth);sc.style.setProperty('--fit',f.toFixed(4))}
@@ -1315,7 +1452,8 @@ window.addEventListener('beforeunload',function(e){if(mgr.dirty||(crew.queue&&cr
 
 /* ---------- start ---------- */
 function refreshBoot(){api('boot').then(function(b){data.crew=b.crew;data.crewZones=b.crewZones||[];data.zones=b.zones||[];data.loaded=true;if(me&&b.crew.indexOf(me)<0){lsDel('snow.me');me=null;ui.mode='pick'}render()},function(e){data.loaded=true;data.err=String(e&&e.message||e);render()})}
-if(me){loadCrew();ui.mode='crew';render();sync();prefetch(crew.route)}else render();
+if(me){loadCrew();if(!window.__skipPin&&!lsGet('snow.tok.'+me,'')){askPin()}else{ui.mode='crew';render();sync();prefetch(crew.route)}}else render();
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 refreshBoot();
 })();
 </script>

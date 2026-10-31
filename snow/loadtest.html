@@ -67,7 +67,7 @@ function callR(fn,args,n){n=n==null?6:n;return call(fn,args).catch(function(e){i
 function Phone(name,cfg){this.name=name;this.cfg=cfg;this.queue=[];this.ver=-1;this.stops=[];this.shift=null;this.busy=false}
 Phone.prototype.sync=function(){
   var p=this;if(p.busy){p.again=true;return Promise.resolve()}p.busy=true;var sent=p.queue.slice();
-  return call('crewSync',[p.name,sent,p.ver,p.shiftOk&&!sent.length?p.shift:'']).then(function(r){if(r.shift&&!r.shift.same)p.shiftOk=r.shift.id===p.shift;
+  return call('crewSync',[p.name,sent,p.ver,p.shiftOk&&!sent.length?p.shift:'',p.tok]).then(function(r){if(r.shift&&!r.shift.same)p.shiftOk=r.shift.id===p.shift;
     var acked=r.done||[];p.queue=p.queue.filter(function(o){return acked.indexOf(o.opId)<0});
     sent.forEach(function(o){if(acked.indexOf(o.opId)>=0){if(o.type==='in')S.ackShifts[o.id]=1;if(o.type==='start')S.ackVisits[o.id]=1}});
     if(r.routes){p.ver=r.ver;var t=r.active||Object.keys(r.routes)[0];p.stops=(r.routes[t]||[]).map(function(s){return s.id});p.type=t}
@@ -78,7 +78,7 @@ Phone.prototype.push=function(op){op.opId=uid();op.t=now();this.queue.push(op);r
 Phone.prototype.run=function(){
   var p=this,c=p.cfg,end=S.end;
   var poll=function(){if(S.stopped||now()>end)return;p.sync().then(function(){setTimeout(poll,rnd(c.poll[0],c.poll[1]))})};
-  return wait(rnd(c.start[0],c.start[1])).then(function(){return p.sync()}).then(function(){
+  return wait(rnd(c.start[0],c.start[1])).then(function(){return callR('crewLogin',[p.name,'1234'])}).then(function(r){if(r&&r.error)throw new Error(r.error);p.tok=r.token;return p.sync()}).then(function(){
     setTimeout(poll,rnd(c.poll[0],c.poll[1]));
     p.shift=uid();S.on++;return p.push({type:'in',id:p.shift});
   }).then(function loop(){
