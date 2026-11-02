@@ -184,7 +184,7 @@ function lsGet(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}c
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 var local=lsGet(LS,{});
 var saved=lsGet(UIK,{});
-var ui={sel:saved.sel||null,view:saved.view||'list',edit:!!saved.edit,filter:saved.filter||'all',tool:'s',mark:null,q:'',zoom:0,confirm:false};
+var ui={sel:null,view:'list',edit:!!saved.edit,filter:saved.filter||'all',tool:'s',mark:null,q:'',zoom:0,confirm:false};
 var canSave=false,art=null,dirty=false,saving=false,toastT=null;
 var app=document.getElementById('app');
 var KIND={s:'Wood stake',f:'Fiberglass stake',h:'Hazard area',p:'Snow pile area'};
