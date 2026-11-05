@@ -1,0 +1,97 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style></head><body><title>City Staking Route</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* One long column a crew member scrolls on a phone: area headers, numbered stops in driving order, tap to directions, tick when staked. */
+:root{
+  --bg:#EEF1F3; --card:#FFFFFF; --ink:#16202A; --muted:#5A6672; --line:#D3DAE0;
+  --accent:#D9480F; --accent-soft:#FFE8DC; --ok:#2B8A3E; --ok-soft:#E2F4E6; --wood:#F2C200;
+  --display:"Barlow Semi Condensed","Arial Narrow",sans-serif; --body:"Barlow",system-ui,-apple-system,sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F151B;--card:#18212B;--ink:#E7EDF2;--muted:#9AA7B3;--line:#2C3845;--accent:#FF7A3D;--accent-soft:#3A2015;--ok:#6BD385;--ok-soft:#173022;--wood:#E8B800;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F151B;--card:#18212B;--ink:#E7EDF2;--muted:#9AA7B3;--line:#2C3845;--accent:#FF7A3D;--accent-soft:#3A2015;--ok:#6BD385;--ok-soft:#173022;--wood:#E8B800;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:720px;margin:0 auto}
+header{padding-block:22px 14px;display:grid;gap:10px}
+h1{font:800 32px/1 var(--display);letter-spacing:.01em;text-transform:uppercase;margin:0;text-wrap:balance}
+.lede{margin:0;color:var(--muted);max-width:60ch}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.fact{font:500 13px/1 var(--mono);padding:7px 10px;border-radius:6px;background:var(--card);border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.fact b{color:var(--accent);font-weight:700}
+.progress{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.bar{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .2s}
+.count{font:700 14px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.reset{font:600 13px var(--body);color:var(--muted);background:none;border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
+.reset.armed{color:#fff;background:var(--accent);border-color:var(--accent)}
+section{margin-top:22px}
+.ghead{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 12px;padding-bottom:8px}
+.ghead h2{font:800 20px/1.1 var(--display);text-transform:uppercase;letter-spacing:.03em;margin:0}
+.ghead p{margin:0;color:var(--muted);font-size:14px;flex-basis:100%}
+.range{font:500 12px var(--mono);color:var(--muted)}
+.gmap{font:600 14px var(--body);color:var(--accent);text-decoration:none;border:1px solid var(--accent);border-radius:6px;padding:6px 10px;white-space:nowrap}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+li{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 10px 10px 8px}
+li.done{background:var(--ok-soft);border-color:var(--ok)}
+.num{font:700 15px var(--mono);text-align:center;border:1.5px solid var(--line);border-radius:7px;padding:5px 0;font-variant-numeric:tabular-nums}
+li.done .num{border-color:var(--ok);color:var(--ok)}
+.info{min-width:0}
+.nm{font-weight:600;line-height:1.25}
+.ad{font-size:14px;color:var(--muted);overflow-wrap:anywhere}
+.meta{font:500 12px var(--mono);color:var(--muted);margin-top:2px}
+.acts{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.go{font:600 14px var(--body);text-align:center;text-decoration:none;color:var(--accent-ink,#fff);background:var(--accent);border-radius:7px;padding:8px 10px;white-space:nowrap}
+.chk{display:flex;align-items:center;justify-content:center;gap:6px;font:600 13px var(--body);border:1px solid var(--line);border-radius:7px;padding:6px 8px;cursor:pointer;background:var(--card);color:var(--ink)}
+li.done .chk{border-color:var(--ok);color:var(--ok)}
+.chk input{width:18px;height:18px;margin:0;accent-color:var(--ok)}
+.foot{margin-top:28px;color:var(--muted);font-size:14px;display:grid;gap:6px;max-width:62ch}
+a:focus-visible,button:focus-visible,label:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+<div class="wrap">
+<header>
+  <h1>City staking route</h1>
+  <p class="lede">All 52 City properties from the 2026-27 plowing list, in the shortest driving loop from the shop and back. Tap <b>Go</b> for directions to a stop, and tick it when it's staked.</p>
+  <div class="facts" id="facts"></div>
+</header>
+<div class="progress"><div class="bar" aria-hidden="true"><i id="pbar"></i></div><span class="count" id="pcount">0 of 52 staked</span><button class="reset" id="reset" type="button">Clear ticks</button></div>
+<main id="list"></main>
+<div class="foot">
+  <p>Order worked out from each address's map location, using straight-line distance between stops. Expect about 40 driving miles for the whole loop.</p>
+  <p>Ticks are saved on this phone only. Other crews and the office won't see them.</p>
+  <p>The area buttons open Google Maps with that area's stops in order. On some phones Google Maps only keeps the first few stops of a long list. If that happens, use Go on each stop.</p>
+</div>
+</div>
+<script>
+var D={"stops": [{"n": 1, "name": "Chen Family Dentistry", "addr": "2070 Lyell Ave.", "zip": "14606", "q": "2070 Lyell Ave., Rochester, NY 14606", "equip": "LOADER / MINI / TRUCK", "size": "17k"}, {"n": 2, "name": "Rochester Davis-Fetch", "addr": "175 Dodge St.", "zip": "14606", "q": "175 Dodge St., Rochester, NY 14606", "equip": "MINI / TRUCK", "size": "32k"}, {"n": 3, "name": "Linda's NY Pizzeria", "addr": "1219 Lyell Ave.", "zip": "14606", "q": "1219 Lyell Ave., Rochester, NY 14606", "equip": "LOADER / MINI / TRUCK", "size": "10k"}, {"n": 4, "name": "Paragon Steel Rule Dies", "addr": "979 Mt. Read Blvd.", "zip": "14606", "q": "979 Mt. Read Blvd., Rochester, NY 14606", "equip": "LOADER / MINI / TRUCK", "size": "38k"}, {"n": 5, "name": "Precision Grinding & Manufacturing", "addr": "1305 Emerson St.", "zip": "14606", "q": "1305 Emerson St., Rochester, NY 14606", "equip": "LOADER / MINI", "size": "62k"}, {"n": 6, "name": "Somerset Condominium", "addr": "1342 & 1286 Emerson St.", "zip": "14606", "q": "1342 Emerson St., Rochester, NY 14606", "equip": "MINI / TRUCK", "size": "35k"}, {"n": 7, "name": "Cannon Industries (Burnett Process)", "addr": "545 Colfax St.", "zip": "14606", "q": "545 Colfax St., Rochester, NY 14606", "equip": "LOADER / MINI / TRUCK", "size": "43k"}, {"n": 8, "name": "Cascades Recovery", "addr": "1845 Emerson St.", "zip": "14606", "q": "1845 Emerson St., Rochester, NY 14606", "equip": "LOADER / MINI", "size": "170k"}, {"n": 9, "name": "Cannon Industries", "addr": "525 Lee Rd.", "zip": "14606", "q": "525 Lee Rd., Rochester, NY 14606", "equip": "LOADER / MINI", "size": "117k"}, {"n": 10, "name": "Everhome Suites", "addr": "500 Bellwood Dr.", "zip": "14606", "q": "500 Bellwood Dr., Rochester, NY 14606", "equip": "LOADER / MINI", "size": "65k"}, {"n": 11, "name": "Bell Company", "addr": "1340 Lexington Ave.", "zip": "14606", "q": "1340 Lexington Ave., Rochester, NY 14606", "equip": "LOADER / MINI / TRUCK", "size": "35k"}, {"n": 12, "name": "Alternatives FCU", "addr": "1275 Lexington Ave.", "zip": "14606", "q": "1275 Lexington Ave., Rochester, NY 14606", "equip": "MINI / TRUCK", "size": "15k"}, {"n": 13, "name": "Cannon Industries", "addr": "1121 Lexington Ave.", "zip": "14606", "q": "1121 Lexington Ave., Rochester, NY 14606", "equip": "MINI / TRUCK", "size": "29k"}, {"n": 14, "name": "Access Lifts", "addr": "1523 Mt. Read Blvd.", "zip": "14606", "q": "1523 Mt. Read Blvd., Rochester, NY 14606", "equip": "MINI / TRUCK", "size": "11k"}, {"n": 15, "name": "Show World", "addr": "1765 Mt. Read Blvd.", "zip": "14606", "q": "1765 Mt. Read Blvd., Rochester, NY 14606", "equip": "LOADER / MINI / TRUCK", "size": "32k"}, {"n": 16, "name": "AP Plumbing", "addr": "1195 Ridgeway Ave.", "zip": "14615", "q": "1195 Ridgeway Ave., Rochester, NY 14615", "equip": "LOADER / MINI / TRUCK", "size": "48k"}, {"n": 17, "name": "Laserwash Touch-Free", "addr": "48 Bernice St.", "zip": "14615", "q": "48 Bernice St., Rochester, NY 14615", "equip": "MINI / TRUCK", "size": "25k"}, {"n": 18, "name": "Isaac Heating & Air Conditioning", "addr": "50 Holleder Pkwy.", "zip": "14615", "q": "50 Holleder Pkwy., Rochester, NY 14615", "equip": "LOADER / MINI", "size": "83k"}, {"n": 19, "name": "Cannon Industries", "addr": "233 La Grange Ave.", "zip": "14613", "q": "233 La Grange Ave., Rochester, NY 14613", "equip": "LOADER / MINI", "size": "63k"}, {"n": 20, "name": "Polymershapes", "addr": "195 La Grange Ave.", "zip": "14613", "q": "195 La Grange Ave., Rochester, NY 14613", "equip": "LOADER / MINI / TRUCK", "size": "16k"}, {"n": 21, "name": "Green Mountain Electric", "addr": "110 La Grange Ave.", "zip": "14613", "q": "110 La Grange Ave., Rochester, NY 14613", "equip": "LOADER / MINI", "size": "43k"}, {"n": 22, "name": "LIUNA- Local 435 JATC", "addr": "754 Lexington Ave., Bldg. 2", "zip": "14613", "q": "754 Lexington Ave., Rochester, NY 14613", "equip": "LOADER / MINI", "size": "90k"}, {"n": 23, "name": "LIUNA- Local 435 JATC", "addr": "754 Lexington Ave., Bldg. 1", "zip": "14613", "q": "754 Lexington Ave., Rochester, NY 14613", "equip": "TRUCK", "size": "10k"}, {"n": 24, "name": "Rochester Gear", "addr": "213 Norman St.", "zip": "14613", "q": "213 Norman St., Rochester, NY 14613", "equip": "LOADER / MINI / TRUCK", "size": "32k"}, {"n": 25, "name": "Moore's Tire Sales", "addr": "185 Norman St.", "zip": "14613", "q": "185 Norman St., Rochester, NY 14613", "equip": "LOADER / MINI / TRUCK", "size": "28k"}, {"n": 26, "name": "Paul's Service", "addr": "717 Emerson St.", "zip": "14613", "q": "717 Emerson St., Rochester, NY 14613", "equip": "LOADER / MINI / TRUCK", "size": "4k"}, {"n": 27, "name": "Besroi Roofing", "addr": "711 Emerson St.", "zip": "14613", "q": "711 Emerson St., Rochester, NY 14613", "equip": "LOADER / MINI / TRUCK", "size": "10k"}, {"n": 28, "name": "Wendy's", "addr": "683 Lake Ave.", "zip": "14613", "q": "683 Lake Ave., Rochester, NY 14613", "equip": "LOADER / MINI / TRUCK", "size": "33k"}, {"n": 29, "name": "Kingdom Hall of Jehovah Witnesses", "addr": "880 St. Paul St.", "zip": "14605", "q": "880 St. Paul St., Rochester, NY 14605", "equip": "LOADER / MINI / TRUCK", "size": "39k"}, {"n": 30, "name": "Finger Lakes Chemical", "addr": "107 St. Bridgets Dr.", "zip": "14605", "q": "107 St. Bridgets Dr., Rochester, NY 14605", "equip": "LOADER / MINI / TRUCK", "size": "5k"}, {"n": 31, "name": "Finger Lakes Chemical", "addr": "418 St. Paul St.", "zip": "14605", "q": "418 St. Paul St., Rochester, NY 14605", "equip": "LOADER / MINI / TRUCK", "size": "12k"}, {"n": 32, "name": "Germanow-Simon", "addr": "408 St. Paul St.", "zip": "14605", "q": "408 St. Paul St., Rochester, NY 14605", "equip": "LOADER / MINI", "size": "70k"}, {"n": 33, "name": "Trailways of New York", "addr": "186 Cumberland St.", "zip": "14605", "q": "186 Cumberland St., Rochester, NY 14605", "equip": "LOADER / MINI", "size": "41k"}, {"n": 34, "name": "Rochester Firefighters Local 1071", "addr": "65 Hudson Ave.", "zip": "14605", "q": "65 Hudson Ave., Rochester, NY 14605", "equip": "LOADER / MINI / TRUCK", "size": "41k"}, {"n": 35, "name": "Ametek Instruments", "addr": "255 N. Union St.", "zip": "14605", "q": "255 N. Union St., Rochester, NY 14605", "equip": "LOADER / MINI", "size": "137k (salt 104k)"}, {"n": 36, "name": "Eastman Gardens", "addr": "800 E. Main St.", "zip": "14604", "q": "800 E. Main St., Rochester, NY 14604", "equip": "MINI / TRUCK", "size": "25k"}, {"n": 37, "name": "Rochester Steel Treating Works", "addr": "962 E. Main St.", "zip": "14605", "q": "962 E. Main St., Rochester, NY 14605", "equip": "MINI / TRUCK", "size": "12k"}, {"n": 38, "name": "Warfield Square", "addr": "1337 E. Main St.", "zip": "14609", "q": "1337 E. Main St., Rochester, NY 14609", "equip": "MINI / TRUCK", "size": "27k"}, {"n": 39, "name": "Meier Supply", "addr": "430 Atlantic Ave.", "zip": "14609", "q": "430 Atlantic Ave., Rochester, NY 14609", "equip": "MINI / TRUCK", "size": "16k"}, {"n": 40, "name": "Gleason Works", "addr": "1000 University Ave.", "zip": "14607", "q": "1000 University Ave., Rochester, NY 14607", "equip": "LOADER + TRUCK", "size": "429k"}, {"n": 41, "name": "Fisher Associates", "addr": "180 Charlotte St.", "zip": "14607", "q": "180 Charlotte St., Rochester, NY 14607", "equip": "MINI / TRUCK", "size": "24k"}, {"n": 42, "name": "Endeavor Health Services", "addr": "228 S. Plymouth Ave.", "zip": "14608", "q": "228 S. Plymouth Ave., Rochester, NY 14608", "equip": "LOADER / MINI / TRUCK", "size": "13k"}, {"n": 43, "name": "Woerner Industries", "addr": "322 Oak St.", "zip": "14608", "q": "322 Oak St., Rochester, NY 14608", "equip": "LOADER / MINI / TRUCK", "size": "22k"}, {"n": 44, "name": "Paul Wolk Commons", "addr": "435 State St.", "zip": "14608", "q": "435 State St., Rochester, NY 14608", "equip": "MINI / TRUCK", "size": "10k"}, {"n": 45, "name": "Center for Disability Rights", "addr": "497 State St.", "zip": "14608", "q": "497 State St., Rochester, NY 14608", "equip": "TRUCK", "size": "34k"}, {"n": 46, "name": "Zweigle's", "addr": "651 Plymouth Ave.", "zip": "14608", "q": "651 Plymouth Ave., Rochester, NY 14608", "equip": "TRUCK", "size": "44k"}, {"n": 47, "name": "Pennant Ingredients", "addr": "64 Chester St.", "zip": "14611", "q": "64 Chester St., Rochester, NY 14611", "equip": "LOADER / MINI", "size": "83k (65k)"}, {"n": 48, "name": "Davenport Machine", "addr": "167 Ames St.", "zip": "14611", "q": "167 Ames St., Rochester, NY 14611", "equip": "LOADER / MINI", "size": "61k"}, {"n": 49, "name": "Livingston Development Ventures", "addr": "860 Maple St.", "zip": "14611", "q": "860 Maple St., Rochester, NY 14611", "equip": "LOADER / MINI", "size": "175k (salt 106k)"}, {"n": 50, "name": "Veritech Precision", "addr": "1040 Jay St., Bldg. 1", "zip": "14611", "q": "1040 Jay St., Rochester, NY 14611", "equip": "LOADER / MINI / TRUCK", "size": "35k"}, {"n": 51, "name": "Riverside Automation", "addr": "1040 Jay St., Bldg. 2", "zip": "14611", "q": "1040 Jay St., Rochester, NY 14611", "equip": "LOADER / MINI / TRUCK", "size": "35k"}, {"n": 52, "name": "Pennant Ingredients", "addr": "181-235 Buffalo Rd.", "zip": "14611", "q": "181 Buffalo Rd., Rochester, NY 14611", "equip": "LOADER / MINI", "size": "66k"}], "groups": [{"a": 1, "b": 15, "name": "West side", "streets": "Lyell, Emerson, Lexington, Mt. Read"}, {"a": 16, "b": 28, "name": "North side", "streets": "Ridgeway, La Grange, Norman, Lake Ave"}, {"a": 29, "b": 41, "name": "Downtown & east", "streets": "St. Paul, E. Main, University"}, {"a": 42, "b": 52, "name": "Southwest", "streets": "Plymouth, Corn Hill, Jay St, Buffalo Rd"}], "miles": 30, "shop": "225 Ballantyne Rd, Rochester, NY 14623"};
+var KEY='city-route-ticks';
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){return {}}}
+function save(t){try{localStorage.setItem(KEY,JSON.stringify(t))}catch(e){}}
+var ticks=load();
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function dir(q){return 'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+encodeURIComponent(q)}
+function legUrl(stops,origin){var dest=stops[stops.length-1].q,wp=stops.slice(0,-1).map(function(s){return s.q});return 'https://www.google.com/maps/dir/?api=1&travelmode=driving'+(origin?'&origin='+encodeURIComponent(origin):'')+'&destination='+encodeURIComponent(dest)+(wp.length?'&waypoints='+encodeURIComponent(wp.join('|')):'')}
+document.getElementById('facts').innerHTML='<span class="fact"><b>52</b> stops</span><span class="fact"><b>4</b> areas</span><span class="fact">≈<b>40</b> driving mi</span><span class="fact">Start: shop, Ballantyne Rd</span>';
+var h='';
+D.groups.forEach(function(g){
+  var ss=D.stops.filter(function(s){return s.n>=g.a&&s.n<=g.b});
+  var prev=g.a===1?D.shop:D.stops[g.a-2].q;
+  var chunks=[];for(var i=0;i<ss.length;i+=9)chunks.push(ss.slice(i,i+9));
+  h+='<section aria-labelledby="g'+g.a+'"><div class="ghead"><h2 id="g'+g.a+'">'+esc(g.name)+' <span class="range">#'+g.a+'–'+g.b+'</span></h2>'+chunks.map(function(c,k){var o=k===0?prev:chunks[k-1][chunks[k-1].length-1].q;return '<a class="gmap" target="_blank" rel="noopener" href="'+legUrl(c,o)+'">Map #'+c[0].n+'–'+c[c.length-1].n+'</a>'}).join(' ')+'<p>'+esc(g.streets)+'</p></div><ol>';
+  ss.forEach(function(s){
+    var on=!!ticks[s.n];
+    h+='<li id="s'+s.n+'"'+(on?' class="done"':'')+'><span class="num">'+s.n+'</span><div class="info"><div class="nm">'+esc(s.name)+'</div><div class="ad">'+esc(s.addr)+'</div><div class="meta">'+esc([s.equip,s.size].filter(Boolean).join(' · '))+'</div></div><div class="acts"><a class="go" target="_blank" rel="noopener" href="'+dir(s.q)+'">Go</a><label class="chk"><input type="checkbox" id="t'+s.n+'" data-n="'+s.n+'"'+(on?' checked':'')+'>Staked</label></div></li>';
+  });
+  h+='</ol></section>';
+});
+document.getElementById('list').innerHTML=h;
+function prog(){var n=Object.keys(ticks).filter(function(k){return ticks[k]}).length;document.getElementById('pbar').style.width=(n/52*100)+'%';document.getElementById('pcount').textContent=n+' of 52 staked'}
+prog();
+document.getElementById('list').addEventListener('change',function(e){var t=e.target;if(!t.dataset.n)return;var n=t.dataset.n;if(t.checked)ticks[n]=1;else delete ticks[n];save(ticks);document.getElementById('s'+n).classList.toggle('done',t.checked);prog()});
+var rb=document.getElementById('reset'),armT;
+rb.addEventListener('click',function(){if(!rb.classList.contains('armed')){rb.classList.add('armed');rb.textContent='Tap again to clear';clearTimeout(armT);armT=setTimeout(function(){rb.classList.remove('armed');rb.textContent='Clear ticks'},3000);return}
+  ticks={};save(ticks);[].forEach.call(document.querySelectorAll('[data-n]'),function(c){c.checked=false});[].forEach.call(document.querySelectorAll('li.done'),function(l){l.classList.remove('done')});rb.classList.remove('armed');rb.textContent='Clear ticks';prog()});
+</script>
+</body></html>
