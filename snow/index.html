@@ -495,7 +495,7 @@ details.sec summary{cursor:pointer;font-weight:700;padding:6px 0}
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
-var WANT_VER='2026-11-18.2'; // must match APP_VERSION in Code.gs
+var WANT_VER='2026-11-18.3'; // must match APP_VERSION in Code.gs
 'use strict';
 /* ---------- server bridge ---------- */
 function api(fn){var args=[].slice.call(arguments,1);return new Promise(function(res,rej){
@@ -653,7 +653,8 @@ function visitsFor(id){var t=eff();return crew.shift?crew.shift.visits.filter(fu
 function siteById(id,list){list=list||crew.route;for(var i=0;i<list.length;i++)if(list[i].id===id)return list[i];return null}
 var SKIPR=['Closed / not open yet','Cars or gate blocking','No snow to clear','Customer said skip','Equipment problem','Not safe','Other'];
 function allMine(){var r=crew.routes||{},a=[];Object.keys(r).forEach(function(k){a=a.concat(r[k])});return a}
-function showPlow(){return !!crew.plow&&!/plow/i.test(eff())}
+function isPlowT(t){t=String(t||'');return /plow/i.test(t)&&!/salt|walk/i.test(t)}
+function showPlow(){return !!crew.plow&&!isPlowT(eff())}
 function plowInfo(id){if(!showPlow())return null;var p=crew.plow[id];if(!p)return null;
   if(p.s==='done')return {c:'pl-done',t:'Plowed '+clock(p.t),l:'Plowed at '+clock(p.t)+' by '+p.by};
   if(p.s==='now')return {c:'pl-now',t:'Plowing now',l:p.by+' is plowing it now (since '+clock(p.t)+')'};
