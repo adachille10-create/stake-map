@@ -1,5 +1,5 @@
-// Keeps the app opening even with no signal. Version b02a085950
-var C='snow-b02a085950',SHELL=['./','index.html','manifest.json','icon-192.png','apple-touch-icon.png'];
+// Keeps the app opening even with no signal. Version fef611c601
+var C='snow-fef611c601',SHELL=['./','index.html','manifest.json','icon-192.png','apple-touch-icon.png'];
 self.addEventListener('install',function(e){e.waitUntil(caches.open(C).then(function(c){return c.addAll(SHELL)}).then(function(){return self.skipWaiting()}))});
 self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.filter(function(x){return x!==C}).map(function(x){return caches.delete(x)}))}).then(function(){return self.clients.claim()}))});
 self.addEventListener('fetch',function(e){var r=e.request;if(r.method!=='GET'||new URL(r.url).origin!==location.origin)return;

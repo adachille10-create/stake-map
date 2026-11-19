@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Snow Route">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <script>window.SNOW_API="https://script.google.com/macros/s/AKfycby5VV5ginbWwLdaM4om5lWtzv9GN2K9s_DcwLZvnBc_YELxUVlGDNZAVfuocTX4dyWO5A/exec";</script>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&amp;family=Overpass+Mono:wght@500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;800&amp;family=Overpass+Mono:wght@500;600&amp;family=Space+Grotesk:wght@500;700&amp;display=swap">
 <style>
 /* Layout: site list beside (desktop) or before (phone) one site sheet: photo with pins, mark list, address actions. */
 :root{
@@ -492,10 +492,189 @@ details.sec summary{cursor:pointer;font-weight:700;padding:6px 0}
 .chk{display:flex;flex-direction:column;gap:4px;font-size:14px}.chk .ok{color:var(--ink)}.chk .bad{color:#b45309;font-weight:600}
 .saltpick{display:grid;grid-template-columns:1fr 1.2fr;gap:8px;margin-top:4px}.saltq{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.saltq .cbtn{min-width:48px}
 .photobtn{cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+/* ---- 2026-11-19 redesign ---- */
+.who .names button.mgrname{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-color:var(--ink);border-width:2px}
+.who .names button.mgrname small{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--surface);background:var(--ink);border-radius:99px;padding:1px 8px}
+.linkbtn.small{font-size:13px;margin-top:18px;align-self:center}
+/* More menu */
+.morebtn{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px;width:100%;text-align:left;padding:16px 14px;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;cursor:pointer}
+.morebtn:first-child{border-top:0}
+.morebtn b{font-size:17px}
+.morebtn span:not(.chev){grid-column:1;font-size:13px;color:var(--muted)}
+.morebtn .chev{grid-column:2;grid-row:1/3;align-self:center}
+.backmore{align-self:flex-start;background:none;border:0;color:var(--accent);font:inherit;font-weight:700;font-size:15px;padding:10px 2px 4px;cursor:pointer}
+/* needs attention */
+.attn{border:2px solid var(--hazard);border-radius:12px;overflow:hidden;background:var(--surface);margin:4px 0 4px}
+.attn.ok{border:1px solid var(--ok);background:var(--ok-bg);padding:12px 14px;font-size:15px}
+.attnh{display:flex;align-items:center;gap:8px;padding:10px 14px;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;background:var(--hazard);color:#fff}
+.attnh span{background:#fff;color:var(--hazard);border-radius:99px;padding:0 8px;font-size:12px}
+.attnrow{display:block;width:100%;text-align:left;padding:12px 14px 12px 18px;border:0;border-top:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:15px;line-height:1.35;cursor:pointer;position:relative}
+.attnh+.attnrow{border-top:0}
+.attnrow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:#E8A33D}
+.attnrow.lv2::before{background:var(--hazard)}
+.attnrow:hover{background:var(--bg)}
+.attnrow .chip{margin-left:4px;font-size:11px}
+/* roomier rows on the phone */
+.lrow{min-height:62px;padding:10px 14px}
+.lname{font-size:17px}
+.lsub{font-size:14px}
+.rr .rtx{min-height:54px}
+.actbar{flex-wrap:wrap;row-gap:8px}
+.actbar .btn.sm{min-height:42px}
+@media (max-width:899px){
+  .mtabs button{min-height:52px;font-size:15px;font-weight:800}
+  .app.mgrmode{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
+  .actbar{bottom:calc(74px + env(safe-area-inset-bottom))}
+}
+/* owner's computer view */
+.app.wide{max-width:1400px}
+.desk{display:flex;flex-direction:column;gap:16px;margin-top:14px}
+.kpis{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch}
+.kpis>div{flex:1 1 120px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kpis>div b{font:800 30px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.kpis>div span{font-size:13px;color:var(--muted)}
+.kpis>div.links{flex:1.6 1 220px;justify-content:center;gap:6px}
+.kpis .links a{font-weight:700;color:var(--accent)}
+.kpis .links .linkbtn{padding:0}
+.zcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start}
+.zcol{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.zch{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.zch h3{font-size:20px;font-weight:800}
+.zcol .meta{font-size:13px;color:var(--muted)}
+.zlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.zrow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--line)}
+.zrow:first-child{border-top:0}
+.zn{display:flex;flex-direction:column;min-width:0;flex:1}
+.zn small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zp{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font:600 13px var(--mono)}
+.zp i{display:block;width:70px;height:5px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.zp u{display:block;height:100%;background:var(--ok)}
+.zcol .btn{align-self:flex-start}
+/* ================= owner command center (desktop) ================= */
+body.cmdmode{--c-bg:#04070d;--c-ink:#e8f1ff;--c-dim:#7d8ca6;--c-line:rgba(140,180,255,.14);--c-glass:rgba(16,26,44,.55);--c-ice:#6ad8ff;--c-fire:#ff6a1a;--c-red:#ff3b4e;--c-amb:#ffb020;--c-ok:#3cf5a0;
+  background:radial-gradient(1200px 600px at 85% -10%,rgba(255,106,26,.18),transparent 60%),radial-gradient(1000px 700px at -10% 30%,rgba(106,216,255,.13),transparent 60%),var(--c-bg);background-attachment:fixed;color:var(--c-ink);color-scheme:dark}
+body.cmdmode::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(var(--c-line) 1px,transparent 1px),linear-gradient(90deg,var(--c-line) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 80%);opacity:.5;z-index:0}
+.cmd-snow{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:0}
+body.cmdmode .app{position:relative;z-index:1}
+body.cmdmode header.top{border-color:var(--c-line)}
+body.cmdmode header.top h1,body.cmdmode header.top .sum{color:var(--c-ink)}
+body.cmdmode header.top .sum{color:var(--c-dim)}
+body.cmdmode header .btn,body.cmdmode .zonesel{background:var(--c-glass);color:var(--c-ink);border:1px solid var(--c-line);backdrop-filter:blur(10px)}
+body.cmdmode .tabs{border-color:var(--c-line);background:transparent}
+body.cmdmode .tabs button{color:var(--c-dim);background:transparent;border-color:transparent}
+body.cmdmode .tabs button[aria-selected="true"]{color:var(--c-ink);background:var(--c-glass);border-color:var(--c-line);box-shadow:inset 0 -2px 0 var(--c-fire)}
+.cmd{display:flex;flex-direction:column;gap:22px;margin-top:22px;font-family:'Space Grotesk','Overpass',system-ui,sans-serif}
+.cmd b,.cmd h2,.cmd h3{color:var(--c-ink)}
+/* hero */
+.cmd-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.cmd-title h2{font-size:54px;line-height:1;font-weight:700;letter-spacing:-.03em;margin:10px 0 8px;background:linear-gradient(100deg,#fff 20%,var(--c-ice) 60%,#fff 90%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:cmdShine 8s linear infinite}
+.cmd-title p{margin:0;color:var(--c-dim);font-size:15px}
+.cmd-live{display:inline-flex;align-items:center;gap:8px;font:700 12px/1 'Overpass Mono',monospace;letter-spacing:.2em;color:var(--c-dim);border:1px solid var(--c-line);border-radius:99px;padding:7px 12px 6px;background:var(--c-glass)}
+.cmd-live i{width:8px;height:8px;border-radius:50%;background:var(--c-dim)}
+.cmd-live.on{color:var(--c-fire);border-color:rgba(255,106,26,.5);box-shadow:0 0 24px rgba(255,106,26,.25)}
+.cmd-live.on i{background:var(--c-fire);box-shadow:0 0 0 0 rgba(255,106,26,.7);animation:cmdPing 1.6s infinite}
+.cmd-clock{text-align:right}
+.cmd-clock b{display:block;font:600 46px/1 'Overpass Mono',monospace;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-shadow:0 0 30px rgba(106,216,255,.35)}
+.cmd-clock span{color:var(--c-dim);font-size:14px}
+/* KPIs */
+.cmd-kpis{display:grid;grid-template-columns:1.7fr repeat(4,1fr) 1.3fr;gap:14px}
+.cmd-kpis .k{position:relative;overflow:hidden;background:var(--c-glass);border:1px solid var(--c-line);border-radius:18px;padding:20px 20px 18px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;backdrop-filter:blur(14px)}
+.cmd-kpis .k::after{content:"";position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(160,210,255,.6),transparent)}
+.cmd-kpis .k>b,.cmd-kpis .k>.cnt{font:600 46px/1 'Overpass Mono',monospace;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.cmd-kpis .k span{color:var(--c-dim);font-size:14px}
+.cmd-kpis .k em{font-style:normal;opacity:.7}
+.cmd-kpis .k.warn{border-color:rgba(255,176,32,.45);box-shadow:0 0 30px rgba(255,176,32,.12) inset}
+.cmd-kpis .k.warn>b{color:var(--c-amb)}
+.cmd-kpis .k-ring{flex-direction:row;align-items:center;justify-content:flex-start;gap:18px}
+.cmd-kpis .k-links{justify-content:center;gap:4px}
+.cmd-kpis .k-links a,.cmd-kpis .k-links button{all:unset;cursor:pointer;display:flex;justify-content:space-between;padding:8px 2px;border-bottom:1px solid var(--c-line);color:var(--c-ink);font-weight:500;font-size:15px}
+.cmd-kpis .k-links>*:last-child{border-bottom:0}
+.cmd-kpis .k-links i{font-style:normal;color:var(--c-ice);transition:transform .2s}
+.cmd-kpis .k-links>*:hover i{transform:translateX(4px)}
+/* progress rings */
+.ring{--p:0;--sz:104px;width:var(--sz);height:var(--sz);flex:none;border-radius:50%;display:grid;place-items:center;background:conic-gradient(from 0deg,var(--c-ice),var(--c-ok) calc(var(--p)*1%),rgba(140,180,255,.1) 0);filter:drop-shadow(0 0 14px rgba(106,216,255,.35))}
+.ring>div{width:calc(100% - 14px);height:calc(100% - 14px);border-radius:50%;background:#08101d;display:flex;align-items:baseline;justify-content:center;padding-top:calc(var(--sz)*.3);box-sizing:border-box}
+.ring b{font:600 30px/1 'Overpass Mono',monospace}
+.ring small{color:var(--c-dim);font-size:13px;margin-left:1px}
+.ring.sm{--sz:64px}
+.ring.sm>div{width:calc(100% - 10px);height:calc(100% - 10px);padding-top:21px}
+.ring.sm b{font-size:18px}
+/* attention */
+.cmd-alert{border:1px solid rgba(255,59,78,.55);border-radius:18px;overflow:hidden;background:linear-gradient(180deg,rgba(255,59,78,.12),rgba(16,26,44,.6));box-shadow:0 0 0 1px rgba(255,59,78,.15),0 0 60px rgba(255,59,78,.18);backdrop-filter:blur(14px);animation:cmdGlow 2.6s ease-in-out infinite}
+.cmd-alert-h{display:flex;align-items:center;gap:12px;padding:14px 20px;font:700 13px 'Overpass Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#ffd5da;border-bottom:1px solid rgba(255,59,78,.3)}
+.cmd-alert-h b{margin-left:auto;background:var(--c-red);color:#fff!important;border-radius:99px;padding:3px 11px;letter-spacing:0;box-shadow:0 0 18px var(--c-red)}
+.siren{width:10px;height:10px;border-radius:50%;background:var(--c-red);box-shadow:0 0 0 0 rgba(255,59,78,.8);animation:cmdPingR 1.2s infinite}
+.cmd-arow{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:grid;grid-template-columns:86px 1fr auto;align-items:center;gap:16px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);font-size:16px;color:var(--c-ink);transition:background .2s}
+.cmd-arow:first-of-type{border-top:0}
+.cmd-arow:hover{background:rgba(255,255,255,.05)}
+.cmd-arow .sev{font:700 11px 'Overpass Mono',monospace;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:5px 0;border-radius:6px;color:var(--c-amb);border:1px solid rgba(255,176,32,.5);background:rgba(255,176,32,.08)}
+.cmd-arow.lv2 .sev{color:#fff;background:var(--c-red);border-color:var(--c-red);box-shadow:0 0 14px rgba(255,59,78,.6)}
+.cmd-arow .zt{color:var(--c-dim);font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.cmd-arow:hover .zt{color:var(--c-ice)}
+.cmd-ok{display:flex;align-items:center;gap:12px;padding:16px 20px;border-radius:18px;border:1px solid rgba(60,245,160,.35);background:rgba(60,245,160,.07);color:var(--c-ink)}
+.okdot{width:10px;height:10px;border-radius:50%;background:var(--c-ok);box-shadow:0 0 14px var(--c-ok)}
+/* zones */
+.cmd-zones{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;align-items:start}
+.cz{position:relative;background:var(--c-glass);border:1px solid var(--c-line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:14px;backdrop-filter:blur(14px);transition:transform .25s,border-color .25s}
+.cz:hover{transform:translateY(-3px);border-color:rgba(106,216,255,.4)}
+.cz.hot{border-color:rgba(255,106,26,.45);box-shadow:0 20px 60px -30px rgba(255,106,26,.6)}
+.cz.hot::before{content:"";position:absolute;inset:-1px;border-radius:20px;padding:1px;background:conic-gradient(from var(--a,0deg),transparent 0 70%,var(--c-fire) 85%,transparent);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:cmdOrbit 4s linear infinite;pointer-events:none}
+.cz-h{display:flex;align-items:center;gap:14px}
+.cz-t{flex:1;min-width:0}
+.cz-t h3{font-size:26px;font-weight:700;letter-spacing:-.02em;margin:0 0 3px}
+.cz-t p{margin:0;font-size:14px;color:var(--c-dim)}
+.cz-t .evt{color:var(--c-fire);font-weight:700}
+.cz-t b{font-family:'Overpass Mono',monospace}
+.cz-bad{background:var(--c-red);color:#fff;font:700 13px 'Overpass Mono',monospace;min-width:26px;height:26px;border-radius:99px;display:grid;place-items:center;box-shadow:0 0 16px var(--c-red)}
+.cz-meta{display:flex;justify-content:space-between;font-size:13px;color:var(--c-dim);padding:0 2px}
+.cz-meta b.none{color:var(--c-amb)}
+.cz-list{display:flex;flex-direction:column;gap:6px}
+.cr{display:grid;grid-template-columns:12px 1fr auto;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04)}
+.cr .sd{width:10px;height:10px;border-radius:50%;background:#3a4558}
+.cr.on .sd{background:var(--c-ok);box-shadow:0 0 10px var(--c-ok)}
+.cr.now .sd{background:var(--c-fire);box-shadow:0 0 0 0 rgba(255,106,26,.7);animation:cmdPing 1.8s infinite}
+.cr.off{opacity:.55}
+.cn{display:flex;flex-direction:column;min-width:0}
+.cn b{font-size:16px;font-weight:600}
+.cn small{color:var(--c-dim);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cp{display:grid;grid-template-columns:auto;justify-items:end;gap:4px}
+.cp em{font:600 15px 'Overpass Mono',monospace;font-style:normal}
+.cp em s{text-decoration:none;color:var(--c-dim)}
+.cp i{display:block;width:96px;height:6px;border-radius:99px;background:rgba(140,180,255,.12);overflow:hidden}
+.cp u{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--c-ice),var(--c-ok));box-shadow:0 0 10px rgba(60,245,160,.6);position:relative;overflow:hidden}
+.cp u::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent);transform:translateX(-100%);animation:cmdShimmer 2.4s infinite}
+.cp small{font-size:10.5px;color:var(--c-dim);text-transform:uppercase;letter-spacing:.08em}
+.cz-open{all:unset;cursor:pointer;align-self:stretch;text-align:center;padding:11px;border-radius:12px;border:1px solid var(--c-line);font-weight:600;color:var(--c-ink);transition:all .2s}
+.cz-open:hover{background:linear-gradient(90deg,rgba(106,216,255,.15),rgba(255,106,26,.15));border-color:rgba(106,216,255,.5)}
+.cz-open i{font-style:normal;color:var(--c-ice)}
+.cmd .dim{color:var(--c-dim);margin:0;font-size:14px}
+.cmd-foot{color:var(--c-dim);font-size:13px;text-align:center;font-family:'Overpass Mono',monospace;letter-spacing:.06em}
+.cmd-load{display:grid;place-items:center;gap:14px;padding:120px 0;color:var(--c-dim);font-family:'Overpass Mono',monospace;letter-spacing:.1em}
+.cmd-spin{width:46px;height:46px;border-radius:50%;border:3px solid rgba(106,216,255,.15);border-top-color:var(--c-ice);animation:cmdRot 1s linear infinite}
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes cmdOrbit{to{--a:360deg}}
+@keyframes cmdRot{to{transform:rotate(360deg)}}
+@keyframes cmdShine{to{background-position:-200% 0}}
+@keyframes cmdPing{0%{box-shadow:0 0 0 0 rgba(255,106,26,.7)}100%{box-shadow:0 0 0 12px rgba(255,106,26,0)}}
+@keyframes cmdPingR{0%{box-shadow:0 0 0 0 rgba(255,59,78,.8)}100%{box-shadow:0 0 0 14px rgba(255,59,78,0)}}
+@keyframes cmdGlow{50%{box-shadow:0 0 0 1px rgba(255,59,78,.3),0 0 80px rgba(255,59,78,.3)}}
+@keyframes cmdRise{from{opacity:0;transform:translateY(14px)}}
+@keyframes cmdSlide{from{opacity:0;transform:translateX(-12px)}}
+@keyframes cmdShimmer{to{transform:translateX(100%)}}
+@keyframes cmdSpin{from{transform:rotate(-90deg) scale(.85);opacity:0}}
+@media (max-width:1250px){.cmd-kpis{grid-template-columns:repeat(3,1fr)}.cmd-kpis .k-ring{grid-column:span 2}}
+@media (prefers-reduced-motion:reduce){.cmd *,.cmd *::before,.cmd *::after{animation:none!important;transition:none!important}}
+.cmd.intro .cmd-kpis .k{animation:cmdRise .6s both}
+.cmd.intro .cmd-arow{animation:cmdSlide .5s both;animation-delay:calc(var(--i)*70ms)}
+.cmd.intro .cz{animation:cmdRise .7s both;animation-delay:calc(var(--i)*90ms + 150ms)}
+.cmd.intro .ring{animation:cmdSpin 1.2s cubic-bezier(.2,.8,.2,1) both}
+body.cmdmode header.top{background:rgba(4,7,13,.72)!important;backdrop-filter:blur(14px);box-shadow:none}
+body.cmdmode header.top h1{color:#fff!important}
+body.cmdmode .zonesel option{background:#0b1322;color:#e8f1ff}
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
-var WANT_VER='2026-11-18.3'; // must match APP_VERSION in Code.gs
+var WANT_VER='2026-11-19.1'; // must match APP_VERSION in Code.gs
 'use strict';
 /* ---------- server bridge ---------- */
 function api(fn){var args=[].slice.call(arguments,1);return new Promise(function(res,rej){
@@ -531,7 +710,7 @@ var EQUIP=[
   {k:'Walkway van',does:['Shoveled walks','Salted walks'],on:['Shoveled walks','Salted walks']}];
 function equipInfo(k){for(var i=0;i<EQUIP.length;i++)if(EQUIP[i].k===k)return EQUIP[i];return null}
 var ui={rtype:'',pickRoute:false,mode:'pick',sel:null,view:'list',tool:'s',mark:null,zoom:0,confirm:false,tab:'live',q:'',ending:false,again:false};
-var data={crew:[],crewZones:[],zones:[],ver:-1};
+var data={crew:[],crewZones:[],managers:[],zones:[],ver:-1};
 var me=lsGet('snow.me',null);
 var crew={plow:null,equip:'',helping:'',routes:{},types:[],active:'',pick:'',route:[],ver:-1,shift:null,queue:[],last:0,offline:false};
 var mgr={me:lsGet('snow.mgrme',null),zone:lsGet('snow.zone',''),zoneEdit:null,mgrs:null,mgrEdit:null,tempMode:null,typeEdit:null,hrsOpen:false,log:null,lg:{scope:'storm',auto:lsGet('snow.lgauto',true),kind:'note',to:''},token:lsGet('snow.mgr',null),d:null,dirty:false,editing:null,importing:null,crewEdit:null};
@@ -764,15 +943,16 @@ function pickHTML(){
   var h='<div class="who"><div class="brand">'+icon()+'<h1 style="font-size:22px;text-transform:uppercase;font-weight:800">Snow Route</h1></div>';
   if(!data.loaded)return h+'<p class="note">Loading…</p></div>';
   if(data.err&&!data.crew.length)h+='<div class="queue"><b>Could not reach the server.</b> '+esc(data.err)+'</div><button class="btn primary" data-act="reboot">Try again</button>';
-  if(!data.crew.length)h+='<div class="empty">No crew names yet. The manager adds them under <b>Manager → Settings</b>.</div>';
+  var mg=data.managers||[];
+  if(!data.crew.length&&!mg.length)h+='<div class="empty">No crew names yet. The owner adds them in Settings.</div>';
   else{
     h+='<h2>Who’s working?</h2>';
     var groups=(data.zones||[]).concat(['']);
-    groups.forEach(function(z){var ns=data.crew.filter(function(n,i){return (data.crewZones[i]||'')===z});if(!ns.length)return;
-      h+=(groups.length>1&&data.zones.length>1?'<p class="zlabel">'+(z?esc(z):'No zone')+'</p>':'')+'<div class="names">'+ns.map(function(n){return '<button data-act="iam" data-v="'+esc(n)+'">'+esc(n)+'</button>'}).join('')+'</div>'});
+    groups.forEach(function(z){var ns=data.crew.filter(function(n,i){return (data.crewZones[i]||'')===z}),ms=mg.filter(function(m){return (m.zone||'')===z});if(!ns.length&&!ms.length)return;
+      h+=(groups.length>1&&data.zones.length>1?'<p class="zlabel">'+(z?esc(z):'No zone')+'</p>':'')+'<div class="names">'+ms.map(function(m){return '<button class="mgrname" data-act="iam-mgr" data-v="'+esc(m.name)+'"><span>'+esc(m.name)+'</span><small>Manager</small></button>'}).join('')+ns.map(function(n){return '<button data-act="iam" data-v="'+esc(n)+'">'+esc(n)+'</button>'}).join('')+'</div>'});
     h+='<p class="note">Pick your name once. This phone will remember you.</p>';
   }
-  return h+'<button class="linkbtn" data-act="to-mgr">Manager</button></div>';
+  return h+'<button class="linkbtn small" data-act="owner-in">Owner sign-in</button></div>';
 }
 function icon(){return '<svg width="22" height="34" viewBox="0 0 22 34" aria-hidden="true"><rect x="8" y="2" width="6" height="30" rx="3" fill="var(--accent)"/><rect x="8" y="5" width="6" height="4" fill="var(--surface)"/><rect x="8" y="12" width="6" height="4" fill="var(--surface)"/></svg>'}
 function crewHeader(){
@@ -856,30 +1036,133 @@ function crewSiteHTML(s){
 function zv(){return mgr.me&&mgr.me.role!=='owner'?mgr.me.zone:mgr.zone}
 function zoneCrew(){return mgr.d.crew.filter(function(c){return c.zone===mgr.d.zone}).map(function(c){return {name:c.name,active:c.active,equip:c.equip||'',hasPin:!!c.hasPin}})}
 function isOwner(){return !!(mgr.me&&mgr.me.role==='owner')}
-function mgrCall(fn){var a=[].slice.call(arguments,1);return api.apply(null,[fn,mgr.token].concat(a)).catch(function(e){if(/signed_out/.test(e.message)){mgr.token=null;lsDel('snow.mgr');ui.mode='mgr-login';render();toast('Signed out. Enter your PIN again.')}throw e})}
-function loadMgr(){return mgrCall('mgrData',zv()).then(function(d){mgr.d=d;mgr.err='';mgr.loaded=Date.now();render();return d},function(e){mgr.err=String(e&&e.message||e);if(!mgr.d)render();throw e})}
+function mgrCall(fn){var a=[].slice.call(arguments,1);return api.apply(null,[fn,mgr.token].concat(a)).catch(function(e){if(/signed_out/.test(e.message)){if(mgr.me)ui.mgrWho=mgr.me.role==='owner'?'@owner':mgr.me.name;mgr.token=null;lsDel('snow.mgr');ui.mode='mgr-login';render();toast('Signed out. Enter your PIN again.')}throw e})}
+function mgrKey(){return 'snow.mgrd.'+(zv()||'all')}
+function mgrFromCache(){if(mgr.d)return;var c=lsGet(mgrKey(),null);if(c&&c.d){mgr.d=c.d;mgr.loaded=c.t;mgr.stale=true}}
+function loadMgr(){return mgrCall('mgrData',zv()).then(function(d){mgr.d=d;mgr.err='';mgr.stale=false;mgr.loaded=Date.now();try{var j=JSON.stringify({t:mgr.loaded,d:d});if(j.length<1500000)localStorage.setItem(mgrKey(),j)}catch(e){}render();if(isDesk()&&!mgr.zone&&ui.tab==='live')loadAll();return d},function(e){mgr.err=String(e&&e.message||e);if(!mgr.d)render();throw e})}
 function msiteById(id){return mgr.d?siteById(id,mgr.d.sites):null}
 function loginHTML(){
-  return '<div class="pinbox"><div class="brand">'+icon()+'<h1 style="font-size:22px;text-transform:uppercase;font-weight:800">Manager</h1></div>'+(ui.firstPin?'<p>Pick a PIN of 4 to 8 digits. You will use it to get into the manager screens.</p>':'<p>Enter your manager PIN.</p>')+'<input class="inp" id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="PIN"><button class="btn primary big" data-act="login">'+(ui.firstPin?'Set PIN':'Open manager')+'</button><button class="linkbtn" data-act="to-crew">Back to crew screen</button></div>';
+  var who=ui.mgrWho&&ui.mgrWho!=='@owner'?ui.mgrWho:'Owner';
+  return '<div class="pinbox"><div class="brand">'+icon()+'<h1 style="font-size:22px;text-transform:uppercase;font-weight:800">'+esc(who)+'</h1></div>'+(ui.firstPin?'<p>Pick a PIN of 4 to 8 digits. You will use it to get into the owner screens.</p>':'<p>Enter your PIN.</p>')+'<input class="inp" id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="PIN"><button class="btn primary big" data-act="login">'+(ui.firstPin?'Set PIN':'Sign in')+'</button><button class="linkbtn" data-act="to-crew">‹ Back</button></div>';
 }
-function setZone(z){if(mgr.dirty){toast('Save or discard your site changes first.');return}mgr.zone=z;lsSet('snow.zone',z);mgr.editing=null;mgr.crewEdit=null;mgr.log=null;mgr.d=null;render();loadMgr().catch(function(){});if(ui.tab==='log')loadLog()}
+function setZone(z){if(mgr.dirty){toast('Save or discard your site changes first.');return}mgr.zone=z;lsSet('snow.zone',z);mgr.editing=null;mgr.crewEdit=null;mgr.log=null;mgr.d=null;ui.liveOpen=null;mgrFromCache();render();loadMgr().catch(function(){});if(ui.tab==='log')loadLog()}
 function mgrHTML(){
   var d=mgr.d;
   var who=mgr.me?esc(mgr.me.name)+(isOwner()&&mgr.me.name!=='Owner'?' · owner':''):'Manager';
   var zsel=isOwner()&&d?'<select class="zonesel" id="zonesel" data-zonesel aria-label="Zone">'+['<option value="">All zones</option>'].concat(d.zones.map(function(z){return '<option value="'+esc(z)+'"'+(z===mgr.zone?' selected':'')+'>'+esc(z)+'</option>'})).join('')+'</select>':(mgr.me&&mgr.me.zone?'<span class="zonetag">'+esc(mgr.me.zone)+'</span>':'');
-  var h='<header class="top"><div class="brand">'+icon()+'<div><h1>Snow Route</h1><div class="sum">'+who+(d?' · '+d.sites.length+' sites · '+d.crew.filter(function(c){return c.active}).length+' crew':'')+'</div></div></div>'+zsel+'<button class="btn sm ghost" data-act="mgr-out">Sign out</button></header>';
-  var t=function(k,l){return '<button role="tab" data-act="tab" data-v="'+k+'" aria-selected="'+(ui.tab===k)+'">'+l+'</button>'};
-  h+='<nav class="tabs mtabs" role="tablist">'+t('live','Live')+t('routes','Routes')+t('log','Log')+t('sites','Sites')+t('crew','Settings')+'</nav>';
+  var h='<header class="top"><div class="brand">'+icon()+'<div><h1>Snow Route</h1><div class="sum">'+who+(mgr.stale?' · updating…':'')+'</div></div></div>'+zsel+'<button class="btn sm ghost" data-act="mgr-out">Sign out</button></header>';
+  var inMore=ui.tab==='more'||ui.tab==='log'||ui.tab==='sites'||ui.tab==='crew';
+  var t=function(k,l,on){return '<button role="tab" data-act="tab" data-v="'+k+'" aria-selected="'+on+'">'+l+'</button>'};
+  h+='<nav class="tabs mtabs" role="tablist">'+t('live',isDesk()&&!mgr.zone?'Overview':'Now',ui.tab==='live')+t('routes','Routes',ui.tab==='routes')+(isDesk()?t('log','Log',ui.tab==='log')+t('sites','Sites',ui.tab==='sites')+t('crew','Settings',ui.tab==='crew'):t('more','More',inMore))+'</nav>';
   if(!d)return h+'<div class="panel">'+(mgr.err?'<div class="queue" style="margin:0"><b>Could not load.</b> '+esc(mgr.err)+'</div><button class="btn primary" style="align-self:flex-start" data-act="refresh">Try again</button>':'<p class="note">Loading…</p>')+'</div>';
   if(isOwner()&&d.version!==WANT_VER)h+='<div class="queue" style="margin:8px 12px 0"><b>The script is out of date.</b> The app is version '+WANT_VER+' but the script says '+esc(d.version||'old')+'. In the script editor: paste the latest Code.gs, Save, then Deploy → Manage deployments → edit → New version → Deploy.</div>';
   var needZone=isOwner()&&!d.zone&&(ui.tab==='routes'||ui.tab==='log');
   if(needZone)h+='<div class="panel"><div class="empty">Pick a zone at the top to see its '+(ui.tab==='log'?'event log':'routes')+'.</div>'+zonePickHTML(d)+'</div>';
-  else if(ui.tab==='live')h+=liveHTML(d);
-  else if(ui.tab==='log')h+=logHTML(d);
+  else if(ui.tab==='live')h+=(isDesk()&&!d.zone?deskHTML(d):liveHTML(d));
+  else if(ui.tab==='more')h+=moreHTML();
+  else if(ui.tab==='log')h+=backMore()+logHTML(d);
   else if(ui.tab==='routes')h+=routesHTML(d);
-  else if(ui.tab==='sites')h+=sitesHTML(d);
-  else h+=crewSetHTML(d);
+  else if(ui.tab==='sites')h+=backMore()+sitesHTML(d);
+  else h+=backMore()+crewSetHTML(d);
   return h+actBar(d)+sheetHTML(d);
+}
+function isDesk(){return isOwner()&&window.innerWidth>=1000}
+function moreHTML(){
+  var b=function(k,t,s){return '<button class="morebtn" data-act="tab" data-v="'+k+'"><b>'+t+'</b><span>'+s+'</span><span class="chev">›</span></button>'};
+  return '<div class="panel">'+b('log','Event log','Notes, calls, weather and every clock-in')+b('sites','Sites','Photos, stakes, notes and hours for each property')+b('crew','Settings','Crew, managers, stop order, reports and system check')+'</div>';
+}
+function backMore(){return isDesk()?'':'<button class="backmore" data-act="tab" data-v="more">‹ More</button>'}
+/* ---------- what needs a manager's attention right now ---------- */
+function ago(t){var m=Math.round((Date.now()-t)/60000);return m<60?m+' min':Math.floor(m/60)+'h '+('0'+m%60).slice(-2)+'m'}
+function attn(d,zoneLabel){
+  var out=[],lz=zoneLabel?' <span class="chip">'+esc(d.zone)+'</span>':'';
+  if(!d||!d.zone)return out;
+  var zi=(d.zoneInfo||[]).filter(function(z){return z.name===d.zone})[0]||{};
+  if(d.storm&&!zi.duty)out.push({lv:2,c:'',t:'<b>Nobody is on duty.</b> Route emails are going to the owner.'+lz,act:'duty'});
+  var on=d.live.filter(function(l){return l.shift});
+  on.forEach(function(l){
+    if(l.lastAct&&Date.now()-l.lastAct>30*60000)out.push({lv:2,c:l.crew,t:'<b>'+esc(l.crew)+'</b>: no update in '+ago(l.lastAct)+(l.current?' (at '+esc(l.current.site)+')':'')+lz});
+    (l.skips||[]).forEach(function(k){out.push({lv:1,c:l.crew,t:'<b>'+esc(l.crew)+'</b> skipped '+esc(k.site)+(k.why?': '+esc(k.why):'')+lz})});
+    (l.far||[]).forEach(function(f){out.push({lv:1,c:l.crew,t:'<b>'+esc(l.crew)+'</b>’s phone was '+(f.m<1609?f.m+' m':(f.m/1609).toFixed(1)+' mi')+' from '+esc(f.site)+lz})});
+  });
+  // behind: on the clock an hour or more and well under half the pace of others on the same kind of route
+  on.forEach(function(l){
+    if(!l.route||!l.total||Date.now()-l.shift.clockIn<3600000)return;
+    var rate=function(x){return (x.done||0)/Math.max(.5,(Date.now()-x.shift.clockIn)/3600000)};
+    var peers=on.filter(function(x){return x!==l&&x.route===l.route&&Date.now()-x.shift.clockIn>=3600000});if(!peers.length)return;
+    var avg=peers.reduce(function(a,x){return a+rate(x)},0)/peers.length;
+    if(avg>0&&rate(l)<avg*.5)out.push({lv:1,c:l.crew,t:'<b>'+esc(l.crew)+'</b> is behind: '+(l.done||0)+' of '+l.total+' after '+ago(l.shift.clockIn)+lz});
+  });
+  if(zoneLabel)out.forEach(function(o){o.z=d.zone});
+  return out.sort(function(a,b){return b.lv-a.lv});
+}
+function attnHTML(items,running){
+  if(!running&&!items.length)return '';
+  if(!items.length)return '<div class="attn ok"><b>All good.</b> Nobody is behind and nothing was skipped.</div>';
+  return '<div class="attn"><div class="attnh">Needs attention <span>'+items.length+'</span></div>'+items.map(function(x){return '<button class="attnrow lv'+x.lv+'" '+(x.z?'data-act="pick-zone" data-v="'+esc(x.z)+'"':x.act?'data-act="'+x.act+'"':'data-act="lopen-go" data-v="'+esc(x.c)+'"')+'>'+x.t+'</button>'}).join('')+'</div>';
+}
+/* ---------- owner on a computer: every zone side by side ---------- */
+function loadAll(){
+  var d=mgr.d;if(!d||!d.zones||mgr.allBusy)return;mgr.allBusy=1;
+  Promise.all(d.zones.map(function(z){return mgrCall('mgrData',z).then(function(x){return x},function(){return null})})).then(function(list){mgr.allBusy=0;mgr.all={};list.forEach(function(x,i){if(x)mgr.all[d.zones[i]]=x});mgr.allAt=Date.now();render()},function(){mgr.allBusy=0});
+}
+function deskHTML(d){
+  var A=mgr.all||{},zs=d.zones.filter(function(z){return A[z]});
+  if(!zs.length){if(!mgr.allBusy)loadAll();return '<div class="cmd-load"><div class="cmd-spin"></div><p>Linking every zone…</p></div>'}
+  var items=[],tot={on:0,crew:0,done:0,total:0,skip:0,ms:0,ev:0};
+  zs.forEach(function(z){var x=A[z];items=items.concat(attn(x,true));if(x.storm)tot.ev++;x.live.forEach(function(l){tot.crew++;if(l.shift){tot.on++;tot.done+=l.done||0;tot.total+=l.total||0;tot.skip+=l.skipped||0;tot.ms+=Date.now()-l.shift.clockIn}})});
+  items.sort(function(a,b){return b.lv-a.lv});
+  var P=mgr.kprev||{};mgr.kprev={on:tot.on,done:tot.done,skip:tot.skip,ev:tot.ev};
+  var pct=tot.total?Math.round(100*tot.done/tot.total):0;
+  var num=function(k,v){return '<b class="cnt" data-from="'+(P[k]==null?0:P[k])+'" data-to="'+v+'">'+v+'</b>'};
+  var running=zs.some(function(z){return A[z].storm});
+  var h='<div class="cmd'+(mgr.cmdShown?'':' intro')+'">';mgr.cmdShown=true;
+  h+='<div class="cmd-hero"><div class="cmd-title"><span class="cmd-live'+(running?' on':'')+'"><i></i>'+(running?'LIVE':'STANDBY')+'</span><h2>Command Center</h2><p>Trimline Landscape · '+zs.length+' zones · synced <span class="tick" data-ago="'+(mgr.allAt||Date.now())+'">just now</span></p></div>'+
+    '<div class="cmd-clock"><b class="tick" data-clock="1">'+clock(Date.now())+'</b><span>'+new Date().toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'})+'</span></div></div>';
+  h+='<div class="cmd-kpis">'+
+    '<div class="k k-ring"><div class="ring" style="--p:'+pct+'"><div><b class="cnt" data-from="'+(P.pct||0)+'" data-to="'+pct+'">'+pct+'</b><small>%</small></div></div><span>of tonight’s stops done<br><em>'+tot.done+' of '+tot.total+' on active routes</em></span></div>'+
+    '<div class="k">'+num('ev',tot.ev)+'<span>events running</span></div>'+
+    '<div class="k">'+num('on',tot.on)+'<span>on the clock <em>of '+tot.crew+'</em></span></div>'+
+    '<div class="k"><b class="tick" data-hours="'+tot.ms+'" data-n="'+tot.on+'" data-t0="'+Date.now()+'">'+(tot.ms/3600000).toFixed(1)+'</b><span>crew hours so far</span></div>'+
+    '<div class="k'+(tot.skip?' warn':'')+'">'+num('skip',tot.skip)+'<span>skipped</span></div>'+
+    '<div class="k k-links"><a href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">Open Google Sheet <i>↗</i></a><button data-act="tab" data-v="crew">Payroll &amp; billing <i>→</i></button><button data-act="tab" data-v="log">Event log <i>→</i></button></div></div>';
+  mgr.kprev.pct=pct;
+  if(items.length)h+='<div class="cmd-alert"><div class="cmd-alert-h"><span class="siren"></span>Needs attention<b>'+items.length+'</b></div>'+items.map(function(x,i){return '<button class="cmd-arow lv'+x.lv+'" style="--i:'+i+'" data-act="pick-zone" data-v="'+esc(x.z||'')+'"><span class="sev">'+(x.lv>1?'Urgent':'Check')+'</span><span class="msg">'+x.t.replace(/ <span class="chip">.*?<\/span>/,'')+'</span><span class="zt">'+esc(x.z||'')+' →</span></button>'}).join('')+'</div>';
+  else if(running)h+='<div class="cmd-ok"><span class="okdot"></span><b>All systems clear.</b> Nobody is behind and nothing was skipped.</div>';
+  h+='<div class="cmd-zones">'+zs.map(function(z,zi){var x=A[z],info=(d.zoneInfo||[]).filter(function(q){return q.name===z})[0]||{};
+    var rank={now:0,on:1,off:2},L=x.live.slice().sort(function(a,b){return rank[stat(a)]-rank[stat(b)]||a.crew.localeCompare(b.crew)});
+    var dn=0,tt=0,on=0;L.forEach(function(l){if(l.shift){on++;dn+=l.done||0;tt+=l.total||0}});var zp=tt?Math.round(100*dn/tt):0;
+    var bad=items.filter(function(it){return it.z===z}).length;
+    return '<section class="cz'+(x.storm?' hot':'')+(bad?' bad':'')+'" style="--i:'+zi+'"><div class="cz-h"><div class="ring sm" style="--p:'+zp+'"><div><b>'+zp+'</b><small>%</small></div></div><div class="cz-t"><h3>'+esc(z)+'</h3>'+
+      (x.storm?'<p><span class="evt">'+esc(x.storm.name)+'</span> · <b class="tick" data-since="'+x.storm.start+'">'+dur(Date.now()-x.storm.start)+'</b></p>':'<p class="dim">No event running</p>')+'</div>'+(bad?'<span class="cz-bad">'+bad+'</span>':'')+'</div>'+
+      '<div class="cz-meta"><span>On duty <b class="'+(info.duty?'':'none')+'">'+(info.duty?esc(info.duty):'nobody')+'</b></span><span><b>'+on+'</b> / '+L.length+' on the clock</span></div>'+
+      '<div class="cz-list">'+(L.length?L.map(function(l){var p=l.total?Math.min(100,Math.round(100*(l.done||0)/l.total)):0,st=stat(l);return '<div class="cr '+st+'"><span class="sd"></span><span class="cn"><b>'+esc(l.crew)+'</b><small>'+(l.current?'At '+esc(l.current.site)+' · <span class="tick" data-since="'+l.current.start+'" data-m="1">'+Math.round((Date.now()-l.current.start)/60000)+' min</span>':l.shift?(l.lastDone?'Finished '+esc(l.lastDone.site):'Clocked in'):'Off')+'</small></span>'+(l.shift?'<span class="cp"><em>'+(l.done||0)+'<s>/'+l.total+'</s></em><i><u style="width:'+p+'%"></u></i><small>'+esc(l.route||'')+'</small></span>':'')+'</div>'}).join(''):'<p class="dim">No crew in this zone yet.</p>')+'</div>'+
+      '<button class="cz-open" data-act="pick-zone" data-v="'+esc(z)+'">Open '+esc(z)+' <i>→</i></button></section>'}).join('')+'</div>';
+  return h+'<p class="cmd-foot">Auto-refreshes every minute · <span class="tick" data-ago="'+(mgr.allAt||Date.now())+'">just now</span></p></div>';
+}
+/* moving parts for the owner's command center */
+function cmdTick(){
+  var now=Date.now();
+  document.querySelectorAll('.tick').forEach(function(el){var ds=el.dataset;
+    if(ds.clock)el.textContent=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'});
+    else if(ds.since)el.textContent=ds.m?Math.round((now-ds.since)/60000)+' min':dur(now-ds.since);
+    else if(ds.hours)el.textContent=((+ds.hours+ds.n*(now-ds.t0))/3600000).toFixed(2);
+    else if(ds.ago){var s=Math.round((now-ds.ago)/1000);el.textContent=s<10?'just now':s<60?s+'s ago':Math.round(s/60)+' min ago'}});
+}
+function cmdCount(){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  document.querySelectorAll('.cmd .cnt').forEach(function(el){var a=+el.dataset.from,b=+el.dataset.to;if(a===b)return;var t0=performance.now();
+    (function f(t){var k=Math.min(1,(t-t0)/900),e=1-Math.pow(1-k,3);el.textContent=Math.round(a+(b-a)*e);if(k<1)requestAnimationFrame(f)})(t0)});
+}
+var snow={c:null,on:false};
+function snowFx(on){
+  if(on===snow.on)return;snow.on=on;
+  if(!on){if(snow.c){snow.c.remove();snow.c=null}return}
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  var c=document.createElement('canvas');c.className='cmd-snow';document.body.appendChild(c);snow.c=c;var x=c.getContext('2d'),F=[],W,H,R=window.devicePixelRatio||1;
+  function size(){W=c.width=innerWidth*R;H=c.height=innerHeight*R}size();addEventListener('resize',size);
+  for(var i=0;i<140;i++)F.push({x:Math.random(),y:Math.random(),r:.5+Math.random()*1.8,s:.15+Math.random()*.5,w:Math.random()*6.28});
+  (function f(){if(!snow.on||snow.c!==c)return;x.clearRect(0,0,W,H);F.forEach(function(p){p.y+=p.s/H*R*2.2;p.w+=.01;p.x+=Math.sin(p.w)*.0003;if(p.y>1){p.y=-.02;p.x=Math.random()}x.beginPath();x.arc(p.x*W,p.y*H,p.r*R,0,6.28);x.fillStyle='rgba(200,225,255,'+(.25+p.r*.2)+')';x.fill()});requestAnimationFrame(f)})();
 }
 function stormHTML(d){
   var st=d.storm,h='<div class="lc" style="background:var(--surface);border-width:2px;border-color:'+(st?'var(--accent)':'var(--line)')+'"><div class="meta" style="text-transform:uppercase;letter-spacing:.06em;font-weight:700">'+esc(d.zone)+'</div>';
@@ -947,7 +1230,7 @@ function liveHTML(d){
     var w=d.unzoned?'<p class="queue" style="margin:0">'+d.unzoned+' site'+(d.unzoned===1?' has':'s have')+' no zone yet. Assign them under Settings → Sites by zone.</p>':'';
     return '<div class="panel"><h3 style="font-size:18px">All zones</h3>'+w+zonePickHTML(d)+'</div>';
   }
-  var h='<div class="panel">'+unzonedNote(d)+compactStorm(d)+dutyLine(d);
+  var h='<div class="panel">'+(isDesk()?'<button class="backmore" data-act="pick-zone" data-v="">‹ All zones</button>':'')+unzonedNote(d)+compactStorm(d)+dutyLine(d)+attnHTML(attn(d),!!d.storm);
   if(!d.live.length)return h+'<div class="empty">Add your crew under <b>Settings</b> first.</div></div>';
   var rank={now:0,on:1,off:2},L=d.live.slice().sort(function(a,b){return rank[stat(a)]-rank[stat(b)]||a.crew.localeCompare(b.crew)});
   var nOn=L.filter(function(l){return l.shift}).length;
@@ -972,7 +1255,7 @@ function liveHTML(d){
     return r;
   }).join('')+'</div>';
   if(d.storms&&d.storms.filter(function(s){return s.end}).length)h+='<details class="sec"><summary>Recent snow events</summary>'+d.storms.filter(function(s){return s.end}).map(function(s){return '<div class="sumrow"><span><b>'+esc(s.name)+'</b><br><span class="note">'+new Date(s.start).toLocaleDateString([], {month:'short',day:'numeric'})+' '+clock(s.start)+' – '+clock(s.end)+' · '+s.people+' people · '+s.hours+' h</span></span>'+(s.printouts?'<a class="btn sm" href="'+esc(s.printouts)+'" target="_blank" rel="noopener">Printouts</a>':'')+'</div>'}).join('')+'</details>';
-  return h+'<p class="note">Updated '+clock(mgr.loaded)+' · refreshes every minute · <a href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">Google Sheet</a></p></div>';
+  return h+'<p class="note">Updated '+clock(mgr.loaded)+' · <a href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">Google Sheet</a></p></div>';
 }
 function rtype(d){if(!ui.rtype||d.types.indexOf(ui.rtype)<0)ui.rtype=d.types[0]||'';return ui.rtype}
 function selIds(){return Object.keys(ui.rsel||{})}
@@ -982,14 +1265,14 @@ function routesHTML(d){
   if(d.storm)h+='<div class="tempbar"><span>Moves are</span><div class="seg"><button data-act="tempmode" data-v="1" aria-pressed="'+stormOnly(d)+'">This event only</button><button data-act="tempmode" data-v="0" aria-pressed="'+!stormOnly(d)+'">Permanent</button></div></div>';
   var names=d.crew.map(function(c){return c.name}),on={};
   var rank={now:0,on:1,off:2};names.sort(function(a,b){return rank[stat(liveOf(a))]-rank[stat(liveOf(b))]||a.localeCompare(b)});
-  h+='<p class="note" style="margin:0">Tap a person to open their route. Tap sites to pick them, then move them. To change the order, press and hold <b>≡</b>, then drag.</p>';
+  h+='<p class="note" style="margin:0">Tap a person to open their route. Tap a stop to move it.</p>';
   names.forEach(function(g){
     var list=routeOf(g,T).filter(function(r){return byId[r.site]}),open=ui.rcrew===g,l=liveOf(g),cz=(d.crew.filter(function(c){return c.name===g})[0]||{});
     list.forEach(function(r){on[r.site]=1});
     var done=(l&&l.doneIds)||[];
     h+='<div class="rc'+(open?' open':'')+'"><button class="rchead" data-act="rcrew" data-v="'+esc(g)+'" aria-expanded="'+open+'"><span class="dot '+stat(l)+'"></span><b>'+esc(g)+'</b>'+(eqOf(g)?'<small class="eqtag">'+esc(eqOf(g))+'</small>':'')+(cz.zone&&cz.zone!==d.zone?'<span class="chip">from '+esc(cz.zone)+'</span>':'')+(d.active[g]===T?'<span class="chip done">today</span>':'')+'<span style="flex:1"></span><span class="cnt">'+list.length+'</span><span class="chev">›</span></button>';
     if(open){
-      h+='<div class="rlist" data-crew="'+esc(g)+'">'+list.map(function(r,i){var x=byId[r.site],sel=ui.rsel&&ui.rsel[x.id];return '<div class="rr'+(sel?' sel':'')+(done.indexOf(x.id)>=0?' dn':'')+'" data-site="'+x.id+'"><span class="hnd" data-drag="'+x.id+'" aria-label="Drag to reorder">≡</span><button class="rtx" data-act="rsel" data-id="'+x.id+'"><span class="num">'+(i+1)+'</span><span class="rnm"><span class="rl"><b>'+esc(x.name)+'</b>'+(r.temp?'<span class="chip tmp">event</span>':'')+(done.indexOf(x.id)>=0?'<span class="chip done">done</span>':'')+'</span><small>'+esc(shortAddr(x.address))+'</small></span><span class="ck" aria-hidden="true"></span></button></div>'}).join('')+'</div>';
+      h+='<div class="rlist" data-crew="'+esc(g)+'">'+list.map(function(r,i){var x=byId[r.site],sel=ui.rsel&&ui.rsel[x.id];return '<div class="rr'+(sel?' sel':'')+(done.indexOf(x.id)>=0?' dn':'')+'" data-site="'+x.id+'"><button class="rtx" data-act="rsel" data-id="'+x.id+'"><span class="num">'+(i+1)+'</span><span class="rnm"><span class="rl"><b>'+esc(x.name)+'</b>'+(r.temp?'<span class="chip tmp">event</span>':'')+(done.indexOf(x.id)>=0?'<span class="chip done">done</span>':'')+'</span><small>'+esc(shortAddr(x.address))+'</small></span><span class="ck" aria-hidden="true"></span></button></div>'}).join('')+'</div>';
       if(!list.length)h+='<p class="note" style="padding:0 12px">Nothing on '+esc(g)+'’s '+esc(T)+' route yet.</p>';
       h+='<div class="rfoot"><button class="btn sm" data-act="addsites" data-v="'+esc(g)+'">+ Add sites</button>'+(list.length?'<button class="btn sm ghost" data-act="selall" data-v="'+esc(g)+'">Select all</button>':'')+'</div>';
     }
@@ -1014,7 +1297,7 @@ function actBar(d){
   if(mgr.undoShow&&mgr.undo&&!ui.sheet&&!selIds().length)return '<div class="actbar"><b>Moved '+mgr.undo.prev.length+' site'+(mgr.undo.prev.length===1?'':'s')+'</b><span style="flex:1"></span><button class="btn sm" data-act="undomove">Undo</button></div>';
   var ids=selIds();if(!ids.length||ui.tab!=='routes'||ui.sheet)return '';
   var T=rtype(d),one=ids.length===1&&d.routes.filter(function(r){return r.type===T&&r.site===ids[0]})[0];
-  return '<div class="actbar"><button class="x" data-act="selnone" aria-label="Clear">✕</button><b>'+ids.length+' picked</b><span style="flex:1"></span>'+(one?'<button class="btn sm" data-act="r-up" data-id="'+ids[0]+'" aria-label="Move up">▲</button><button class="btn sm" data-act="r-down" data-id="'+ids[0]+'" aria-label="Move down">▼</button>':'')+'<button class="btn sm primary" data-act="sheet" data-v="move">Move to…</button></div>';
+  return '<div class="actbar"><button class="x" data-act="selnone" aria-label="Clear">✕</button><b>'+ids.length+' picked</b><span style="flex:1"></span>'+(one?'<button class="btn sm" data-act="r-next" data-id="'+ids[0]+'">Make next</button><button class="btn sm" data-act="r-up" data-id="'+ids[0]+'" aria-label="Move up">▲</button><button class="btn sm" data-act="r-down" data-id="'+ids[0]+'" aria-label="Move down">▼</button><button class="btn sm" data-act="r-end" data-id="'+ids[0]+'">To end</button>':'')+'<button class="btn sm primary" data-act="sheet" data-v="move">Move to…</button></div>';
 }
 function dtl(ms){if(!ms)return '';var x=new Date(ms),p=function(n){return ('0'+n).slice(-2)};return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate())+'T'+p(x.getHours())+':'+p(x.getMinutes())}
 function tval(id){var e=document.getElementById(id);return e&&e.value?new Date(e.value).getTime():0}
@@ -1179,20 +1462,22 @@ function render(){
   else if(ui.mode==='mgr-login')h=loginHTML();
   else if(ui.mode==='mgr')h=mgrHTML();
   else{var s=ui.view==='detail'&&ui.sel?siteById(ui.sel):null;if(ui.view==='detail'&&!s){ui.view='list';ui.sel=null}h=s?crewSiteHTML(s):crewListHTML()}
-  app.className='app'+(editing()&&mgr.editing?' editing':'')+(ui.mode==='mgr'?' mgrmode':'')+(ui.sheet?' sheeton':'');
+  app.className='app'+(editing()&&mgr.editing?' editing':'')+(ui.mode==='mgr'?' mgrmode':'')+(ui.mode==='mgr'&&isDesk()&&!mgr.zone&&ui.tab==='live'?' wide':'')+(ui.sheet?' sheeton':'');
   app.innerHTML=h;
+  var cmdOn=!!document.querySelector('.cmd');document.body.classList.toggle('cmdmode',cmdOn);snowFx(cmdOn);if(cmdOn){cmdTick();cmdCount()}
   window.scrollTo(0,y);applyFit();
   var ns=document.querySelector('.photo-scroll');if(ns&&ps&&pz===ui.zoom){ns.scrollLeft=pl;ns.scrollTop=pt}
   if(fid){var el=document.getElementById(fid);if(el&&el.focus){el.focus();try{if(fs!=null)el.setSelectionRange(fs,fs)}catch(e){}}}
 }
 setInterval(function(){
+  if(document.body.classList.contains('cmdmode'))cmdTick();
   var a=document.getElementById('shiftclock');if(a&&crew.shift)a.textContent=dur(Date.now()-crew.shift.clockIn);
   var b=document.getElementById('visitclock'),ov=openVisit();if(b&&ov)b.textContent=tick(Date.now()-ov.start);
 },1000);
 setInterval(function(){
   if(document.hidden)return;
   if(ui.mode==='crew')sync();
-  else if(ui.mode==='mgr'&&ui.tab==='live'&&mgr.token)loadMgr().catch(function(){});
+  else if(ui.mode==='mgr'&&ui.tab==='live'&&mgr.token){loadMgr().catch(function(){})}
   else if(ui.mode==='mgr'&&ui.tab==='log'&&mgr.token)loadLog();
 },60000+Math.floor(Math.random()*15000));
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&ui.mode==='crew')sync()});
@@ -1274,14 +1559,20 @@ app.addEventListener('click',function(e){
   // manager
   else if(a==='to-mgr'){ui.mode=mgr.token?'mgr':'mgr-login';if(mgr.token)loadMgr().catch(function(){});else api('mgrHasPin').then(function(h){ui.firstPin=!h;var p=document.getElementById('pin'),pv=p?p.value:'';render();var q=document.getElementById('pin');if(q&&pv)q.value=pv},function(){});render()}
   else if(a==='to-crew'){ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
-  else if(a==='login'){var pin=(document.getElementById('pin')||{}).value;api('mgrLogin',pin).then(function(r){if(r.error){toast(r.error);return}mgr.token=r.token;mgr.me=r.me;lsSet('snow.mgr',r.token);lsSet('snow.mgrme',r.me);if(r.me.role!=='owner')mgr.zone=r.me.zone;ui.mode='mgr';ui.tab='live';render();loadMgr()},function(e){toast('Could not sign in: '+e.message)})}
-  else if(a==='mgr-out'){if(mgr.dirty){toast('Save or discard your site changes first.');return}mgr.token=null;mgr.d=null;mgr.me=null;mgr.mgrs=null;lsDel('snow.mgr');lsDel('snow.mgrme');ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
-  else if(a==='tab'){if(mgr.dirty){toast('Save or discard your site changes first.');return}ui.tab=v;ui.sheet=null;ui.rsel={};ui.confirm=false;mgr.editing=null;ui.zoom=0;render();if(v==='live'||v==='routes')loadMgr().catch(function(){});if(v==='log')loadLog()}
+  else if(a==='iam-mgr'||a==='owner-in'){var w=a==='owner-in'?'@owner':v;ui.mgrWho=w;
+    if(mgr.token&&mgr.me&&(w==='@owner'?mgr.me.role==='owner':mgr.me.name===w)){if(mgr.me.role!=='owner')mgr.zone=mgr.me.zone;ui.mode='mgr';ui.tab='live';mgrFromCache();render();loadMgr().catch(function(){});return}
+    if(mgr.token){mgr.token=null;mgr.me=null;mgr.d=null;lsDel('snow.mgr');lsDel('snow.mgrme')}
+    ui.firstPin=false;ui.mode='mgr-login';render();if(w==='@owner')api('mgrHasPin').then(function(h){ui.firstPin=!h;render()},function(){})}
+  else if(a==='login'){var pin=(document.getElementById('pin')||{}).value;api('mgrLogin',pin,ui.mgrWho||'').then(function(r){if(r.error){toast(r.error);return}mgr.token=r.token;mgr.me=r.me;lsSet('snow.mgr',r.token);lsSet('snow.mgrme',r.me);if(r.me.role!=='owner')mgr.zone=r.me.zone;ui.mode='mgr';ui.tab='live';render();loadMgr()},function(e){toast('Could not sign in: '+e.message)})}
+  else if(a==='mgr-out'){mgr.cmdShown=false;mgr.kprev=null;try{Object.keys(localStorage).forEach(function(k){if(/^snow\.mgrd\./.test(k))localStorage.removeItem(k)})}catch(e){}mgr.undo=null;mgr.undoShow=false;mgr.all=null;if(mgr.dirty){toast('Save or discard your site changes first.');return}mgr.token=null;mgr.d=null;mgr.me=null;mgr.mgrs=null;lsDel('snow.mgr');lsDel('snow.mgrme');ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
+  else if(a==='tab'){if(mgr.dirty){toast('Save or discard your site changes first.');return}ui.tab=v;ui.sheet=null;ui.rsel={};ui.confirm=false;mgr.editing=null;ui.zoom=0;render();window.scrollTo(0,0);if(v==='live'||v==='routes')loadMgr().catch(function(){});if(v==='log')loadLog()}
   else if(a==='reboot'){data.err='';data.loaded=false;render();refreshBoot()}
   else if(a==='refresh'){loadMgr().then(function(){toast('Updated.')},function(){})}
   else if(a==='ask-out'){ui.confirm='out:'+v;render()}
   else if(a==='cancel-x'){ui.confirm=false;render()}
   else if(a==='force-out'){ui.confirm=false;mgrCall('mgrClockOut',v,zv()).then(function(d){mgr.d=d;render();toast(v+' is clocked out. Their route email is on its way.')},function(e){toast('Could not clock out: '+e.message)})}
+  else if(a==='r-next'||a==='r-end'){var T2=rtype(mgr.d),r2=mgr.d.routes.filter(function(r){return r.type===T2&&r.site===bid})[0];if(!r2)return;var l2=liveOf(r2.crew),dn=(l2&&l2.doneIds)||[],cu=l2&&l2.current&&l2.current.siteId,lst=routeOf(r2.crew,T2).filter(function(r){return r.site!==bid}),ix2=a==='r-end'?lst.length:lst.filter(function(r){return dn.indexOf(r.site)>=0||r.site===cu}).length;doMove([bid],r2.crew,ix2,a==='r-next'?'Made next.':'Moved to the end.')}
+  else if(a==='lopen-go'){ui.liveOpen=v;render();var el=document.querySelector('.lrow.open');if(el)el.scrollIntoView({block:'center'})}
   else if(a==='r-up'||a==='r-down'){var T=rtype(mgr.d),rr=mgr.d.routes.filter(function(r){return r.type===T&&r.site===bid})[0];if(!rr)return;var list=routeOf(rr.crew,T),ix=list.indexOf(rr)+(a==='r-up'?-1:1);if(ix<0||ix>=list.length)return;var keep={};keep[bid]=1;doMove([bid],rr.crew,ix);ui.rsel=keep;render()}
   else if(a==='rtype'){ui.rtype=v;ui.rsel={};render()}
   else if(a==='tempmode'){mgr.tempMode=v==='1';render()}
@@ -1452,8 +1743,8 @@ document.addEventListener('paste',function(e){if(!editing()||!mgr.editing||!e.cl
 window.addEventListener('beforeunload',function(e){if(mgr.dirty||(crew.queue&&crew.queue.length)){e.preventDefault();e.returnValue=''}});
 
 /* ---------- start ---------- */
-function refreshBoot(){api('boot').then(function(b){data.crew=b.crew;data.crewZones=b.crewZones||[];data.zones=b.zones||[];data.loaded=true;if(me&&b.crew.indexOf(me)<0){lsDel('snow.me');me=null;ui.mode='pick'}render()},function(e){data.loaded=true;data.err=String(e&&e.message||e);render()})}
-if(me){loadCrew();if(!window.__skipPin&&!lsGet('snow.tok.'+me,'')){askPin()}else{ui.mode='crew';render();sync();prefetch(crew.route)}}else render();
+function refreshBoot(){api('boot').then(function(b){data.crew=b.crew;data.crewZones=b.crewZones||[];data.managers=b.managers||[];data.zones=b.zones||[];data.loaded=true;if(me&&b.crew.indexOf(me)<0){lsDel('snow.me');me=null;ui.mode='pick'}render()},function(e){data.loaded=true;data.err=String(e&&e.message||e);render()})}
+if(me){loadCrew();if(!window.__skipPin&&!lsGet('snow.tok.'+me,'')){askPin()}else{ui.mode='crew';render();sync();prefetch(crew.route)}}else if(mgr.token&&mgr.me){if(mgr.me.role!=='owner')mgr.zone=mgr.me.zone;ui.mode='mgr';ui.tab='live';mgrFromCache();render();loadMgr().catch(function(){})}else render();
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 refreshBoot();
 })();
