@@ -671,6 +671,60 @@ body.cmdmode .tabs button[aria-selected="true"]{color:var(--c-ink);background:va
 body.cmdmode header.top{background:rgba(4,7,13,.72)!important;backdrop-filter:blur(14px);box-shadow:none}
 body.cmdmode header.top h1{color:#fff!important}
 body.cmdmode .zonesel option{background:#0b1322;color:#e8f1ff}
+/* ---- dark command look for every manager screen ---- */
+body.cmdmode{--bg:#04070d;--surface:#0c1526;--sunk:#08101d;--ink:#e8f1ff;--muted:#8a9ab4;--line:#1c2a42;--accent:#ff6a1a;--accent-ink:#fff;--hazard:#ff4d5e;--pile:#6ad8ff;--ok:#3cf5a0;--ok-bg:rgba(60,245,160,.09);--sel:#ffd43b}
+html:has(body.cmdmode){background:#04070d}
+body.cmdmode .panel{background:rgba(12,21,38,.78);border-color:var(--c-line);backdrop-filter:blur(14px)}
+body.cmdmode .btn{border-color:var(--c-line)}
+body.cmdmode .mtabs{background:rgba(6,11,20,.88)!important;backdrop-filter:blur(16px);border-color:var(--c-line)!important}
+body.cmdmode .mtabs button[aria-selected="true"]{background:linear-gradient(135deg,#ff6a1a,#ff3d6e)!important;color:#fff!important;box-shadow:0 0 22px rgba(255,106,26,.45)}
+body.cmdmode .mtabs button{color:var(--c-dim)}
+body.cmdmode .actbar{background:rgba(10,18,32,.94);border:1px solid var(--c-line);backdrop-filter:blur(16px);box-shadow:0 10px 40px rgba(0,0,0,.6)}
+body.cmdmode a{color:var(--c-ice)}
+.themebtn{min-width:40px;font-size:17px}
+/* zone command screen */
+.zc .cmd-title h2{font-size:58px}
+.zc .cmd-title p b{color:var(--c-ink)}
+.zc .cmd-title p b.none{color:var(--c-amb)}
+.cmd-kpis.zk{grid-template-columns:1.8fr repeat(4,1fr)}
+.cmd-kpis.zk .k-ring{grid-column:auto}
+.zgrid{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+.zcol-a,.zcol-b{display:flex;flex-direction:column;gap:16px;min-width:0}
+.cbox{background:var(--c-glass);border:1px solid var(--c-line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px;backdrop-filter:blur(14px)}
+.cbox .sbar{border-radius:14px;box-shadow:0 0 40px -10px rgba(255,106,26,.7)}
+.cbox .sbar.off{background:rgba(255,255,255,.04);border:1px dashed var(--c-line);box-shadow:none}
+.cbox .dline{color:var(--c-dim)}
+.crewbox .lhead{padding:2px 4px}
+.crewbox .llist{border:0;gap:8px;display:flex;flex-direction:column;background:transparent}
+.crewbox .lrow{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.05)!important;border-radius:14px;transition:background .2s,border-color .2s}
+.crewbox .lrow:hover{background:rgba(106,216,255,.06);border-color:rgba(106,216,255,.3)!important}
+.crewbox .lrow.open{border-color:rgba(255,106,26,.5)!important;background:rgba(255,106,26,.07)}
+.crewbox .ldet{background:rgba(255,255,255,.03);border-radius:14px;margin-top:-4px;border:1px solid rgba(255,106,26,.25)}
+.crewbox .dot.now{background:var(--c-fire);box-shadow:0 0 0 0 rgba(255,106,26,.7);animation:cmdPing 1.8s infinite}
+.crewbox .dot.on{background:var(--c-ok);box-shadow:0 0 10px var(--c-ok)}
+.crewbox .lprog i,.crewbox .lbar{background:rgba(140,180,255,.12)}
+.crewbox .lprog u,.crewbox .lbar u{background:linear-gradient(90deg,var(--c-ice),var(--c-ok));box-shadow:0 0 10px rgba(60,245,160,.55)}
+body.cmdmode details.sec{background:var(--c-glass);border:1px solid var(--c-line);border-radius:14px;padding:10px 14px}
+.zc .cmd-arow{grid-template-columns:76px 1fr auto}
+@media (min-width:760px){.zgrid{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}.zcol-a{position:sticky;top:90px}}
+@media (max-width:1100px){.cmd-kpis.zk{grid-template-columns:repeat(4,1fr)}.cmd-kpis.zk .k-ring{grid-column:1/-1}}
+@media (max-width:640px){
+  .cmd{gap:14px;margin-top:12px}
+  .cmd-hero{align-items:flex-start;gap:10px}
+  .cmd-title h2,.zc .cmd-title h2{font-size:38px;margin:8px 0 4px}
+  .cmd-clock{text-align:left}
+  .cmd-clock b{font-size:28px}
+  .cmd-kpis,.cmd-kpis.zk{grid-template-columns:repeat(2,1fr);gap:10px}
+  .cmd-kpis .k{padding:14px;border-radius:14px}
+  .cmd-kpis .k>b,.cmd-kpis .k>.cnt{font-size:34px}
+  .cmd-kpis .k-ring{grid-column:1/-1}
+  .ring{--sz:84px}.ring>div{padding-top:24px}.ring b{font-size:24px}
+  .cmd-arow,.zc .cmd-arow{grid-template-columns:64px 1fr;gap:10px;padding:12px 14px;font-size:15px}
+  .cmd-arow .zt{display:none}
+  .cmd-alert-h{padding:12px 14px}
+}
+@media (min-width:641px) and (max-width:1100px){.cmd-kpis.zk{grid-template-columns:1.3fr 1fr 1fr}.cmd-kpis.zk .k-ring{grid-column:1;grid-row:1/3;flex-direction:column;align-items:flex-start;justify-content:center}}
+body.cmdmode .zonetag{background:linear-gradient(135deg,rgba(106,216,255,.18),rgba(255,106,26,.18));color:var(--c-ink);border:1px solid var(--c-line)}
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
@@ -1050,7 +1104,7 @@ function mgrHTML(){
   var d=mgr.d;
   var who=mgr.me?esc(mgr.me.name)+(isOwner()&&mgr.me.name!=='Owner'?' · owner':''):'Manager';
   var zsel=isOwner()&&d?'<select class="zonesel" id="zonesel" data-zonesel aria-label="Zone">'+['<option value="">All zones</option>'].concat(d.zones.map(function(z){return '<option value="'+esc(z)+'"'+(z===mgr.zone?' selected':'')+'>'+esc(z)+'</option>'})).join('')+'</select>':(mgr.me&&mgr.me.zone?'<span class="zonetag">'+esc(mgr.me.zone)+'</span>':'');
-  var h='<header class="top"><div class="brand">'+icon()+'<div><h1>Snow Route</h1><div class="sum">'+who+(mgr.stale?' · updating…':'')+'</div></div></div>'+zsel+'<button class="btn sm ghost" data-act="mgr-out">Sign out</button></header>';
+  var h='<header class="top"><div class="brand">'+icon()+'<div><h1>Snow Route</h1><div class="sum">'+who+(mgr.stale?' · updating…':'')+'</div></div></div>'+zsel+'<button class="btn sm ghost themebtn" data-act="theme" aria-label="'+(cmdDark()?'Switch to light screen':'Switch to dark screen')+'" title="'+(cmdDark()?'Light screen':'Dark screen')+'">'+(cmdDark()?'☀':'☾')+'</button><button class="btn sm ghost" data-act="mgr-out">Sign out</button></header>';
   var inMore=ui.tab==='more'||ui.tab==='log'||ui.tab==='sites'||ui.tab==='crew';
   var t=function(k,l,on){return '<button role="tab" data-act="tab" data-v="'+k+'" aria-selected="'+on+'">'+l+'</button>'};
   h+='<nav class="tabs mtabs" role="tablist">'+t('live',isDesk()&&!mgr.zone?'Overview':'Now',ui.tab==='live')+t('routes','Routes',ui.tab==='routes')+(isDesk()?t('log','Log',ui.tab==='log')+t('sites','Sites',ui.tab==='sites')+t('crew','Settings',ui.tab==='crew'):t('more','More',inMore))+'</nav>';
@@ -1225,13 +1279,8 @@ function dutyLine(d){
   var zi=d.zoneInfo.filter(function(z){return z.name===d.zone})[0]||{},mine=mgr.me&&zi.duty===mgr.me.name;
   return '<div class="dline"><span>On duty: <b>'+(zi.duty?esc(zi.duty):'nobody')+'</b>'+(mine?' (you)':'')+'</span>'+(mine?'':'<button class="linkbtn" data-act="duty">I’m on duty</button>')+'</div>';
 }
-function liveHTML(d){
-  if(!d.zone){
-    var w=d.unzoned?'<p class="queue" style="margin:0">'+d.unzoned+' site'+(d.unzoned===1?' has':'s have')+' no zone yet. Assign them under Settings → Sites by zone.</p>':'';
-    return '<div class="panel"><h3 style="font-size:18px">All zones</h3>'+w+zonePickHTML(d)+'</div>';
-  }
-  var h='<div class="panel">'+(isDesk()?'<button class="backmore" data-act="pick-zone" data-v="">‹ All zones</button>':'')+unzonedNote(d)+compactStorm(d)+dutyLine(d)+attnHTML(attn(d),!!d.storm);
-  if(!d.live.length)return h+'<div class="empty">Add your crew under <b>Settings</b> first.</div></div>';
+function mgrCrewHTML(d){
+  var h='';
   var rank={now:0,on:1,off:2},L=d.live.slice().sort(function(a,b){return rank[stat(a)]-rank[stat(b)]||a.crew.localeCompare(b.crew)});
   var nOn=L.filter(function(l){return l.shift}).length;
   h+='<div class="lhead"><b>Crew</b><span>'+nOn+' of '+L.length+' on the clock</span><span style="flex:1"></span><button class="linkbtn" data-act="refresh">Refresh</button></div><div class="llist">';
@@ -1254,7 +1303,46 @@ function liveHTML(d){
     }
     return r;
   }).join('')+'</div>';
-  if(d.storms&&d.storms.filter(function(s){return s.end}).length)h+='<details class="sec"><summary>Recent snow events</summary>'+d.storms.filter(function(s){return s.end}).map(function(s){return '<div class="sumrow"><span><b>'+esc(s.name)+'</b><br><span class="note">'+new Date(s.start).toLocaleDateString([], {month:'short',day:'numeric'})+' '+clock(s.start)+' – '+clock(s.end)+' · '+s.people+' people · '+s.hours+' h</span></span>'+(s.printouts?'<a class="btn sm" href="'+esc(s.printouts)+'" target="_blank" rel="noopener">Printouts</a>':'')+'</div>'}).join('')+'</details>';
+  return h;
+}
+function recentHTML(d){
+  var h='';if(d.storms&&d.storms.filter(function(s){return s.end}).length)h+='<details class="sec"><summary>Recent snow events</summary>'+d.storms.filter(function(s){return s.end}).map(function(s){return '<div class="sumrow"><span><b>'+esc(s.name)+'</b><br><span class="note">'+new Date(s.start).toLocaleDateString([], {month:'short',day:'numeric'})+' '+clock(s.start)+' – '+clock(s.end)+' · '+s.people+' people · '+s.hours+' h</span></span>'+(s.printouts?'<a class="btn sm" href="'+esc(s.printouts)+'" target="_blank" rel="noopener">Printouts</a>':'')+'</div>'}).join('')+'</details>';
+  return h;
+}
+function cmdDark(){return ui.mode==='mgr'&&lsGet('snow.mgrtheme','dark')!=='light'}
+function cmdAttnHTML(items,running){
+  if(!items.length)return running?'<div class="cmd-ok"><span class="okdot"></span><b>All clear.</b> Nobody is behind and nothing was skipped.</div>':'';
+  return '<div class="cmd-alert"><div class="cmd-alert-h"><span class="siren"></span>Needs attention<b>'+items.length+'</b></div>'+items.map(function(x,i){var act=x.z?'data-act="pick-zone" data-v="'+esc(x.z)+'"':x.act?'data-act="'+x.act+'"':'data-act="lopen-go" data-v="'+esc(x.c)+'"';return '<button class="cmd-arow lv'+x.lv+'" style="--i:'+i+'" '+act+'><span class="sev">'+(x.lv>1?'Urgent':'Check')+'</span><span class="msg">'+x.t.replace(/ <span class="chip">.*?<\/span>/,'')+'</span><span class="zt">→</span></button>'}).join('')+'</div>';
+}
+function zoneCmdHTML(d){
+  var on=0,crew=d.live.length,dn=0,tt=0,sk=0,ms=0;d.live.forEach(function(l){if(l.shift){on++;dn+=l.done||0;tt+=l.total||0;sk+=l.skipped||0;ms+=Date.now()-l.shift.clockIn}});
+  var pct=tt?Math.round(100*dn/tt):0,zi=(d.zoneInfo||[]).filter(function(z){return z.name===d.zone})[0]||{};
+  var P=mgr.zprev||{},key=d.zone;if(P.z!==key)P={};mgr.zprev={z:key,on:on,dn:dn,sk:sk,pct:pct};
+  var num=function(k,v){return '<b class="cnt" data-from="'+(P[k]==null?0:P[k])+'" data-to="'+v+'">'+v+'</b>'};
+  var h='<div class="cmd zc'+(mgr.cmdShown?'':' intro')+'">';mgr.cmdShown=true;
+  h+=(isDesk()?'<button class="backmore" data-act="pick-zone" data-v="">‹ All zones</button>':'');
+  h+='<div class="cmd-hero"><div class="cmd-title"><span class="cmd-live'+(d.storm?' on':'')+'"><i></i>'+(d.storm?'LIVE · '+esc(d.storm.name):'STANDBY')+'</span><h2>'+esc(d.zone)+'</h2><p>'+(d.storm?'Event running <b class="tick" data-since="'+d.storm.start+'">'+dur(Date.now()-d.storm.start)+'</b> · ':'')+'On duty <b class="'+(zi.duty?'':'none')+'">'+(zi.duty?esc(zi.duty):'nobody')+'</b></p></div>'+
+    '<div class="cmd-clock"><b class="tick" data-clock="1">'+clock(Date.now())+'</b><span>'+new Date().toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+'</span></div></div>';
+  h+=unzonedNote(d);
+  h+='<div class="cmd-kpis zk"><div class="k k-ring"><div class="ring" style="--p:'+pct+'"><div><b class="cnt" data-from="'+(P.pct||0)+'" data-to="'+pct+'">'+pct+'</b><small>%</small></div></div><span>of stops done<br><em>'+dn+' of '+tt+' on active routes</em></span></div>'+
+    '<div class="k">'+num('on',on)+'<span>on the clock <em>of '+crew+'</em></span></div>'+
+    '<div class="k">'+num('dn',dn)+'<span>sites done</span></div>'+
+    '<div class="k'+(sk?' warn':'')+'">'+num('sk',sk)+'<span>skipped</span></div>'+
+    '<div class="k"><b class="tick" data-hours="'+ms+'" data-n="'+on+'" data-t0="'+Date.now()+'">'+(ms/3600000).toFixed(2)+'</b><span>crew hours</span></div></div>';
+  h+='<div class="zgrid"><div class="zcol-a"><div class="cbox">'+compactStorm(d)+dutyLine(d)+'</div>'+cmdAttnHTML(attn(d),!!d.storm)+'</div>';
+  h+='<div class="zcol-b"><div class="cbox crewbox">'+(d.live.length?mgrCrewHTML(d):'<div class="empty">Add your crew under <b>More → Settings</b> first.</div>')+'</div>'+recentHTML(d)+'</div></div>';
+  return h+'<p class="cmd-foot">Updated '+clock(mgr.loaded)+' · <a href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">Google Sheet</a></p></div>';
+}
+function liveHTML(d){
+  if(!d.zone){
+    var w=d.unzoned?'<p class="queue" style="margin:0">'+d.unzoned+' site'+(d.unzoned===1?' has':'s have')+' no zone yet. Assign them under Settings → Sites by zone.</p>':'';
+    return '<div class="panel"><h3 style="font-size:18px">All zones</h3>'+w+zonePickHTML(d)+'</div>';
+  }
+  if(cmdDark())return zoneCmdHTML(d);
+  var h='<div class="panel">'+(isDesk()?'<button class="backmore" data-act="pick-zone" data-v="">‹ All zones</button>':'')+unzonedNote(d)+compactStorm(d)+dutyLine(d)+attnHTML(attn(d),!!d.storm);
+  if(!d.live.length)return h+'<div class="empty">Add your crew under <b>Settings</b> first.</div></div>';
+  h+=mgrCrewHTML(d);
+  h+=recentHTML(d);
   return h+'<p class="note">Updated '+clock(mgr.loaded)+' · <a href="'+esc(d.sheetUrl)+'" target="_blank" rel="noopener">Google Sheet</a></p></div>';
 }
 function rtype(d){if(!ui.rtype||d.types.indexOf(ui.rtype)<0)ui.rtype=d.types[0]||'';return ui.rtype}
@@ -1464,7 +1552,7 @@ function render(){
   else{var s=ui.view==='detail'&&ui.sel?siteById(ui.sel):null;if(ui.view==='detail'&&!s){ui.view='list';ui.sel=null}h=s?crewSiteHTML(s):crewListHTML()}
   app.className='app'+(editing()&&mgr.editing?' editing':'')+(ui.mode==='mgr'?' mgrmode':'')+(ui.mode==='mgr'&&isDesk()&&!mgr.zone&&ui.tab==='live'?' wide':'')+(ui.sheet?' sheeton':'');
   app.innerHTML=h;
-  var cmdOn=!!document.querySelector('.cmd');document.body.classList.toggle('cmdmode',cmdOn);snowFx(cmdOn);if(cmdOn){cmdTick();cmdCount()}
+  var cmdFx=!!document.querySelector('.cmd'),cmdOn=cmdFx||cmdDark();document.body.classList.toggle('cmdmode',cmdOn);snowFx(cmdFx);if(cmdFx){cmdTick();cmdCount()}
   window.scrollTo(0,y);applyFit();
   var ns=document.querySelector('.photo-scroll');if(ns&&ps&&pz===ui.zoom){ns.scrollLeft=pl;ns.scrollTop=pt}
   if(fid){var el=document.getElementById(fid);if(el&&el.focus){el.focus();try{if(fs!=null)el.setSelectionRange(fs,fs)}catch(e){}}}
@@ -1572,6 +1660,7 @@ app.addEventListener('click',function(e){
   else if(a==='cancel-x'){ui.confirm=false;render()}
   else if(a==='force-out'){ui.confirm=false;mgrCall('mgrClockOut',v,zv()).then(function(d){mgr.d=d;render();toast(v+' is clocked out. Their route email is on its way.')},function(e){toast('Could not clock out: '+e.message)})}
   else if(a==='r-next'||a==='r-end'){var T2=rtype(mgr.d),r2=mgr.d.routes.filter(function(r){return r.type===T2&&r.site===bid})[0];if(!r2)return;var l2=liveOf(r2.crew),dn=(l2&&l2.doneIds)||[],cu=l2&&l2.current&&l2.current.siteId,lst=routeOf(r2.crew,T2).filter(function(r){return r.site!==bid}),ix2=a==='r-end'?lst.length:lst.filter(function(r){return dn.indexOf(r.site)>=0||r.site===cu}).length;doMove([bid],r2.crew,ix2,a==='r-next'?'Made next.':'Moved to the end.')}
+  else if(a==='theme'){lsSet('snow.mgrtheme',cmdDark()?'light':'dark');mgr.cmdShown=true;render()}
   else if(a==='lopen-go'){ui.liveOpen=v;render();var el=document.querySelector('.lrow.open');if(el)el.scrollIntoView({block:'center'})}
   else if(a==='r-up'||a==='r-down'){var T=rtype(mgr.d),rr=mgr.d.routes.filter(function(r){return r.type===T&&r.site===bid})[0];if(!rr)return;var list=routeOf(rr.crew,T),ix=list.indexOf(rr)+(a==='r-up'?-1:1);if(ix<0||ix>=list.length)return;var keep={};keep[bid]=1;doMove([bid],rr.crew,ix);ui.rsel=keep;render()}
   else if(a==='rtype'){ui.rtype=v;ui.rsel={};render()}
