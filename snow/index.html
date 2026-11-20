@@ -768,7 +768,7 @@ body.cmdmode .tchip.t4,body.cmdmode .tchip.t5{background:rgba(60,245,160,.14);co
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
-var WANT_VER='2026-11-20.2'; // must match APP_VERSION in Code.gs
+var WANT_VER='2026-11-20.3'; // must match APP_VERSION in Code.gs
 'use strict';
 /* ---------- server bridge ---------- */
 function api(fn){var args=[].slice.call(arguments,1);return new Promise(function(res,rej){
@@ -1318,7 +1318,7 @@ function logHTML(d){
 function zonePickHTML(d){return '<div class="livegrid">'+d.zoneInfo.map(function(z){return '<div class="lc"><div class="row"><h3>'+esc(z.name)+'</h3><span style="flex:1"></span>'+(z.storm?'<span class="pill now"><i class="blink"></i>Event</span>':'<span class="pill off">No event</span>')+'</div><div class="meta">'+(z.storm?esc(z.storm.name)+' since '+clock(z.storm.start)+' · ':'')+z.onClock+' on the clock</div><div class="meta">On duty: <b>'+(z.duty?esc(z.duty):'nobody')+'</b>'+(z.managers.length?' · Managers: '+z.managers.map(esc).join(', '):'')+'</div><div class="meta">'+z.crew+' crew · '+z.sites+' sites</div><button class="btn sm" style="align-self:flex-start" data-act="pick-zone" data-v="'+esc(z.name)+'">Open '+esc(z.name)+'</button></div>'}).join('')+'</div>'}
 function dutyHTML(d){
   var zi=d.zoneInfo.filter(function(z){return z.name===d.zone})[0]||{},mine=mgr.me&&zi.duty===mgr.me.name;
-  return '<div class="duty'+(zi.duty?'':' none')+'"><span>On duty tonight</span><b>'+(zi.duty?esc(zi.duty):'Nobody yet')+'</b><span class="note" style="margin:0">'+(zi.duty?'Gets '+esc(d.zone)+'’s route emails and printouts':'Emails go to the owner until someone is on duty')+'</span><span class="sp"></span>'+(mine?'<span class="chip done">You</span>':'<button class="btn sm primary" data-act="duty">I’m on duty</button>')+'</div>';
+  return '<div class="duty'+(zi.duty?'':' none')+'"><span>On duty tonight</span><b>'+(zi.duty?esc(zi.duty):'Nobody yet')+'</b><span class="note" style="margin:0">'+(zi.duty?'Gets '+esc(d.zone)+'’s route emails and printouts':'Emails go to the owner until someone is on duty')+'</span><span class="sp"></span>'+(mine?'<span class="chip done">You</span>':'<button class="btn sm primary" data-act="duty">I’m on duty</button>')+(zi.duty&&(mine||isOwner())&&d.version>='2026-11-20.3'?'<button class="btn sm ghost" data-act="duty-off">'+(mine?'Go off duty':'Take off duty')+'</button>':'')+'</div>';
 }
 function stormOnly(d){d=d||mgr.d;return !!(d&&d.storm)&&(mgr.tempMode==null?true:mgr.tempMode)}
 function eqOf(n){var c=(mgr.d&&mgr.d.crew||[]).filter(function(x){return x.name===n})[0];return c?c.equip||'':''}
@@ -1337,7 +1337,7 @@ function compactStorm(d){
 }
 function dutyLine(d){
   var zi=d.zoneInfo.filter(function(z){return z.name===d.zone})[0]||{},mine=mgr.me&&zi.duty===mgr.me.name;
-  return '<div class="dline"><span>On duty: <b>'+(zi.duty?esc(zi.duty):'nobody')+'</b>'+(mine?' (you)':'')+'</span>'+(mine?'':'<button class="linkbtn" data-act="duty">I’m on duty</button>')+'</div>';
+  return '<div class="dline"><span>On duty: <b>'+(zi.duty?esc(zi.duty):'nobody')+'</b>'+(mine?' (you)':'')+'</span>'+(mine?'':'<button class="linkbtn" data-act="duty">I’m on duty</button>')+(zi.duty&&(mine||isOwner())&&d.version>='2026-11-20.3'?'<button class="linkbtn" data-act="duty-off">'+(mine?'Go off duty':'Take '+esc(zi.duty)+' off duty')+'</button>':'')+'</div>';
 }
 function mgrCrewHTML(d){
   var h='';
@@ -1770,6 +1770,7 @@ app.addEventListener('click',function(e){
   else if(a==='addpick'){ui.addSel=ui.addSel||{};if(ui.addSel[bid])delete ui.addSel[bid];else ui.addSel[bid]=1;render()}
   else if(a==='addgo'){var ai=Object.keys(ui.addSel||{});if(!ai.length)return;ui.rcrew=ui.addTo;doMove(ai,ui.addTo,null,ai.length+' site'+(ai.length===1?'':'s')+' added to '+ui.addTo+'’s route.')}
   else if(a==='pick-zone'){setZone(v)}
+  else if(a==='duty-off'){mgrCall('mgrDuty',zv(),zv(),true).then(function(d){mgr.d=d;render();toast('Nobody is on duty for '+zv()+' now. Its route emails go to the owner.')},function(e){toast(e.message)})}
   else if(a==='duty'){mgrCall('mgrDuty',zv(),zv()).then(function(d){mgr.d=d;render();toast('You are on duty for '+zv()+'. Its route emails and printouts come to you.')},function(e){toast(e.message)})}
   else if(a==='zn-add'){mgr.zoneEdit=mgr.zoneEdit||mgr.d.zones.map(function(z){return {old:z,name:z}});mgr.zoneEdit.push({old:'',name:''});render()}
   else if(a==='zn-del'){mgr.zoneEdit=mgr.zoneEdit||mgr.d.zones.map(function(z){return {old:z,name:z}});mgr.zoneEdit.splice(+v,1);render()}
