@@ -750,7 +750,7 @@ body.cmdmode .zonetag{background:linear-gradient(135deg,rgba(106,216,255,.18),rg
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
-var WANT_VER='2026-11-19.1'; // must match APP_VERSION in Code.gs
+var WANT_VER='2026-11-20.1'; // must match APP_VERSION in Code.gs
 'use strict';
 /* ---------- server bridge ---------- */
 function api(fn){var args=[].slice.call(arguments,1);return new Promise(function(res,rej){
@@ -1110,7 +1110,7 @@ function crewSiteHTML(s){
 
 /* ---------- manager ---------- */
 function zv(){return mgr.me&&mgr.me.role!=='owner'?mgr.me.zone:mgr.zone}
-function zoneCrew(){return mgr.d.crew.filter(function(c){return c.zone===mgr.d.zone}).map(function(c){return {name:c.name,active:c.active,equip:c.equip||'',hasPin:!!c.hasPin}})}
+function zoneCrew(){return mgr.d.crew.filter(function(c){return c.zone===mgr.d.zone}).map(function(c){return {name:c.name,old:c.name,active:c.active,equip:c.equip||'',hasPin:!!c.hasPin}})}
 function isOwner(){return !!(mgr.me&&mgr.me.role==='owner')}
 function mgrCall(fn){var a=[].slice.call(arguments,1);return api.apply(null,[fn,mgr.token].concat(a)).catch(function(e){if(/signed_out/.test(e.message)){if(mgr.me)ui.mgrWho=mgr.me.role==='owner'?'@owner':mgr.me.name;mgr.token=null;lsDel('snow.mgr');ui.mode='mgr-login';render();toast('Signed out. Enter your PIN again.')}throw e})}
 function mgrKey(){return 'snow.mgrd.'+(zv()||'all')}
