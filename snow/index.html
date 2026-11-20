@@ -768,7 +768,7 @@ body.cmdmode .tchip.t4,body.cmdmode .tchip.t5{background:rgba(60,245,160,.14);co
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
-var WANT_VER='2026-11-20.1'; // must match APP_VERSION in Code.gs
+var WANT_VER='2026-11-20.2'; // must match APP_VERSION in Code.gs
 'use strict';
 /* ---------- server bridge ---------- */
 function api(fn){var args=[].slice.call(arguments,1);return new Promise(function(res,rej){
@@ -1589,7 +1589,7 @@ function crewSetHTML(d){
   if(!mgr.mgrs)h+='<button class="btn sm" data-act="mgrs-load">Show managers</button>';
   else{
     var ml=mgr.mgrEdit||mgr.mgrs.map(function(m){return {old:m.name,name:m.name,zone:m.zone,role:m.role,email:m.email,pin:''}});
-    h+=ml.map(function(m,i){return '<div class="mgrrow"><input class="inp" data-mg="'+i+'" data-k="name" id="mgn-'+i+'" value="'+esc(m.name)+'" placeholder="Name"><select class="inp" data-mg="'+i+'" data-k="role" id="mgr-'+i+'"><option value="manager"'+(m.role!=='owner'?' selected':'')+'>Zone manager</option><option value="owner"'+(m.role==='owner'?' selected':'')+'>Owner</option></select><select class="inp" data-mg="'+i+'" data-k="zone" id="mgz-'+i+'"'+(m.role==='owner'?' disabled':'')+'>'+['<option value="">Zone…</option>'].concat(d.zones.map(function(z){return '<option value="'+esc(z)+'"'+(z===m.zone?' selected':'')+'>'+esc(z)+'</option>'})).join('')+'</select><input class="inp" data-mg="'+i+'" data-k="email" id="mge-'+i+'" type="email" value="'+esc(m.email)+'" placeholder="Email"><input class="inp" data-mg="'+i+'" data-k="pin" id="mgp-'+i+'" type="password" inputmode="numeric" maxlength="8" value="'+esc(m.pin||'')+'" placeholder="'+(m.old?'New PIN (optional)':'PIN')+'"><button class="btn sm danger" data-act="mg-del" data-v="'+i+'">Remove</button></div>'}).join('');
+    h+=ml.map(function(m,i){return '<div class="mgrrow"><input class="inp" data-mg="'+i+'" data-k="name" id="mgn-'+i+'" value="'+esc(m.name)+'" placeholder="Name"><select class="inp" data-mg="'+i+'" data-k="role" id="mgr-'+i+'"><option value="manager"'+(m.role!=='owner'?' selected':'')+'>Zone manager</option><option value="owner"'+(m.role==='owner'?' selected':'')+'>Owner</option></select><select class="inp" data-mg="'+i+'" data-k="zone" id="mgz-'+i+'"'+'>'+['<option value="">'+(m.role==='owner'?'All zones':'Zone…')+'</option>'].concat(d.zones.map(function(z){return '<option value="'+esc(z)+'"'+(z===m.zone?' selected':'')+'>'+esc(z)+'</option>'})).join('')+'</select><input class="inp" data-mg="'+i+'" data-k="email" id="mge-'+i+'" type="email" value="'+esc(m.email)+'" placeholder="Email"><input class="inp" data-mg="'+i+'" data-k="pin" id="mgp-'+i+'" type="password" inputmode="numeric" maxlength="8" value="'+esc(m.pin||'')+'" placeholder="'+(m.old?'New PIN (optional)':'PIN')+'"><button class="btn sm danger" data-act="mg-del" data-v="'+i+'">Remove</button></div>'}).join('');
     h+='<div class="row" style="margin-top:8px"><button class="btn sm" data-act="mg-add">+ Add manager</button><span style="flex:1"></span>'+(mgr.mgrEdit?'<button class="btn sm ghost" data-act="mg-cancel">Cancel</button><button class="btn sm primary" data-act="mg-save">Save managers</button>':'')+'</div>';
   }
   h+='</div>';
@@ -1719,10 +1719,10 @@ app.addEventListener('click',function(e){
   else if(a==='to-mgr'){ui.mode=mgr.token?'mgr':'mgr-login';if(mgr.token)loadMgr().catch(function(){});else api('mgrHasPin').then(function(h){ui.firstPin=!h;var p=document.getElementById('pin'),pv=p?p.value:'';render();var q=document.getElementById('pin');if(q&&pv)q.value=pv},function(){});render()}
   else if(a==='to-crew'){ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
   else if(a==='iam-mgr'||a==='owner-in'){var w=a==='owner-in'?'@owner':v;ui.mgrWho=w;
-    if(mgr.token&&mgr.me&&(w==='@owner'?mgr.me.role==='owner':mgr.me.name===w)){if(mgr.me.role!=='owner')mgr.zone=mgr.me.zone;ui.mode='mgr';ui.tab='live';mgrFromCache();render();loadMgr().catch(function(){});return}
+    if(mgr.token&&mgr.me&&(w==='@owner'?mgr.me.role==='owner':mgr.me.name===w)){if(mgr.me.role!=='owner'||(w!=='@owner'&&mgr.me.zone))mgr.zone=mgr.me.zone;ui.mode='mgr';ui.tab='live';mgrFromCache();render();loadMgr().catch(function(){});return}
     if(mgr.token){mgr.token=null;mgr.me=null;mgr.d=null;lsDel('snow.mgr');lsDel('snow.mgrme')}
     ui.firstPin=false;ui.mode='mgr-login';render();if(w==='@owner')api('mgrHasPin').then(function(h){ui.firstPin=!h;render()},function(){})}
-  else if(a==='login'){var pin=(document.getElementById('pin')||{}).value;api('mgrLogin',pin,ui.mgrWho||'').then(function(r){if(r.error){toast(r.error);return}mgr.token=r.token;mgr.me=r.me;lsSet('snow.mgr',r.token);lsSet('snow.mgrme',r.me);if(r.me.role!=='owner')mgr.zone=r.me.zone;ui.mode='mgr';ui.tab='live';render();loadMgr()},function(e){toast('Could not sign in: '+e.message)})}
+  else if(a==='login'){var pin=(document.getElementById('pin')||{}).value;api('mgrLogin',pin,ui.mgrWho||'').then(function(r){if(r.error){toast(r.error);return}mgr.token=r.token;mgr.me=r.me;lsSet('snow.mgr',r.token);lsSet('snow.mgrme',r.me);if(r.me.role!=='owner'||r.me.zone){mgr.zone=r.me.zone;lsSet('snow.zone',r.me.zone)}ui.mode='mgr';ui.tab='live';render();loadMgr()},function(e){toast('Could not sign in: '+e.message)})}
   else if(a==='mgr-out'){mgr.cmdShown=false;mgr.kprev=null;try{Object.keys(localStorage).forEach(function(k){if(/^snow\.mgrd\./.test(k))localStorage.removeItem(k)})}catch(e){}mgr.undo=null;mgr.undoShow=false;mgr.all=null;if(mgr.dirty){toast('Save or discard your site changes first.');return}mgr.token=null;mgr.d=null;mgr.me=null;mgr.mgrs=null;lsDel('snow.mgr');lsDel('snow.mgrme');ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
   else if(a==='tab'){if(mgr.dirty){toast('Save or discard your site changes first.');return}ui.tab=v;ui.sheet=null;ui.rsel={};ui.confirm=false;mgr.editing=null;ui.zoom=0;render();window.scrollTo(0,0);if(v==='live'||v==='routes')loadMgr().catch(function(){});if(v==='log')loadLog()}
   else if(a==='reboot'){data.err='';data.loaded=false;render();refreshBoot()}
