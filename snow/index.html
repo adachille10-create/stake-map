@@ -770,7 +770,7 @@ body.cmdmode .tchip.t4,body.cmdmode .tchip.t5{background:rgba(60,245,160,.14);co
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
-var WANT_VER='2026-11-21.1'; // must match APP_VERSION in Code.gs
+var WANT_VER='2026-11-21.2'; // must match APP_VERSION in Code.gs
 'use strict';
 /* ---------- server bridge ---------- */
 function api(fn){var args=[].slice.call(arguments,1);return new Promise(function(res,rej){
@@ -1137,9 +1137,18 @@ function zv(){return mgr.me&&mgr.me.role!=='owner'?mgr.me.zone:mgr.zone}
 function zoneCrew(){return mgr.d.crew.filter(function(c){return c.zone===mgr.d.zone}).map(function(c){return {name:c.name,old:c.name,active:c.active,equip:c.equip||'',hasPin:!!c.hasPin}})}
 function isOwner(){return !!(mgr.me&&mgr.me.role==='owner')}
 function mgrCall(fn){var a=[].slice.call(arguments,1);return api.apply(null,[fn,mgr.token].concat(a)).catch(function(e){if(/signed_out/.test(e.message)){if(mgr.me)ui.mgrWho=mgr.me.role==='owner'?'@owner':mgr.me.name;mgr.token=null;lsDel('snow.mgr');ui.mode='mgr-login';render();toast('Signed out. Enter your PIN again.')}throw e})}
+/** Manager taps during an event: change the screen now, save to Google in the background,
+    and put it back (with the reason) if Google says no. */
+function opt(mut,run,ok){
+  var snap=mgr.d?JSON.stringify(mgr.d):null;mgr.pending=(mgr.pending||0)+1;
+  try{if(mgr.d)mut(mgr.d)}catch(e){}
+  render();if(ok)toast(ok);
+  return run().then(function(d){mgr.pending--;if(d&&d.zoneInfo){mgr.d=d;render()}},function(e){mgr.pending--;if(snap){mgr.d=JSON.parse(snap);render()}toast('Didn’t save: '+(e&&e.message||e))});
+}
+function zinfo(d){return (d.zoneInfo||[]).filter(function(z){return z.name===d.zone})[0]||{}}
 function mgrKey(){return 'snow.mgrd.'+(zv()||'all')}
 function mgrFromCache(){if(mgr.d)return;var c=lsGet(mgrKey(),null);if(c&&c.d){mgr.d=c.d;mgr.loaded=c.t;mgr.stale=true}}
-function loadMgr(){return mgrCall('mgrData',zv()).then(function(d){mgr.d=d;mgr.err='';mgr.stale=false;mgr.loaded=Date.now();try{var j=JSON.stringify({t:mgr.loaded,d:d});if(j.length<1500000)localStorage.setItem(mgrKey(),j)}catch(e){}render();if(isDesk()&&!mgr.zone&&ui.tab==='live')loadAll();return d},function(e){mgr.err=String(e&&e.message||e);if(!mgr.d)render();throw e})}
+function loadMgr(){return mgrCall('mgrData',zv()).then(function(d){if(mgr.pending)return d;mgr.d=d;mgr.err='';mgr.stale=false;mgr.loaded=Date.now();try{var j=JSON.stringify({t:mgr.loaded,d:d});if(j.length<1500000)localStorage.setItem(mgrKey(),j)}catch(e){}render();if(isDesk()&&!mgr.zone&&ui.tab==='live')loadAll();return d},function(e){mgr.err=String(e&&e.message||e);if(!mgr.d)render();throw e})}
 function msiteById(id){return mgr.d?siteById(id,mgr.d.sites):null}
 function loginHTML(){
   var who=ui.mgrWho&&ui.mgrWho!=='@owner'?ui.mgrWho:'Owner';
@@ -1729,14 +1738,14 @@ app.addEventListener('click',function(e){
     if(mgr.token&&mgr.me&&(w==='@owner'?mgr.me.role==='owner':mgr.me.name===w)){if(mgr.me.role!=='owner'||(w!=='@owner'&&mgr.me.zone))mgr.zone=mgr.me.zone;ui.mode='mgr';ui.tab='live';mgrFromCache();render();loadMgr().catch(function(){});return}
     if(mgr.token){mgr.token=null;mgr.me=null;mgr.d=null;lsDel('snow.mgr');lsDel('snow.mgrme')}
     ui.firstPin=false;ui.mode='mgr-login';render();if(w==='@owner')api('mgrHasPin').then(function(h){ui.firstPin=!h;render()},function(){})}
-  else if(a==='login'){var pin=(document.getElementById('pin')||{}).value;api('mgrLogin',pin,ui.mgrWho||'').then(function(r){if(r.error){toast(r.error);return}mgr.token=r.token;mgr.me=r.me;lsSet('snow.mgr',r.token);lsSet('snow.mgrme',r.me);if(r.me.role!=='owner'||r.me.zone){mgr.zone=r.me.zone;lsSet('snow.zone',r.me.zone)}ui.mode='mgr';ui.tab='live';render();loadMgr()},function(e){toast('Could not sign in: '+e.message)})}
+  else if(a==='login'){var pin=(document.getElementById('pin')||{}).value;api('mgrLogin',pin,ui.mgrWho||'',lsGet('snow.zone','')).then(function(r){if(r.error){toast(r.error);return}mgr.token=r.token;mgr.me=r.me;lsSet('snow.mgr',r.token);lsSet('snow.mgrme',r.me);if(r.me.role!=='owner'||r.me.zone){mgr.zone=r.me.zone;lsSet('snow.zone',r.me.zone)}ui.mode='mgr';ui.tab='live';if(r.data&&(r.dataZone||'')===(zv()||'')){mgr.d=r.data;mgr.stale=false;mgr.loaded=Date.now();try{localStorage.setItem(mgrKey(),JSON.stringify({t:mgr.loaded,d:r.data}))}catch(e){}render();if(isDesk()&&!mgr.zone)loadAll()}else{mgrFromCache();render();loadMgr()}},function(e){toast('Could not sign in: '+e.message)})}
   else if(a==='mgr-out'){mgr.cmdShown=false;mgr.kprev=null;try{Object.keys(localStorage).forEach(function(k){if(/^snow\.mgrd\./.test(k))localStorage.removeItem(k)})}catch(e){}mgr.undo=null;mgr.undoShow=false;mgr.all=null;if(mgr.dirty){toast('Save or discard your site changes first.');return}mgr.token=null;mgr.d=null;mgr.me=null;mgr.mgrs=null;lsDel('snow.mgr');lsDel('snow.mgrme');ui.mode=me?'crew':'pick';if(me){loadCrew();sync()}render();refreshBoot()}
   else if(a==='tab'){if(mgr.dirty){toast('Save or discard your site changes first.');return}ui.tab=v;ui.sheet=null;ui.rsel={};ui.confirm=false;mgr.editing=null;ui.zoom=0;render();window.scrollTo(0,0);if(v==='live'||v==='routes')loadMgr().catch(function(){});if(v==='log')loadLog()}
   else if(a==='reboot'){data.err='';data.loaded=false;render();refreshBoot()}
   else if(a==='refresh'){loadMgr().then(function(){toast('Updated.')},function(){})}
   else if(a==='ask-out'){ui.confirm='out:'+v;render()}
   else if(a==='cancel-x'){ui.confirm=false;render()}
-  else if(a==='force-out'){ui.confirm=false;mgrCall('mgrClockOut',v,zv()).then(function(d){mgr.d=d;render();toast(v+' is clocked out. Their route email is on its way.')},function(e){toast('Could not clock out: '+e.message)})}
+  else if(a==='force-out'){ui.confirm=false;var zc=zv();opt(function(d){(d.live||[]).forEach(function(l){if(l.crew===v){l.lastShift=l.shift;l.shift=null;l.current=null}})},function(){return mgrCall('mgrClockOut',v,zc)},v+' is clocked out. Their route email is on its way.')}
   else if(a==='r-next'||a==='r-end'){var T2=rtype(mgr.d),r2=mgr.d.routes.filter(function(r){return r.type===T2&&r.site===bid})[0];if(!r2)return;var l2=liveOf(r2.crew),dn=(l2&&l2.doneIds)||[],cu=l2&&l2.current&&l2.current.siteId,lst=routeOf(r2.crew,T2).filter(function(r){return r.site!==bid}),ix2=a==='r-end'?lst.length:lst.filter(function(r){return dn.indexOf(r.site)>=0||r.site===cu}).length;doMove([bid],r2.crew,ix2,a==='r-next'?'Made next.':'Moved to the end.')}
   else if(a==='theme'){lsSet('snow.mgrtheme',cmdDark()?'light':'dark');mgr.cmdShown=true;render()}
   else if(a==='lopen-go'){ui.liveOpen=v;render();var el=document.querySelector('.lrow.open');if(el)el.scrollIntoView({block:'center'})}
@@ -1745,8 +1754,8 @@ app.addEventListener('click',function(e){
   else if(a==='tempmode'){mgr.tempMode=v==='1';render()}
   else if(a==='lopen'){ui.liveOpen=ui.liveOpen===v?null:v;ui.confirm=false;render()}
   else if(a==='ask-startstorm'){ui.confirm=ui.confirm==='startstorm'?false:'startstorm';render();var sn=document.getElementById('st-name');if(sn)sn.focus()}
-  else if(a==='setactive'){var wc=b.getAttribute('data-c');if(b.getAttribute('data-empty'))toast(v+' has no sites for '+wc+' yet. Add them under Routes.');mgr.d.active[wc]=v;render();mgrCall('mgrSetActive',wc,v,zv()).then(function(d){mgr.d=d;render();toast(wc+' is on the '+v+' route. Their phone switches within a minute.')},function(err){toast('Could not set the route: '+err.message);loadMgr()})}
-  else if(a==='sethelp'){var hc=b.getAttribute('data-c');mgrCall('mgrHelp',hc,v,zv()).then(function(d){mgr.d=d;render();toast(v?hc+' is helping '+v+' this event. Their phone shows it.':hc+' is back in their own zone.')},function(err){toast(err.message);loadMgr()})}
+  else if(a==='setactive'){var wc=b.getAttribute('data-c');if(b.getAttribute('data-empty'))toast(v+' has no sites for '+wc+' yet. Add them under Routes.');var za=zv();opt(function(d){d.active[wc]=v},function(){return mgrCall('mgrSetActive',wc,v,za)},wc+' is on the '+v+' route. Their phone switches within a minute.')}
+  else if(a==='sethelp'){var hc=b.getAttribute('data-c'),zh=zv();opt(function(d){d.crew.forEach(function(c){if(c.name===hc)c.helping=v});(d.live||[]).forEach(function(l){if(l.crew===hc)l.helping=v})},function(){return mgrCall('mgrHelp',hc,v,zh)},v?hc+' is helping '+v+' this event. Their phone shows it.':hc+' is back in their own zone.')}
   else if(a==='goroute'){var gl=liveOf(v);ui.tab='routes';ui.rcrew=v;ui.rsel={};if(gl&&gl.route)ui.rtype=gl.route;render();window.scrollTo(0,0)}
   else if(a==='moveleft'){var ml=liveOf(v);if(!ml||!ml.route)return;ui.rtype=ml.route;ui.rsel={};leftOf(ml).forEach(function(r){ui.rsel[r.site]=1});ui.sheet='move';render()}
   else if(a==='rcrew'){var tt=b.getAttribute('data-t')||'';if(ui.rcrew===v&&(ui.rtype===tt||!v)){ui.rcrew=null}else{ui.rcrew=v;if(tt)ui.rtype=tt}ui.rsel={};render()}
@@ -1777,8 +1786,8 @@ app.addEventListener('click',function(e){
   else if(a==='addpick'){ui.addSel=ui.addSel||{};if(ui.addSel[bid])delete ui.addSel[bid];else ui.addSel[bid]=1;render()}
   else if(a==='addgo'){var ai=Object.keys(ui.addSel||{});if(!ai.length)return;ui.rcrew=ui.addTo;doMove(ai,ui.addTo,null,ai.length+' site'+(ai.length===1?'':'s')+' added to '+ui.addTo+'’s route.')}
   else if(a==='pick-zone'){setZone(v)}
-  else if(a==='duty-off'){mgrCall('mgrDuty',zv(),zv(),true).then(function(d){mgr.d=d;render();toast('Nobody is on duty for '+zv()+' now. Its route emails go to the owner.')},function(e){toast(e.message)})}
-  else if(a==='duty'){mgrCall('mgrDuty',zv(),zv()).then(function(d){mgr.d=d;render();toast('You are on duty for '+zv()+'. Its route emails and printouts come to you.')},function(e){toast(e.message)})}
+  else if(a==='duty-off'){var zo=zv();opt(function(d){zinfo(d).duty=''},function(){return mgrCall('mgrDuty',zo,zo,true)},'Nobody is on duty for '+zo+' now. Its route emails go to the owner.')}
+  else if(a==='duty'){var zd=zv();opt(function(d){zinfo(d).duty=mgr.me.name},function(){return mgrCall('mgrDuty',zd,zd)},'You are on duty for '+zd+'. Its route emails and printouts come to you.')}
   else if(a==='zn-add'){mgr.zoneEdit=mgr.zoneEdit||mgr.d.zones.map(function(z){return {old:z,name:z}});mgr.zoneEdit.push({old:'',name:''});render()}
   else if(a==='zn-del'){mgr.zoneEdit=mgr.zoneEdit||mgr.d.zones.map(function(z){return {old:z,name:z}});mgr.zoneEdit.splice(+v,1);render()}
   else if(a==='zn-cancel'){mgr.zoneEdit=null;render()}
@@ -1809,15 +1818,17 @@ app.addEventListener('click',function(e){
   else if(a==='crew-save'){var cl=(mgr.crewEdit||[]).filter(function(c){return c.name.trim()});var seen={},dup=cl.some(function(c){var k=c.name.trim().toLowerCase();if(seen[k])return true;seen[k]=1});if(dup){toast('Two people have the same name. Add a last initial to tell them apart.');return}
     mgrCall('mgrSetCrew',cl,zv()).then(function(d){mgr.d=d;mgr.crewEdit=null;render();toast('Crew saved.')},function(e){toast('Could not save crew: '+e.message)})}
   else if(a==='import-drive'){mgr.driveImport=true;render();mgrCall('mgrImportDrive').then(function(r){mgr.driveImport=false;toast(r.left?'Added '+r.added+' sites. '+r.left+' still to go: tap Import from Google Drive again to finish.':(r.added?'Added '+r.added+' sites. All '+r.total+' are in.':'All '+r.total+' sites were already imported.'));return loadMgr()},function(e){mgr.driveImport=false;render();toast(e.message)})}
-  else if(a==='start-storm'){var nm=(document.getElementById('st-name')||{}).value||'';mgrCall('mgrStartStorm',nm,zv()).then(function(d){mgr.d=d;ui.confirm=false;render();toast('Snow event started. Crew clock-ins now count toward it.')},function(e){toast(e.message)})}
+  else if(a==='start-storm'){var nm=(document.getElementById('st-name')||{}).value||'',zs=zv();ui.confirm=false;opt(function(d){d.storm={id:'',name:nm||(zs+' snow event'),start:Date.now()};var zi=zinfo(d);zi.storm=d.storm},function(){return mgrCall('mgrStartStorm',nm,zs)},'Snow event started. Crew clock-ins now count toward it.')}
   else if(a==='ask-endstorm'){ui.confirm='endstorm';render()}
-  else if(a==='end-storm'){ui.confirm=false;mgr.ending=true;toast('Ending the event and making printouts. This takes about a minute.');mgrCall('mgrEndStorm',zv()).then(function(d){mgr.d=d;render();toast('Snow event ended. Printouts are in your email and in Drive.')},function(e){toast('Could not end the event: '+e.message)})}
+  else if(a==='end-storm'){ui.confirm=false;var ze=zv();opt(function(d){d.storm=null;var zi=zinfo(d);zi.storm=null},function(){return mgrCall('mgrEndStorm',ze).then(function(d){toast('Printouts for '+ze+' are in your email and in Drive.');return d})},'Snow event ended. Printouts are being made and will be in your email in about a minute.')}
   else if(a==='lg-print'){printLog()}
   else if(a==='lg-scope'){mgr.lg.scope=v;mgr.log=null;render();loadLog()}
   else if(a==='lg-kind'){mgr.lg.kind=v;render()}
   else if(a==='lg-to'){mgr.lg.to=mgr.lg.to===v?'':v;render()}
   else if(a==='lg-add'){var tx=(document.getElementById('lg-text')||{}).value||'',k=mgr.lg.kind;if(k==='call'&&!mgr.lg.to){toast('Pick who you called.');return}if(k==='note'&&!tx.trim()){toast('Type a note first.');return}
-    b.disabled=true;mgrCall('mgrNote',k,k==='call'?mgr.lg.to:'',tx,mgr.lg.scope,zv()).then(function(r){mgr.log=r;mgr.lg.to='';var el=document.getElementById('lg-text');if(el)el.value='';render();toast(k==='conditions'?'Weather added to the log.':'Added to the log.')},function(e){b.disabled=false;toast(e.message)})}
+    var to=k==='call'?mgr.lg.to:'',tmp={t:Date.now(),type:k,text:(to?'Call with '+to+': ':'')+tx,by:mgr.me?mgr.me.name:'',pending:true},el0=document.getElementById('lg-text');
+    if(k!=='conditions'&&mgr.log&&mgr.log.entries){mgr.log.entries.push(tmp);if(el0)el0.value='';mgr.lg.to='';render();toast('Added to the log.')}else b.disabled=true;
+    mgrCall('mgrNote',k,to,tx,mgr.lg.scope,zv()).then(function(r){mgr.log=r;var el=document.getElementById('lg-text');if(el&&k==='conditions')el.value='';render();if(k==='conditions')toast('Weather added to the log.')},function(e){b.disabled=false;if(mgr.log&&mgr.log.entries){var i=mgr.log.entries.indexOf(tmp);if(i>=0)mgr.log.entries.splice(i,1)}render();var el=document.getElementById('lg-text');if(el&&!el.value)el.value=tx;toast('Didn’t save the note: '+e.message)})}
   else if(a==='save-wx'){var code=(document.getElementById('s-wx')||{}).value||'';mgrCall('mgrSetStation',code).then(function(w){toast(w)},function(e){toast(e.message)})}
   else if(a==='save-email'){var em=(document.getElementById('s-email')||{}).value;mgrCall('mgrMyEmail',em).then(function(){mgr.d.myEmail=em;toast('When you are on duty, emails go to '+em+'.')},function(e){toast('Could not save: '+e.message)})}
   else if(a==='test-email'){mgrCall('mgrTestEmail').then(function(to){toast('Test email sent to '+to+'.')},function(e){toast('Could not send: '+e.message)})}
@@ -1841,11 +1852,11 @@ app.addEventListener('change',function(e){
   if(t.id==='v-saltu'||t.hasAttribute('data-svc')){workDraft();if(t.id==='v-saltu')render();return}
   if(t.hasAttribute('data-assign')){var id=t.getAttribute('data-assign'),to=t.value,T=ui.rtype;var s=msiteById(id);mgrCall('mgrAssign',id,to,null,T,mgr.tempMode,zv()).then(function(d){mgr.d=d;render();toast(to?(s?s.name:'Site')+' is on '+to+'’s '+T+' route.':(s?s.name:'Site')+' is off the '+T+' route.')},function(err){toast('Could not move: '+err.message);loadMgr()});return}
   if(t.hasAttribute('data-zonesel')){setZone(t.value);return}
-  if(t.hasAttribute('data-help')){var hw=t.getAttribute('data-help'),hz=t.value;mgrCall('mgrHelp',hw,hz,zv()).then(function(d){mgr.d=d;render();toast(hz?hw+' is helping '+hz+' this event. Their phone shows it.':hw+' is back in their own zone.')},function(err){toast(err.message);loadMgr()});return}
+  if(t.hasAttribute('data-help')){var hw=t.getAttribute('data-help'),hz=t.value,zh2=zv();opt(function(d){d.crew.forEach(function(c){if(c.name===hw)c.helping=hz});(d.live||[]).forEach(function(l){if(l.crew===hw)l.helping=hz})},function(){return mgrCall('mgrHelp',hw,hz,zh2)},hz?hw+' is helping '+hz+' this event. Their phone shows it.':hw+' is back in their own zone.');return}
   if(t.hasAttribute('data-sitezone')){var sid=t.getAttribute('data-sitezone'),sz=t.value;mgrCall('mgrSiteZone',sid,sz).then(function(){var x=msiteById(sid);if(x)x.zone=sz;toast((x?x.name:'Site')+(sz?' is in '+sz+'.':' has no zone.'))},function(err){toast(err.message)});return}
   if(t.hasAttribute('data-mg')){mgr.mgrEdit=mgr.mgrEdit||mgr.mgrs.map(function(m){return {old:m.name,name:m.name,zone:m.zone,role:m.role,email:m.email,pin:''}});var mi=+t.getAttribute('data-mg'),mk=t.getAttribute('data-k');mgr.mgrEdit[mi][mk]=t.value;if(mk==='role'||!document.querySelector('[data-act="mg-save"]'))render();return}
   if(t.id==='f-zone'&&mgr.editing){mgr.editing.zone=t.value;if(!mgr.dirty){mgr.dirty=true;render()}return}
-  if(t.hasAttribute('data-active')){var who=t.getAttribute('data-active'),rt=t.value;mgrCall('mgrSetActive',who,rt,zv()).then(function(d){mgr.d=d;render();toast(rt?who+' is on the '+rt+' route. Their phone switches within a minute.':who+' has no route set.')},function(err){toast('Could not set the route: '+err.message);loadMgr()});return}
+  if(t.hasAttribute('data-active')){var who=t.getAttribute('data-active'),rt=t.value,za2=zv();opt(function(d){d.active[who]=rt},function(){return mgrCall('mgrSetActive',who,rt,za2)},rt?who+' is on the '+rt+' route. Their phone switches within a minute.':who+' has no route set.');return}
   if(t.hasAttribute('data-hx')||t.hasAttribute('data-ho')||t.hasAttribute('data-hc')){hrsFromForm();return}
   if(t.id==='lg-auto'){mgr.lg.auto=t.checked;lsSet('snow.lgauto',t.checked);render();return}
   if(t.hasAttribute('data-crewequip')){mgr.crewEdit=(mgr.crewEdit||zoneCrew());mgr.crewEdit[+t.getAttribute('data-crewequip')].equip=t.value;render();return}
