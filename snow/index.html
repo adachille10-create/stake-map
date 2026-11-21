@@ -765,10 +765,12 @@ body.cmdmode .tchip.t4,body.cmdmode .tchip.t5{background:rgba(60,245,160,.14);co
 .tpick{display:flex;flex-wrap:wrap;gap:6px}
 .tpick button{min-height:36px;padding:0 12px;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
 .tpick button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.spin{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style></head><body>
 <div id="app" class="app"><div class="placeholder">Loading…</div></div>
 <script>(function(){
-var WANT_VER='2026-11-20.3'; // must match APP_VERSION in Code.gs
+var WANT_VER='2026-11-21.1'; // must match APP_VERSION in Code.gs
 'use strict';
 /* ---------- server bridge ---------- */
 function api(fn){var args=[].slice.call(arguments,1);return new Promise(function(res,rej){
@@ -871,7 +873,10 @@ function sync(){
   syncing=true;var sent=crew.queue.slice(),t0=Date.now();
   // phone clocks can be minutes off: send each tap's time corrected by how far this phone was off when it was tapped
   var out=sent.map(function(o){var x={};for(var k in o)if(k!=='sk')x[k]=o[k];if(x.t)x.t=Math.round(x.t+(+o.sk||0));return x});
-  api('crewSync',me,out,crew.ver,crew.shift&&!sent.length?crew.shift.id:'',lsGet('snow.tok.'+me,'')).then(function(r){
+  api('crewSync',me,out,crew.ver,crew.shift&&!sent.length?crew.shift.id:'',lsGet('snow.tok.'+me,'')).then(function(r){syncDone(r,t0)},syncFail);
+}
+/** What the office sent back (route, shift, messages). Used after every sync, and right after a PIN sign-in. */
+function syncDone(r,t0){
     syncing=false;crew.offline=false;crew.last=Date.now();if(r.now){var rt=Date.now()-t0;if(rt<8000)lsSet('snow.skew',Math.round(r.now-(t0+rt/2)))}if(typeof r.direct==='boolean'&&r.direct!==direct){direct=r.direct;lsSet('snow.direct',direct)}
     if(r.error==='unknown_crew'){toast('Your name was removed from the crew list. Pick your name again.');lsDel('snow.me');me=null;ui.mode='pick';refreshBoot();return}
     var doneIds=r.done||[];crew.queue=crew.queue.filter(function(o){return doneIds.indexOf(o.opId)<0});
@@ -898,8 +903,8 @@ function sync(){
     }
     saveCrew();if(crew.shift)gpsOn();if(ui.mode==='crew')render();
     if(syncAgain){syncAgain=false;sync()}else photoSync();
-  },function(e){syncing=false;if(/crew_auth/.test(String(e&&e.message||''))&&!window.__skipPin){lsDel('snow.tok.'+me);askPin();return}var net=!navigator.onLine||/network|connection|failed to fetch|offline/i.test(String(e&&e.message||''));crew.offline=net;if(ui.mode==='crew')render();setTimeout(function(){if(crew.queue.length)sync()},(net?20000:8000)+Math.random()*12000)});
 }
+function syncFail(e){syncing=false;if(/crew_auth/.test(String(e&&e.message||''))&&!window.__skipPin){lsDel('snow.tok.'+me);askPin();return}var net=!navigator.onLine||/network|connection|failed to fetch|offline/i.test(String(e&&e.message||''));crew.offline=net;if(ui.mode==='crew')render();setTimeout(function(){if(crew.queue.length)sync()},(net?20000:8000)+Math.random()*12000)}
 function pickRoute(t){
   if(openVisit()){toast('Finish the site you are working on before changing routes.');return}
   crew.pick=t===crew.active?'':t;applyRoute();ui.pickRoute=false;ui.view='list';ui.sel=null;
@@ -1028,7 +1033,7 @@ function pinHTML(){
   var h='<div class="pinbox"><div class="brand">'+icon()+'<h1 style="font-size:22px;text-transform:uppercase;font-weight:800">'+esc(me)+'</h1></div>';
   if(!i)return h+'<p class="note">Loading…</p></div>';
   h+='<p>'+(first?'Pick a 4-number PIN. You will type it if you ever sign in on another phone, and it keeps anyone else from using your name.':'Enter your 4-number PIN.')+'</p>';
-  if(crew.queue.length)h+='<p class="queue" style="margin:0">'+crew.queue.length+' tap'+(crew.queue.length===1?' is':'s are')+' saved on this phone and will send as soon as you’re in.</p>';
+  if(crew.queue.length&&(crew.offline||Date.now()-(crew.queue[0].t||0)>20000))h+='<p class="queue" style="margin:0">'+crew.queue.length+' tap'+(crew.queue.length===1?' is':'s are')+' saved on this phone and will send as soon as you’re in.</p>';
   h+='<input class="inp" id="cpin" type="password" inputmode="numeric" autocomplete="off" maxlength="4" aria-label="PIN"><button class="btn primary big" data-act="crewpin">'+(first?'Set PIN':'Sign in')+'</button>';
   h+='<button class="linkbtn" data-act="pinback">Not '+esc(me)+'? Pick a different name</button><p class="note" style="margin:0">Forgot it? Your manager can reset it in Settings.</p></div>';
   return h;
@@ -1061,7 +1066,7 @@ function crewHeader(){
   if(sh)h+='<div class="shiftbar"><span class="pill on"><i class="blink"></i>On the clock</span><span>since '+clock(sh.clockIn)+' · <b id="shiftclock">'+dur(Date.now()-sh.clockIn)+'</b></span><span class="sp"></span><span class="cnt">'+done+' of '+crew.route.length+' done'+(skp?' · '+skp+' skipped':'')+'</span></div>';
   if(crew.helping)h+='<p class="helpbar">Helping <b>'+esc(crew.helping)+'</b> this event</p>';
   if(crew.offline)h+='<p class="offline">No signal right now. Everything you tap is saved on this phone.</p>';
-  if(crew.queue.length)h+='<p class="queue" style="margin:8px 0 0">'+crew.queue.length+' update'+(crew.queue.length===1?'':'s')+' waiting for signal. They send on their own; keep the app open.</p>';
+  if(crew.queue.length&&(crew.offline||Date.now()-(crew.queue[0].t||0)>20000))h+='<p class="queue" style="margin:8px 0 0">'+crew.queue.length+' update'+(crew.queue.length===1?'':'s')+' waiting for signal. They send on their own; keep the app open.</p>';
   return h;
 }
 function stopRow(s,i){
@@ -1080,7 +1085,8 @@ function crewListHTML(){
     var done=sh.visits.filter(function(v){return v.stop}).length,ov=openVisit();
     h+='<div class="card confirm" style="margin-top:14px"><h3>Finish route and clock out?</h3><div class="sumrow"><span>On the clock</span><b>'+dur(Date.now()-sh.clockIn)+'</b></div><div class="sumrow"><span>Sites done</span><b>'+done+' of '+crew.route.length+'</b></div>'+(ov?'<p class="queue">You are still working at '+esc((siteById(ov.site)||{}).name||'a site')+'. Clocking out will stop it too.</p>':'')+'<label class="fieldlbl">Note for the office (optional)<textarea class="inp" id="o-note" placeholder="Anything they should know: damage, a site you skipped and why"></textarea></label><div class="row"><button class="btn ghost" data-act="cancel-end">Keep working</button><span style="flex:1"></span><button class="btn stop" data-act="clockout">Clock out and send</button></div></div>';
   }
-  if(!crew.route.length)h+='<div class="empty" style="margin-top:14px">No stops on '+(eff()?'your '+esc(eff())+' route':'your route')+' yet. The office assigns them, and they show up here on their own.</div>';
+  if(!crew.route.length&&crew.ver<0)h+='<div class="empty" style="margin-top:14px"><span class="spin"></span> Getting your route…</div>';
+  else if(!crew.route.length)h+='<div class="empty" style="margin-top:14px">No stops on '+(eff()?'your '+esc(eff())+' route':'your route')+' yet. The office assigns them, and they show up here on their own.</div>';
   else{
     var ov2=openVisit();
     if(ov2&&!ui.ending){var cs=siteById(ov2.site);h+='<button class="btn big primary" style="margin-top:14px" data-act="open" data-id="'+ov2.site+'">Back to '+esc(cs?cs.name:'current site')+' · '+tick(Date.now()-ov2.start)+'</button>'}
@@ -1632,6 +1638,7 @@ setInterval(function(){
   if(document.body.classList.contains('cmdmode'))cmdTick();
   var a=document.getElementById('shiftclock');if(a&&crew.shift)a.textContent=dur(Date.now()-crew.shift.clockIn);
   var b=document.getElementById('visitclock'),ov=openVisit();if(b&&ov)b.textContent=tick(Date.now()-ov.start);
+  if(ui.mode==='crew'&&crew.queue.length&&!document.querySelector('.queue')&&Date.now()-(crew.queue[0].t||0)>20000&&!document.activeElement.matches('input,textarea,select'))render();
 },1000);
 setInterval(function(){
   if(document.hidden)return;
@@ -1696,7 +1703,7 @@ app.addEventListener('click',function(e){
   else if(a==='del-mark'){var sd=mgr.editing;if(sd){sd.marks=sd.marks.filter(function(m){return m.id!==bid});ui.mark=null;mgr.dirty=true;render()}}
   // crew
   else if(a==='iam'){me=v;lsSet('snow.me',me);loadCrew();if(!window.__skipPin&&!lsGet('snow.tok.'+me,'')){askPin();return}ui.mode='crew';ui.view='list';render();sync()}
-  else if(a==='crewpin'){var cp=(document.getElementById('cpin')||{}).value||'';if(!/^\d{4}$/.test(cp)){toast('PINs are 4 numbers.');return}b.disabled=true;api('crewLogin',me,cp).then(function(r){if(r.error){b.disabled=false;toast(r.error);var q=document.getElementById('cpin');if(q){q.value='';q.focus()}return}lsSet('snow.tok.'+me,r.token);ui.mode='crew';ui.view='list';render();sync();toast(ui.pinInfo&&!ui.pinInfo.set?'PIN set. You’re in.':'Signed in.')},function(e){b.disabled=false;toast('Could not sign in: '+e.message)})}
+  else if(a==='crewpin'){var cp=(document.getElementById('cpin')||{}).value||'';if(!/^\d{4}$/.test(cp)){toast('PINs are 4 numbers.');return}b.disabled=true;b.textContent='Checking…';api('crewLogin',me,cp).then(function(r){if(r.error){b.disabled=false;toast(r.error);var q=document.getElementById('cpin');if(q){q.value='';q.focus()}return}lsSet('snow.tok.'+me,r.token);ui.mode='crew';ui.view='list';if(r.sync){syncing=true;syncDone(r.sync,Date.now())}else{render();sync()}toast(ui.pinInfo&&!ui.pinInfo.set?'PIN set. You’re in.':'Signed in.')},function(e){b.disabled=false;toast('Could not sign in: '+e.message)})}
   else if(a==='pinback'){if(crew.shift||crew.queue.length){toast('Your shift and taps are saved for '+me+'. Sign in as '+me+' to finish them.');}lsDel('snow.me');me=null;ui.mode='pick';render();refreshBoot()}
   else if(a==='switch'){if(crew.shift){toast('Clock out before switching to another name.');return}if(crew.queue.length){toast('Wait until your taps have sent before switching names.');return}lsDel('snow.me');me=null;ui.mode='pick';ui.ended=null;render();refreshBoot()}
   else if(a==='open'){if(bid){ui.skip=null;ui.sel=bid;ui.view='detail';ui.zoom=0;ui.mark=null;ui.again=false;render();window.scrollTo(0,0)}}
